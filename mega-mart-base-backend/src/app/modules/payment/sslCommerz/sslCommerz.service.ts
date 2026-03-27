@@ -1,0 +1,80 @@
+import axios from 'axios';
+import config from '../../../config';
+import { ISSLCommerz } from './sslCommerz.interface';
+import { StatusCodes } from 'http-status-codes';
+import AppError from '../../../errors/handleAppError';
+import { Payment } from '../payment.model';
+
+export const sslPaymentInit = async (payload: ISSLCommerz) => {
+ try {
+   const data = {
+     store_id: config.SSL.STORE_ID,
+     store_passwd: config.SSL.STORE_PASS,
+     total_amount: payload.amount,
+     currency: 'BDT',
+     tran_id: payload.transactionId,
+     success_url: `${config.SSL.SSL_SUCCESS_BACKEND_URL}?transactionId=${payload.transactionId}&amount=${payload.amount}&status=success`,
+     fail_url: `${config.SSL.SSL_FAIL_BACKEND_URL}?transactionId=${payload.transactionId}&amount=${payload.amount}&status=fail`,
+     cancel_url: `${config.SSL.SSL_CANCEL_BACKEND_URL}?transactionId=${payload.transactionId}&amount=${payload.amount}&status=cancel`,
+     ipn_url: `${config.SSL.SSL_IPN_URL}`,
+     shipping_method: 'N/A',
+     product_name: 'Vendor Payment',
+     product_category: 'Shop',
+     product_profile: 'general',
+     cus_name: payload.name,
+     cus_email: payload.email,
+     cus_add1: payload.address,
+     cus_add2: 'N/A',
+     cus_city: 'Dhaka',
+     cus_state: 'Dhaka',
+     cus_postcode: '1000',
+     cus_country: 'Bangladesh',
+     cus_phone: payload.phoneNumber,
+     cus_fax: '01711111111',
+     ship_name: 'N/A',
+     ship_add1: 'N/A',
+     ship_add2: 'N/A',
+     ship_city: 'N/A',
+     ship_state: 'N/A',
+     ship_postcode: 1000,
+     ship_country: 'N/A',
+   };
+
+   const response = await axios({
+     method: 'POST',
+     url: config.SSL.SSL_PAYMENT_API,
+     data: data,
+     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+   });
+
+   return response.data;
+ } catch (error: any) {
+  console.log('Payment Error Occured', error);
+  throw new AppError(StatusCodes.BAD_REQUEST, error.message);
+ }
+};
+
+
+
+const validatepayment = async (payload: any) => {
+  try {
+    const response = await axios({
+      method: 'GET',
+      url: `${config.SSL.SSL_VALIDATION_API}?val_id=${payload.val_id}&store_id=${config.SSL.STORE_ID}&store_passwd=${config.SSL.STORE_PASS}`,
+    });
+
+    await Payment.updateOne(
+      { transactionId: payload.tran_id },
+      { paymentGatewayData: response.data },
+      { runValidators: true }
+    );
+  } catch (error: any) {
+    console.log(error);
+    throw new AppError(401, `Payment Validation Error, ${error.message}`);
+  }
+};
+
+export const SSLService = {
+  sslPaymentInit,
+  validatepayment,
+};

@@ -1,0 +1,92 @@
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.QueryBuilder = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
+class QueryBuilder {
+    constructor(modelQuery, query) {
+        this.modelQuery = modelQuery;
+        this.query = query;
+    }
+    search(searchableFields) {
+        const searchTerm = this.query.searchTerm;
+        if (searchTerm && typeof searchTerm === 'string') {
+            const searchConditions = searchableFields.map(field => {
+                if (field === '_id' && mongoose_1.default.Types.ObjectId.isValid(searchTerm)) {
+                    return { [field]: new mongoose_1.default.Types.ObjectId(searchTerm) };
+                }
+                else {
+                    return { [field]: { $regex: new RegExp(searchTerm, 'i') } };
+                }
+            });
+            this.modelQuery = this.modelQuery.find({ $or: searchConditions });
+        }
+        return this;
+    }
+    filter() {
+        const filter = Object.assign({}, this.query);
+        const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
+        for (const field of excludeFields) {
+            delete filter[field];
+        }
+        if (filter.status) {
+            this.modelQuery = this.modelQuery.find({
+                'orderInfo.status': filter.status,
+            });
+            delete filter.status;
+        }
+        if (filter.vendorId) {
+            this.modelQuery = this.modelQuery.find({
+                'orderInfo.vendorId': filter.vendorId,
+            });
+            delete filter.vendorId;
+        }
+        if (Object.keys(filter).length) {
+            this.modelQuery = this.modelQuery.find(filter);
+        }
+        return this;
+    }
+    sort() {
+        const sort = this.query.sort || '-createdAt';
+        this.modelQuery = this.modelQuery.sort(sort);
+        return this;
+    }
+    fields() {
+        var _a;
+        const fields = ((_a = this.query.fields) === null || _a === void 0 ? void 0 : _a.split(',').join(' ')) || '';
+        this.modelQuery = this.modelQuery.select(fields);
+        return this;
+    }
+    paginate() {
+        const page = Number(this.query.page) || 1;
+        const limit = Number(this.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        this.modelQuery = this.modelQuery.skip(skip).limit(limit);
+        return this;
+    }
+    build() {
+        return this.modelQuery;
+    }
+    getMeta() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const filter = this.modelQuery.getFilter();
+            const totalDocuments = yield this.modelQuery.model.countDocuments(filter);
+            const page = Number(this.query.page) || 1;
+            const limit = Number(this.query.limit) || 10;
+            const totalPage = Math.ceil(totalDocuments / limit);
+            return { page, limit, total: totalDocuments, totalPage };
+        });
+    }
+}
+exports.QueryBuilder = QueryBuilder;
