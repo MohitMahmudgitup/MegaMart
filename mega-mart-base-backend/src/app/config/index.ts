@@ -31,7 +31,7 @@ export default {
     SSL_FAIL_FRONTEND_URL: process.env.SSL_FAIL_FRONTEND_URL as string,
     SSL_CANCEL_FRONTEND_URL: process.env.SSL_CANCEL_FRONTEND_URL as string,
     SSL_SUCCESS_BACKEND_URL: process.env.SSL_SUCCESS_BACKEND_URL as string,
-    SSL_FAIL_BACKEND_URL: process.env.SSL_FAIL_BACKEND_URL as string,
+    SSL_FAIL_BACKEND_URL: process.env.SSL_FAIL_BACKEND_URL as string, 
     SSL_CANCEL_BACKEND_URL: process.env.SSL_CANCEL_BACKEND_URL as string,
     SSL_IPN_URL: process.env.SSL_IPN_URL as string,
   },

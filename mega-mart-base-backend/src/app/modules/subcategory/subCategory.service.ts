@@ -21,20 +21,20 @@ const createsubCategoryIntoDB = async (payload: TSubCategory) => {
   //creating slug
   payload.slug = payload.name.split(" ").join("-").toLowerCase();
 
-   if (payload.isFeatured === true) {
-     const featuredCount = await subCategoryModel.countDocuments({
-       isFeatured: true,
-     });
+  if (payload.isFeatured === true) {
+    const featuredCount = await subCategoryModel.countDocuments({
+      isFeatured: true,
+    });
 
-     if (featuredCount >= 4) {
-       payload.isFeatured = false;
+    if (featuredCount >= 4) {
+      payload.isFeatured = false;
 
-       throw new AppError(
-         400,
-         'Maximum 4 featured categories allowed! This category has been set to non-featured.'
-       );
-     }
-   }
+      throw new AppError(
+        400,
+        'Maximum 4 featured categories allowed! This category has been set to non-featured.'
+      );
+    }
+  }
 
   if (isCategoryExists) {
     throw new AppError(
@@ -49,5 +49,5 @@ const createsubCategoryIntoDB = async (payload: TSubCategory) => {
 export const subCategoryServices = {
   getAllSubCategoryFromDB,
   getSingleSubCategoryFromDB,
-createsubCategoryIntoDB
+  createsubCategoryIntoDB
 };

@@ -21,6 +21,9 @@ import {
   useEditCategoryMutation,
   useGetAllCategoriesQuery,
 } from "@/redux/featured/categories/categoryApi";
+import {
+  useGetAllSubCategoriesQuery
+} from "@/redux/featured/subcategories/subcategoryApi";
 import { useForm, FormProvider } from "react-hook-form";
 import { ImagePlusIcon, XIcon } from "lucide-react";
 import { FileWithPreview, useFileUpload } from "@/hooks/use-file-upload";
@@ -59,8 +62,7 @@ export default function Category({
 }) {
   const [createCategory, { isLoading, isSuccess }] =
     useCreateCategoryMutation();
-  const [updateCategory, { isLoading: EditLoading }] =
-    useEditCategoryMutation();
+  const [updateCategory, { isLoading: EditLoading }] = useEditCategoryMutation();
   const [bannerImg, setBannerImg] = useState<FileWithPreview | null>(null);
   const [image, setImage] = useState<FileWithPreview | null>(null);
   const [open, setOpen] = useState(false);

@@ -24,13 +24,13 @@ app.use(passport.session());
 app.use(express.json());
 app.use(cookieParser());
 app.set("trust proxy", 1);
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true })); 
 
 app.use(
   cors({
     origin: [
       'http://localhost:5173',
-      'http://localhost:3000',
+      'http://localhost:3000', 
       'http://localhost:3001',
       'https://mega-mart-base-customer.vercel.app',
       'https://mega-mart-base-admin-panel.vercel.app',

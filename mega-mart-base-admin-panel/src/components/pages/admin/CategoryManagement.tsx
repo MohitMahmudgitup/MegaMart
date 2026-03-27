@@ -10,6 +10,7 @@ import {
   useGetAllCategoriesQuery,
   useEditCategoryMutation,
 } from '@/redux/featured/categories/categoryApi'
+
 import { selectCategories, setCategories } from '@/redux/featured/categories/categorySlice'
 import ViewCategoryDetails from '@/components/category/ViewCategory'
 import Category from '@/components/category/Category'
@@ -17,9 +18,11 @@ import PaginationControls from '@/components/categorise/PaginationControls'
 import Swal from 'sweetalert2'
 import { ICategory } from '@/types/Category'
 import CategoryManagementSkeleton from '../loadings/CategoryManagementSkeleton'
+import { useGetAllSubCategoriesQuery} from "@/redux/featured/subcategories/subcategoryApi";
 
 export default function CategoryManagement() {
   const { data: allCategories, isLoading, refetch } = useGetAllCategoriesQuery()
+  const { data: allsubCategories } = useGetAllSubCategoriesQuery()
   const [editCategory] = useEditCategoryMutation()
   const dispatch = useAppDispatch()
   const categories = useAppSelector(selectCategories)
@@ -27,6 +30,7 @@ export default function CategoryManagement() {
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 10
+  const  sublength = allsubCategories?.length
 
   // Populate Redux state
   useEffect(() => {
