@@ -38,17 +38,18 @@ const NavbarLogo: React.FC<NavbarLogoProps> = ({
       )}
 
       {/* Logo Image */}
-      <div className="flex items-center">
-        <Link href="/">
-            <Image
-            src={site?.siteLogo ? site?.siteLogo : "/logo.png"}
-              alt={site?.siteName || "Logo"}
-              width={96}
-              height={96}
-              className="object-contain"
-            />
-        </Link>
-      </div>
+   <div className="flex items-center">
+  <Link href="/" className="block">
+    <Image
+      src={site?.siteLogo ? site?.siteLogo : "/logo.png"}
+      alt={site?.siteName || "Logo"}
+      width={185}
+      height={100}
+      className="object-contain w-[120px] sm:w-[150px] md:w-[180px] lg:w-[200px] h-auto"
+      priority
+    />
+  </Link>
+</div>
 
       {/* Site Name */}
       {/* <Link
