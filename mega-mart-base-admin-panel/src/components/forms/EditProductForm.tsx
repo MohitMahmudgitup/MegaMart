@@ -143,6 +143,7 @@ export default function EditProductForm({ id }: { id: string }) {
           slug: product.description.slug,
           unit: product.description.unit,
           description: product.description.description,
+          shortdescription: product.description.shortdescription,
           status: product.description.status,
         },
         productType: product.productType,
@@ -172,22 +173,23 @@ export default function EditProductForm({ id }: { id: string }) {
     }
   }, [editableProduct, form, isReady]);
 
-  console.log(editableProduct);
-  
+
+
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "specifications",
   });
 
-   const { fields: variantFields, append: appendVariant, remove: removeVariant } = useFieldArray({
-      control: form.control,
-      name: "variants",
-    });
+  const { fields: variantFields, append: appendVariant, remove: removeVariant } = useFieldArray({
+    control: form.control,
+    name: "variants",
+  });
 
   const isExternalProduct = form.watch("productInfo.isExternal");
 
   const onSubmit: SubmitHandler<ProductFormValues> = async (data) => {
+    console.log("object")
     const submitToast = toast.loading("Submiting Product...");
     try {
       const formData = new FormData();
@@ -233,7 +235,7 @@ export default function EditProductForm({ id }: { id: string }) {
     }
   };
 
-  const onErrors = (errors: any) => {};
+  const onErrors = (errors: any) => { };
 
   const simplifiedCategories: Option[] =
     categoriesData?.map((cat: any) => ({
@@ -296,6 +298,20 @@ export default function EditProductForm({ id }: { id: string }) {
                   <FormLabel>Slug</FormLabel>
                   <FormControl>
                     <Input placeholder="Auto-generated slug" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="description.shortdescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Short Description</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter short description" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -949,6 +965,7 @@ export default function EditProductForm({ id }: { id: string }) {
               <Save className="mr-2 h-4 w-4 hidden md:flex" /> Save as Draft
             </Button>
             <Button type="submit" className="mt-2 md:mt-0">
+
               {form.formState.isSubmitting
                 ? "Publishing..."
                 : "Publish Product"}

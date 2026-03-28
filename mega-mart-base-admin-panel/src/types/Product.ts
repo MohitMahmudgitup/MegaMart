@@ -51,6 +51,7 @@ export type TDescription = {
   slug?: string;
   unit: string;
   description: string;
+  shortdescription: string;
   status: "publish" | "draft";
 };
 
