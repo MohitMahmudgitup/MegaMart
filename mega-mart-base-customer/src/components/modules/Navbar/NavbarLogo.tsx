@@ -45,7 +45,7 @@ const NavbarLogo: React.FC<NavbarLogoProps> = ({
       alt={site?.siteName || "Logo"}
       width={185}
       height={100}
-      className="object-contain w-[120px] sm:w-[150px] md:w-[180px] lg:w-[200px] h-auto"
+      className="object-contain w-[140px] sm:w-[150px] md:w-[180px] lg:w-[200px] h-auto"
       priority
     />
   </Link>
