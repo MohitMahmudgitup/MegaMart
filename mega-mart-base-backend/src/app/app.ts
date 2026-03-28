@@ -43,7 +43,8 @@ app.use(
       'https://www.faymo.shop',
       'https://www.faymo.store',
       'https://syed-aowlia-online-website-customer-psi.vercel.app',
-      'https://syed-aowlia-online-website-admin-12.vercel.app'
+      'https://syed-aowlia-online-website-admin-12.vercel.app',
+      'https://syed-aowlia-online-website-admin.vercel.app'
     ],
     credentials: true,
   })
