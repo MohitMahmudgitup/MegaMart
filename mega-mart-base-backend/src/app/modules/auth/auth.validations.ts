@@ -15,7 +15,7 @@ const registerUser = z.object({
     .min(6, "Password must be at least 6 characters long!")
     .max(20, "Password must be less than 20 characters!"),
 });
-
+ 
 const loginUser = z.object({
   email: z
     .string()

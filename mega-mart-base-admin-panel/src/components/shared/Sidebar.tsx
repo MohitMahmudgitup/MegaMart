@@ -503,6 +503,7 @@ const { data: settings } = useGetSettingsQuery();
                   "productManagement",
                 )}
                 {renderLink("/admin/category-management", Hash, "Categories")}
+                {renderLink("/admin/subcategory-management", Hash, "Sub Categories")}
                 {renderLink("/admin/tag-management", Tag, "Tags")}
                 {renderLink("/admin/brand-management", Box, "Brand")}
                 {renderLink("/admin/product-attributes", Palette, "Attributes")}

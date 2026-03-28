@@ -8,4 +8,4 @@ export type TAuth = {
 export type TExternalProviderAuth = {
   name: string;
   email: string;
-};
+}; 

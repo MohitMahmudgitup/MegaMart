@@ -22,6 +22,7 @@ import { useGetAllSubCategoriesQuery} from "@/redux/featured/subcategories/subca
 
 export default function CategoryManagement() {
   const { data: allCategories, isLoading, refetch } = useGetAllCategoriesQuery()
+  console.log(useGetAllCategoriesQuery)
   const { data: allsubCategories } = useGetAllSubCategoriesQuery()
   const [editCategory] = useEditCategoryMutation()
   const dispatch = useAppDispatch()

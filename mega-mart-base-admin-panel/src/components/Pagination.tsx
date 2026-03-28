@@ -12,7 +12,7 @@ interface pages {
   setCurrentPage: any;
   currentPage: any;
   meta: any;
-}
+} 
 
 export default function PaginationView({
   setCurrentPage,

@@ -114,7 +114,7 @@ export default function Category({
   }, [image, bannerImg, editCategory]);
 
   const { data: categoriesData, isLoading: isCategoriesLoading } =
-    useGetAllCategoriesQuery(undefined);
+    useGetAllSubCategoriesQuery(undefined);
 
   const simplifiedCategories: Option[] =
     categoriesData?.map((cat: any) => ({

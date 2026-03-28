@@ -13,15 +13,14 @@ async function main() {
     await mongoose.connect(config.database_url as string);
      console.log("✅ MongoDB connected successfully");
 
-
     server = app.listen(port, () => {
       console.log(`Example app listening on port ${port}`);
     });
   } catch (err) { 
     console.log(err); 
-  }
+  } 
 }
-
+ 
 (() => {
   main();
   seedSiteSettings()
