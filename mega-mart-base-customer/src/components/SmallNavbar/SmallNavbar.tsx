@@ -1,6 +1,6 @@
 import type React from "react";
 import Link from "next/link";
-import { Home, Heart, MessageCircleMore} from "lucide-react";
+import { Home, Heart, MessageCircleMore } from "lucide-react";
 import MobileMenu from "../modules/Navbar/MobileMenu";
 
 
@@ -14,23 +14,22 @@ export default function SmallNavbar({ showSidebar }: { showSidebar?: any }) {
         <NavItem icon={Heart} href="/dashboard/wishlistItems" />
 
         {/* WhatsApp */}
-      <Link
-  href="https://wa.me/8801618767729"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="relative flex items-center justify-center p-3 rounded-full hover:scale-110 transition-all duration-300"
->
- 
-<MessageCircleMore className="w-5 h-5"/>
-  {/* Notification Badge */}
-  {/* <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-[10px] font-bold bg-red-500 text-white rounded-full border-2 border-white shadow-sm animate-pulse">
-    1
-  </span> */}
-</Link>
+        <Link
+          href="https://wa.me/8801630075111"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Chat on WhatsApp"
+          className="relative flex items-center justify-center p-3 rounded-full hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl"
+        >
+          <MessageCircleMore className="w-5 h-5" />
+          <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 text-[10px] sm:text-xs font-bold bg-red-500 text-white rounded-full border-2 border-white shadow-sm animate-pulse">
+            1
+          </span>
+        </Link>
 
         {!showSidebar && (
           <div className="flex-shrink-0">
-            {/* <MobileMenu /> */}
+            <MobileMenu />
             {/* <TextAlignEnd /> */}
           </div>
         )}
@@ -49,11 +48,10 @@ function NavItem({ icon: Icon, href, isActive = false }: NavItemProps) {
   return (
     <Link href={href}>
       <div
-        className={`flex items-center justify-center p-3 transition-all duration-300 ${
-          isActive
+        className={`flex items-center justify-center p-3 transition-all duration-300 ${isActive
             ? "text-white bg-black rounded-full shadow-md scale-110"
             : "text-gray-500 hover:text-orange-500 hover:scale-110"
-        }`}
+          }`}
       >
         <Icon className="w-5 h-5" />
       </div>
