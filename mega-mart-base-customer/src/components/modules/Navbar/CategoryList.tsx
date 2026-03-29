@@ -5,7 +5,6 @@ import {
   NavigationMenuLink,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import MenuSection from "./MenuSection";
 import Link from "next/link";
 import { MegaMenuItems } from "@/data/megaMenuItems";
 import Masonry from "react-masonry-css";

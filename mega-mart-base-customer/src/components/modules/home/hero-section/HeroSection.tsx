@@ -1,12 +1,12 @@
 "use client";
 
-import React from "react";
+
 import Sidebar from "./Sidebar";
 import Promo from "./Promo";
 import { useGetAllBannersQuery } from "@/redux/featured/Banner/bannerApi";
 import { HeroSectionSkeleton } from "./HeroSectionSkeleton";
-
-
+import { AlertTriangle, RefreshCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const HeroSection = () => {
   const { data: banners, isLoading, error } = useGetAllBannersQuery();
@@ -15,12 +15,37 @@ const HeroSection = () => {
   
   if (error) {
     return (
-      <div className="flex items-center  justify-center h-64 bg-red-50 rounded-lg">
-        <div className="text-center">
-          <p className="text-red-600 font-medium">Failed to load banners</p>
-          <p className="text-sm text-red-500 mt-1">Please try refreshing the page</p>
-        </div>
+<div className="flex items-center justify-center h-64 bg-red-50 rounded-2xl border border-red-100">
+  <div className="text-center space-y-4 px-4">
+    
+    {/* Icon */}
+    <div className="flex justify-center">
+      <div className="bg-red-100 p-4 rounded-full">
+        <AlertTriangle className="text-red-500 w-8 h-8" />
       </div>
+    </div>
+
+    {/* Title */}
+    <p className="text-red-600 font-semibold text-lg">
+      Failed to load banners
+    </p>
+
+    {/* Description */}
+    <p className="text-sm text-red-500">
+      Something went wrong. Please try refreshing the page.
+    </p>
+
+    {/* Button */}
+    <Button
+      onClick={() => window.location.reload()}
+      className="mt-2 flex items-center gap-2 mx-auto"
+    >
+      <RefreshCcw className="w-4 h-4" />
+      Refresh Page
+    </Button>
+  </div>
+</div>
+
     );
   }
 

@@ -60,7 +60,7 @@ const NavbarActions: React.FC = () => {
   const handleSearchHistory = (query: string) => {
     setSearchHistory((prevHistory) => {
       const updatedHistory = [query, ...prevHistory.filter((item) => item !== query)];
-      return updatedHistory.slice(0, 5); // Keep only the latest 5 entries
+      return updatedHistory.slice(0, 5);
     });
   }
 

@@ -56,4 +56,5 @@ export type TProduct = {
   specifications?: [{ key: string; value: string }];
   variants?: IVariant[];
   deletedImages?: string[];
+  gender?: 'male' | 'female' | 'unisex';
 };

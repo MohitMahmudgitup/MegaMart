@@ -36,7 +36,6 @@ const categorySchema = new Schema<TCategory>(
       type: [Schema.Types.ObjectId],
       ref: "subCategories",
       required: [true, 'Category is Required!'],
-      // ref: 'category',
     },
   },
   {

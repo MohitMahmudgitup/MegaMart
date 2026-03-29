@@ -15,16 +15,31 @@ interface NavbarLogoProps {
 }
 
 const NavbarLogo: React.FC<NavbarLogoProps> = ({
-  showSidebar,  setSidebarOpen,  dashboardLocation,
+  showSidebar,
+  setSidebarOpen,
+  dashboardLocation,
 }) => {
   const { data: settings, isLoading } = useGetSettingsQuery();
 
-  const site: any = settings?.[0] ;
+  const site: any = settings?.[0];
+
+  // 🔥 Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-4">
+        {showSidebar && dashboardLocation && (
+          <div className="lg:hidden">
+            <div className="h-9 w-9 bg-gray-200 rounded-md animate-pulse" />
+          </div>
+        )}
+
+        <div className="h-8 w-[120px] sm:w-[150px] md:w-[180px] bg-gray-200 rounded-md animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-4">
-    
-
       {showSidebar && dashboardLocation && (
         <div className="lg:hidden">
           <Button
@@ -37,27 +52,21 @@ const NavbarLogo: React.FC<NavbarLogoProps> = ({
         </div>
       )}
 
-      {/* Logo Image */}
-   <div className="flex items-center">
-  <Link href="/" className="block">
-    <Image
-      src={site?.siteLogo ? site?.siteLogo : "/logo.png"}
-      alt={site?.siteName || "Logo"}
-      width={185}
-      height={100}
-      className="object-contain w-[140px] sm:w-[150px] md:w-[180px] lg:w-[200px] h-auto"
-      priority
-    />
-  </Link>
-</div>
-
-      {/* Site Name */}
-      {/* <Link
-        href="/"
-        className="hidden sm:inline-block text-2xl font-bold text-gray-800 leading-none tracking-tight"
-      >
-        {site?.siteName ?  site?.siteName : "Mega Mart"}
-      </Link> */}
+      {/* ✅ Only render if logo exists */}
+      {site?.siteLogo && (
+        <div className="flex items-center">
+          <Link href="/" className="block">
+            <Image
+              src={site.siteLogo}
+              alt={site?.siteName || "Logo"}
+              width={185}
+              height={100}
+              className="object-contain w-[120px] sm:w-[150px] md:w-[180px] h-auto"
+              priority
+            />
+          </Link>
+        </div>
+      )}
     </div>
   );
 };

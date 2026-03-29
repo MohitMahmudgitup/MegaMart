@@ -165,6 +165,10 @@ const productSchema = new Schema<TProduct>(
       required: true,
       default: [],
     },
+    gender: {
+      type: String,
+      enum: ['male', 'female', 'unisex'],
+    },
   },
   {
     timestamps: true,

@@ -350,7 +350,7 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
             />
             
 
-            <FormField
+            {/* <FormField
               control={form.control}
               name="description.slug"
               render={({ field }) => (
@@ -362,7 +362,7 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
 
             <FormField
               control={form.control}
