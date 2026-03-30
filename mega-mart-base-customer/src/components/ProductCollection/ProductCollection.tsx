@@ -632,19 +632,19 @@ export function ProductCollection() {
                               product.productInfo.salePrice > 0 ? (
                               <>
                                 <span className="text-lg font-bold">
-                                  BDT {product.productInfo.salePrice.toFixed(2)}
+                                ৳{product.productInfo.salePrice.toFixed(2)}
                                 </span>
                                 {product.productInfo.price &&
                                   product.productInfo.price >
                                   product.productInfo.salePrice && (
-                                    <span className="text-sm text-muted-foreground line-through">
-                                      BDT {product.productInfo.price.toFixed(2)}
+                                    <span className="text-xs text-muted-foreground line-through">
+                                      ৳{product.productInfo.price.toFixed(2)}
                                     </span>
                                   )}
                               </>
                             ) : (
                               <span className="text-lg font-bold">
-                                BDT {(product.productInfo?.price || 0).toFixed(2)}
+                               ৳{(product.productInfo?.price || 0).toFixed(2)}
                               </span>
                             )}
                           </div>
