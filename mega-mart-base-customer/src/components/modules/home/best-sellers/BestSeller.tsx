@@ -12,6 +12,7 @@ import { BestSellerSkeleton } from "./BestSellerSkeleton";
 
 const BestSeller = () => {
   const { data, isLoading } = useGetBestSellingProductsQuery({});
+ 
 
   // Filter products that have "Best Selling" tag
   const bestSellerProducts = data

@@ -223,73 +223,53 @@ export const bestSellingProducts = async (
   categorySlug?: string,
 ) => {
   let limit = 10;
-  const pipeline: any[] = [
-    { $unwind: '$orderInfo' },
 
-    // প্রতিটি product কতবার order হয়েছে তা গণনা
+  const pipeline: any[] = [
+    { $unwind: "$orderInfo" },
+
+    // total sold count
     {
       $group: {
-        _id: '$orderInfo.productInfo',
-        totalSold: { $sum: '$orderInfo.quantity' },
+        _id: "$orderInfo.productInfo",
+        totalSold: { $sum: "$orderInfo.quantity" },
       },
     },
 
-    // বেশি sold products আগে আসবে
     { $sort: { totalSold: -1 } },
 
-    // Product details lookup
+    // product lookup
     {
       $lookup: {
-        from: 'products',
-        localField: '_id',
-        foreignField: '_id',
-        as: 'product',
+        from: "products",
+        localField: "_id",
+        foreignField: "_id",
+        as: "product",
       },
     },
-    { $unwind: '$product' },
+    { $unwind: "$product" },
 
-    // Brand populate
-    {
-      $lookup: {
-        from: 'brands',
-        localField: 'product.brandAndCategories.brand',
-        foreignField: '_id',
-        as: 'product.brandAndCategories.brand',
-      },
-    },
-
-    // Categories populate
-    {
-      $lookup: {
-        from: 'categories',
-        localField: 'product.brandAndCategories.categories',
-        foreignField: '_id',
-        as: 'product.brandAndCategories.categories',
-      },
-    },
-
-    // Tags populate
-    {
-      $lookup: {
-        from: 'tags',
-        localField: 'product.brandAndCategories.tags',
-        foreignField: '_id',
-        as: 'product.brandAndCategories.tags',
-      },
-    },
-
-    // Optional: categorySlug filter
+    // optional category filter
     ...(categorySlug
       ? [
-        {
-          $match: {
-            'product.brandAndCategories.categories.slug': categorySlug,
+          {
+            $match: {
+              "product.brandAndCategories.categories.slug": categorySlug,
+            },
           },
-        },
-      ]
+        ]
       : []),
 
-    { $replaceRoot: { newRoot: '$product' } },
+    // root replace
+    { $replaceRoot: { newRoot: "$product" } },
+
+    // 🔥 only প্রয়োজনীয় data return
+    {
+      $project: {
+        _id: 1,
+        featuredImg: 1,
+        "description.name": 1,
+      },
+    },
 
     { $limit: limit },
   ];
