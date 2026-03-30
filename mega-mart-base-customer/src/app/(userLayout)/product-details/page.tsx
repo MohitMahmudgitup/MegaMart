@@ -37,6 +37,7 @@ import {
 import Link from "next/link";
 import { ProductDetailsSkeleton } from "@/components/ProductDetailsSkeleton";
 import SectionHeader from "@/components/modules/home/new-arrivals/SectionHeader";
+import NewArrivals from "@/components/modules/home/new-arrivals/NewArrivals";
 
 function cn(...c: (string | false | null | undefined)[]) {
   return c.filter(Boolean).join(" ");
@@ -547,7 +548,9 @@ export default function ProductDetailsPage({ productId }: any) {
             )}
           </div>
           <div>
-            <h1 className="text-3xl md:text-3xl font-bold line-clamp-1">{product.title}</h1>
+<h1 className="font-bold line-clamp-3 text-[clamp(1.25rem,2.5vw,2rem)]">
+  {product.title}
+</h1>
           </div>
           <div className="relative">
             <p
@@ -820,17 +823,20 @@ export default function ProductDetailsPage({ productId }: any) {
           </div>
 
           {/* guarantees */}
-          <div className="flex justify-center flex-wrap items-center gap-8 text-sm text-gray-600 mt-6">
-            <div className="flex flex-col items-center gap-2">
-              <Truck className="w-7 h-7" /> First Shipping
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <Shield className="w-7 h-7" /> 2 Year Warranty
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <Undo2 className="w-7 h-7" /> Easy Returns
-            </div>
-          </div>
+       <div className="flex justify-center flex-wrap items-center gap-4 sm:gap-6 md:gap-8 text-xs sm:text-sm md:text-base text-gray-600 mt-6">
+  <div className="flex flex-col items-center gap-1 sm:gap-2">
+    <Truck className="w-5 sm:w-6 md:w-7 h-5 sm:h-6 md:h-7" /> 
+    First Shipping
+  </div>
+  <div className="flex flex-col items-center gap-1 sm:gap-2">
+    <Shield className="w-5 sm:w-6 md:w-7 h-5 sm:h-6 md:h-7" /> 
+    2 Year Warranty
+  </div>
+  <div className="flex flex-col items-center gap-1 sm:gap-2">
+    <Undo2 className="w-5 sm:w-6 md:w-7 h-5 sm:h-6 md:h-7" /> 
+    Easy Returns
+  </div>
+</div>
         </div>
       </div>
 
@@ -1076,61 +1082,8 @@ export default function ProductDetailsPage({ productId }: any) {
       </div>
 
       {/* Related Products */}
-      {relatedProducts.length > 0 && (
-        <div ref={relatedRef} className="w-full bg-white p-6 rounded-lg border mx-auto mt-8">
-          <SectionHeader
-            title="New Arrivals"
+      <NewArrivals />
 
-            viewAllLinkState={true}
-          />
-
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {relatedProducts.map((product: any) => (
-              <Card
-                key={product.id}
-                className="p-3 rounded-xl border border-gray-200 hover:shadow-sm transition cursor-pointer"
-              >
-                <Link href={`/product-details/${product.id}`}>
-                  {/* Image */}
-                  <div className="relative w-full h-40 mb-3">
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      fill
-                      className="object-contain"
-                      sizes="w-full h-full"
-                    />
-                  </div>
-
-                  {/* Name */}
-                  <div className="flex flex-col">
-                    <h3 className="text-[16px] font-medium text-gray-900 truncate">
-                      {product.name}
-                    </h3>
-
-                    {/* Price */}
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-orange-600 font-semibold">
-                        {product.price}
-                      </span>
-                      {product.oldPrice && (
-                        <span className="text-gray-400 line-through text-sm">
-                          {product.oldPrice}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Sold */}
-                    <span className="text-gray-500 text-xs mt-1">
-                      {product.sold} sold
-                    </span>
-                  </div>
-                </Link>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

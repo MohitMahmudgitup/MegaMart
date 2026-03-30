@@ -14,6 +14,7 @@ export const metadata: Metadata = {
   title: "CartX | Your Cart Your Choice",
   description: "Vendor management website",
 };
+
 const HomePage = () => {
   return (
     <main className="space-y-4 md:space-y-16 lg:space-y-20 ">

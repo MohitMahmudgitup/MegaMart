@@ -204,7 +204,7 @@ function FilterPanel({
             <Slider
               value={priceRange}
               onValueChange={setPriceRange}
-              max={1000}
+              max={1000000}
               step={10}
               className="w-full"
             />
@@ -294,7 +294,7 @@ function FilterPanel({
 export function ProductCollection() {
   const { data, isLoading, error } = useGetAllProductsQuery({});
   const [productData, setProductData] = useState<Product[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -354,7 +354,7 @@ export function ProductCollection() {
     const prices = productData.map(
       (p: Product) => p.productInfo?.salePrice || p.productInfo?.price || 0
     );
-    const maxPrice = Math.max(...prices, 1000);
+    const maxPrice = Math.max(...prices, 1000000);
     setPriceRange([0, Math.ceil(maxPrice / 100) * 100]);
   };
 
@@ -456,7 +456,7 @@ export function ProductCollection() {
   }
 
 
-  
+  console.log(sortedProducts)
 
   return (
     <div className="min-h-screen bg-background">

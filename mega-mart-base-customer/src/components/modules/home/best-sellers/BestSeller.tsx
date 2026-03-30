@@ -20,24 +20,28 @@ const BestSeller = () => {
     return <BestSellerSkeleton />;
   }
 
-  if (bestSellerProducts?.length === 0) {
-    return (
-      < >
-        <div className="flex  justify-center items-center">
-          <SectionHeader title="Best Selling Store" />
-        </div>
-        <div className="flex justify-center items-center py-20">
-          <div className="text-lg text-gray-500">No best seller products found</div>
-        </div>
-      </>
-    );
-  }
+  // if (bestSellerProducts?.length === 0) {
+  //   return (
+  //     < >
+  //       <div className="flex  justify-center items-center">
+  //         <SectionHeader title="Best Selling Store" />
+  //       </div>
+  //       <div className="flex justify-center items-center py-20">
+  //         <div className="text-lg text-gray-500">No best seller products found</div>
+  //       </div>
+  //     </>
+  //   );
+  // }
 
   
 
   return (
+    
     <>
-      <div className="flex justify-center pt-6 items-center">
+    {
+      data && data.length > 0 && (
+        <>
+             <div className="flex justify-center pt-6 items-center">
         <SectionHeader title="Best Selling Store" />
       </div>
       <section className="mt-8">
@@ -63,6 +67,12 @@ const BestSeller = () => {
           </Button>
         </Link>
       </div> */}
+        
+        
+        </>
+      )
+    }
+ 
     </>
   );
 };

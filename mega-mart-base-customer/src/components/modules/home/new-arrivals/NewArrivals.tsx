@@ -83,8 +83,9 @@ const NewArrivals = () => {
       id: product._id,
       title: product.description?.name,
       subtitle: product.description?.description,
-      price: product.productInfo?.salePrice,
+      salePrice: product.productInfo?.salePrice,
       image: product.featuredImg,
+      price: product.productInfo?.price,
     }));
   }, [arrivals]);
 
