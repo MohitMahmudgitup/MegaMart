@@ -21,14 +21,12 @@ import {
 } from "lucide-react";
 import { useGetAllProductsQuery, useGetSingleProductQuery } from "@/redux/featured/product/productApi";
 import {
-  useCreateCustomerMutation,
   useGetSingleCustomerQuery,
   useUpdateCustomerMutation,
 } from "@/redux/featured/customer/customerApi";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { selectCurrentUser } from "@/redux/featured/auth/authSlice";
 import { useRouter } from "next/navigation";
-import { current } from "@reduxjs/toolkit";
 import toast from "react-hot-toast";
 import clsx from "clsx";
 import {
@@ -235,13 +233,12 @@ export default function ProductDetailsPage({ productId }: any) {
         ...(stock < 10 && stock > 0
           ? ["Limited Edition"]
           : []),
-      ] as const,
+      ] as any,
       brand: currentProduct.brandAndCategories?.brand?.name || "",
       categories: currentProduct.brandAndCategories?.categories || [],
       tags: currentProduct.brandAndCategories?.tags || [],
       specifications: {
         sku: currentProduct.productInfo?.sku || "",
-        weight: "450g",
         dimensions: {
           length: currentProduct.productInfo?.length || "",
           width: currentProduct.productInfo?.width || "",
@@ -250,6 +247,7 @@ export default function ProductDetailsPage({ productId }: any) {
         status: currentProduct.productInfo?.status || "",
         quantity: stock,
       },
+      specificationsList: currentProduct.specifications || [],
     };
   }, [currentProduct, selectedVariant]);
 
@@ -526,7 +524,7 @@ export default function ProductDetailsPage({ productId }: any) {
         <div className="bg-white rounded-lg p-6 border ">
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mb-2">
-            {product.badges.includes("SALE") && (
+            {product.badges.includes("SALE"  )  && (
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-500 text-white">
                 SALE
               </span>
@@ -536,7 +534,7 @@ export default function ProductDetailsPage({ productId }: any) {
                 In Stock
               </span>
             )}
-            {product.badges.includes("Out of Stock") && (
+            {product.badges.includes("Out of Stock ") && (
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full border border-red-600 text-red-700">
                 Out of Stock
               </span>
@@ -548,9 +546,9 @@ export default function ProductDetailsPage({ productId }: any) {
             )}
           </div>
           <div>
-<h1 className="font-bold line-clamp-3 text-[clamp(1.25rem,2.5vw,2rem)]">
-  {product.title}
-</h1>
+            <h1 className="font-bold line-clamp-3 text-[clamp(1.25rem,2.5vw,2rem)]">
+              {product.title}
+            </h1>
           </div>
           <div className="relative">
             <p
@@ -823,69 +821,54 @@ export default function ProductDetailsPage({ productId }: any) {
           </div>
 
           {/* guarantees */}
-       <div className="flex justify-center flex-wrap items-center gap-4 sm:gap-6 md:gap-8 text-xs sm:text-sm md:text-base text-gray-600 mt-6">
-  <div className="flex flex-col items-center gap-1 sm:gap-2">
-    <Truck className="w-5 sm:w-6 md:w-7 h-5 sm:h-6 md:h-7" /> 
-    First Shipping
-  </div>
-  <div className="flex flex-col items-center gap-1 sm:gap-2">
-    <Shield className="w-5 sm:w-6 md:w-7 h-5 sm:h-6 md:h-7" /> 
-    2 Year Warranty
-  </div>
-  <div className="flex flex-col items-center gap-1 sm:gap-2">
-    <Undo2 className="w-5 sm:w-6 md:w-7 h-5 sm:h-6 md:h-7" /> 
-    Easy Returns
-  </div>
-</div>
+          <div className="flex justify-center flex-wrap items-center gap-4 sm:gap-6 md:gap-8 text-xs sm:text-sm md:text-base text-gray-600 mt-6">
+            <div className="flex flex-col items-center gap-1 sm:gap-2">
+              <Truck className="w-5 sm:w-6 md:w-7 h-5 sm:h-6 md:h-7" />
+              First Shipping
+            </div>
+            <div className="flex flex-col items-center gap-1 sm:gap-2">
+              <Shield className="w-5 sm:w-6 md:w-7 h-5 sm:h-6 md:h-7" />
+              2 Year Warranty
+            </div>
+            <div className="flex flex-col items-center gap-1 sm:gap-2">
+              <Undo2 className="w-5 sm:w-6 md:w-7 h-5 sm:h-6 md:h-7" />
+              Easy Returns
+            </div>
+          </div>
         </div>
       </div>
+      
+<div className=" mt-6 z-30 bg-white/80  rounded-lg border border-gray-200  sticky top-6">
+  <div className="max-w-7xl mx-auto px-3 sm:px-6">
+    <div className="flex gap-2 sm:gap-3 overflow-x-auto no-scrollbar py-3">
 
-      <div className="flex flex-wrap gap-3 mb-6 mt-20 px-4 py-3 bg-white border rounded-lg sticky top-20 z-20 ">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex items-center gap-2 px-4 py-2 rounded-lg  bg-amber-600 text-white  hover:bg-zinc-700 hover:text-white transition"
-          onClick={() => scrollToSection(whyRef, -100)}
-        >
-          Why Choose
-        </Button>
+      {/* Button */}
+      <button
+        onClick={() => scrollToSection(whyRef, -100)}
+        className="flex-shrink-0 px-4 py-2 text-sm sm:text-base font-medium rounded-full 
+        bg-amber-600 text-white hover:bg-amber-700 transition-all duration-200"
+      >
+        Why Choose
+      </button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex items-center gap-2 px-4 py-2 rounded-lg  bg-amber-600 text-white  hover:bg-zinc-700 hover:text-white transition"
-          onClick={() => scrollToSection(specRef, -100)}
-        >
-          Specifications
-        </Button>
+      <button
+        onClick={() => scrollToSection(specRef, -100)}
+        className="flex-shrink-0 px-4 py-2 text-sm sm:text-base font-medium rounded-full 
+        bg-gray-100 text-gray-700 hover:bg-amber-600 hover:text-white transition-all duration-200"
+      >
+        Specifications
+      </button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-zinc-700 hover:text-white transition"
-          onClick={() => scrollToSection(reviewRef, -100)}
-        >
-          Reviews
-        </Button>
+      {/* Future Buttons */}
+      {/* 
+      <button className="tab-btn">Reviews</button>
+      <button className="tab-btn">Vouchers</button>
+      <button className="tab-btn">Related</button> 
+      */}
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex items-center gap-2 px-4 py-2 rounded-lg   bg-amber-600 text-white hover:bg-zinc-700 hover:text-white transition"
-          onClick={() => scrollToSection(voucherRef, -100)}
-        >
-          Vouchers
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex items-center gap-2 px-4 py-2 rounded-lg  bg-amber-600 text-white  hover:bg-zinc-700 hover:text-white transition"
-          onClick={() => scrollToSection(relatedRef, -100)}
-        >
-          Related
-        </Button>
-      </div>
+    </div>
+  </div>
+</div>
 
       {/* WHY CHOOSE */}
       <div ref={whyRef} className="mt-10">
@@ -918,69 +901,97 @@ export default function ProductDetailsPage({ productId }: any) {
             {/* Product Details */}
             <div>
               <h3 className="font-semibold mb-3">Product Details</h3>
-              <table className="w-full text-sm border-collapse">
-                <tbody>
-                  {product.specifications.sku && (
-                    <tr className="border-b">
-                      <td className="py-2 text-gray-500">SKU</td>
-                      <td className="py-2 font-semibold">
-                        {product.specifications.sku}
-                      </td>
-                    </tr>
-                  )}
-                  <tr className="border-b">
-                    <td className="py-2 text-gray-500">Status</td>
-                    <td className="py-2 capitalize">
-                      {product.specifications.status || "Available"}
-                    </td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="py-2 text-gray-500">Stock</td>
-                    <td className="py-2">
-                      {product.specifications.quantity} units
-                    </td>
-                  </tr>
-                  {product.specifications.weight && (
-                    <tr className="border-b">
-                      <td className="py-2 text-gray-500">Weight</td>
-                      <td className="py-2">{product.specifications.weight}</td>
-                    </tr>
-                  )}
-                  {(product.specifications.dimensions.length ||
-                    product.specifications.dimensions.width ||
-                    product.specifications.dimensions.height) && (
-                      <tr className="border-b">
-                        <td className="py-2 text-gray-500">Dimensions</td>
-                        <td className="py-2">
-                          {[
-                            product.specifications.dimensions.length &&
-                            `L: ${product.specifications.dimensions.length}`,
-                            product.specifications.dimensions.width &&
-                            `W: ${product.specifications.dimensions.width}`,
-                            product.specifications.dimensions.height &&
-                            `H: ${product.specifications.dimensions.height}`,
-                          ]
-                            .filter(Boolean)
-                            .join(", ")}
-                        </td>
-                      </tr>
-                    )}
-                  {product.brand && (
-                    <tr className="border-b">
-                      <td className="py-2 text-gray-500">Brand</td>
-                      <td className="py-2 font-semibold">{product.brand}</td>
-                    </tr>
-                  )}
-                  {product.tags.length > 0 && (
-                    <tr>
-                      <td className="py-2 text-gray-500">Tags</td>
-                      <td className="py-2">
-                        {product.tags.map((tag: any) => tag.name).join(", ")}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+  <tbody className="divide-y divide-gray-200">
+
+    {/* SKU */}
+    {product.specifications.sku && (
+      <tr className="hover:bg-gray-50 transition">
+        <td className="py-3 px-4 text-gray-500 font-medium w-1/3">SKU</td>
+        <td className="py-3 px-4 font-semibold text-gray-800">
+          {product.specifications.sku}
+        </td>
+      </tr>
+    )}
+
+    {/* Status */}
+    <tr className="hover:bg-gray-50 transition">
+      <td className="py-3 px-4 text-gray-500 font-medium">Status</td>
+      <td className="py-3 px-4 capitalize text-gray-800">
+        {product.specifications.status || "Available"}
+      </td>
+    </tr>
+
+    {/* Stock */}
+    <tr className="hover:bg-gray-50 transition">
+      <td className="py-3 px-4 text-gray-500 font-medium">Stock</td>
+      <td className="py-3 px-4 text-gray-800">
+        {product.specifications.quantity} units
+      </td>
+    </tr>
+
+    {/* Dimensions */}
+    {(product.specifications.dimensions.length ||
+      product.specifications.dimensions.width ||
+      product.specifications.dimensions.height) && (
+      <tr className="hover:bg-gray-50 transition">
+        <td className="py-3 px-4 text-gray-500 font-medium">Dimensions</td>
+        <td className="py-3 px-4 text-gray-800">
+          {[
+            product.specifications.dimensions.length &&
+              `L: ${product.specifications.dimensions.length}`,
+            product.specifications.dimensions.width &&
+              `W: ${product.specifications.dimensions.width}`,
+            product.specifications.dimensions.height &&
+              `H: ${product.specifications.dimensions.height}`,
+          ]
+            .filter(Boolean)
+            .join(", ")}
+        </td>
+      </tr>
+    )}
+
+    {/* Brand */}
+    {product.brand && (
+      <tr className="hover:bg-gray-50 transition">
+        <td className="py-3 px-4 text-gray-500 font-medium">Brand</td>
+        <td className="py-3 px-4 text-gray-800 font-medium">
+          {product.brand}
+        </td>
+      </tr>
+    )}
+
+    {/* Tags */}
+    {product.tags.length > 0 && (
+      <tr className="hover:bg-gray-50 transition">
+        <td className="py-3 px-4 text-gray-500 font-medium">Tags</td>
+        <td className="py-3 px-4 flex flex-wrap gap-2">
+          {product.tags.map((tag: any, i: number) => (
+            <span
+              key={i}
+              className="px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded-md"
+            >
+              {tag.name}
+            </span>
+          ))}
+        </td>
+      </tr>
+    )}
+
+    {/* Dynamic Specifications */}
+    {product.specificationsList?.length > 0 &&
+      product.specificationsList.map((spec: any, index: number) => (
+        <tr key={index} className="hover:bg-gray-50 transition">
+          <td className="py-3 px-4 text-gray-500 font-medium">
+            {spec.key}
+          </td>
+          <td className="py-3 px-4 text-gray-800">
+            {spec.value}
+          </td>
+        </tr>
+      ))}
+  </tbody>
+</table>
             </div>
 
             {/* Features & Benefits + Care Instructions */}
@@ -1001,13 +1012,14 @@ export default function ProductDetailsPage({ productId }: any) {
       </div>
 
       {/* Customer Reviews */}
-      <div ref={reviewRef} className="space-y-4 mt-10">
+      {/* <div ref={reviewRef} className="space-y-4 mt-10">
         <h2 className="text-xl font-semibold">Customer Reviews</h2>
         <div className="space-y-4">
           {reviews.map((review, index) => (
             <Card key={index} className="border rounded-lg">
               <CardContent className="p-4">
-                {/* Name, Stars & Date */}
+     
+     
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold">{review.name}</span>
                   <div className="flex items-center text-yellow-500">
@@ -1024,7 +1036,8 @@ export default function ProductDetailsPage({ productId }: any) {
                   <span className="text-sm text-gray-500">{review.date}</span>
                 </div>
 
-                {/* Review Text */}
+               
+               
                 <p className="mt-2 text-gray-700 whitespace-pre-line">
                   {review.review}
                 </p>
@@ -1032,10 +1045,10 @@ export default function ProductDetailsPage({ productId }: any) {
             </Card>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* Available Vouchers */}
-      <div ref={voucherRef} className="w-full mx-auto mt-10">
+      {/* <div ref={voucherRef} className="w-full mx-auto mt-10">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <span className="text-xl">🔷</span> Available Vouchers
         </h2>
@@ -1044,7 +1057,7 @@ export default function ProductDetailsPage({ productId }: any) {
           {vouchers.map((voucher, idx) => (
             <Card key={idx} className="rounded-lg border border-gray-200">
               <div className="flex flex-col sm:flex-row justify-between">
-                {/* Left Side */}
+                
                 <div className="flex items-center flex-1 p-4">
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-semibold ${voucher.labelColor}`}
@@ -1063,7 +1076,7 @@ export default function ProductDetailsPage({ productId }: any) {
                   </div>
                 </div>
 
-                {/* Right Side */}
+               
                 <div className="flex justify-between md:flex-col items-center md:justify-center p-4 w-full sm:w-32 border-t sm:border-t-0 sm:border-l border-gray-200 sm:border-dashed">
                   <span className="font-bold text-lg">{voucher.code}</span>
                   <Button
@@ -1079,7 +1092,7 @@ export default function ProductDetailsPage({ productId }: any) {
             </Card>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* Related Products */}
       <NewArrivals />

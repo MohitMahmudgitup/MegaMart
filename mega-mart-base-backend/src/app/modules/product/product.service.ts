@@ -97,10 +97,55 @@ const getProductsByCategoryandTag = async (category: string, tag: string, slug: 
 
 const getSingleProductFromDB = async (id: string) => {
   const result = await ProductModel.findById(id)
-    .populate("brandAndCategories.brand")
-    .populate("brandAndCategories.categories")
-    .populate("brandAndCategories.tags");
-  return result;
+    .select("-vendorId -shopId") // ❌ remove vendorId, shopId
+    .populate({
+      path: "brandAndCategories.brand",
+      select: "name -_id", // ✅ only name
+    })
+    .populate({
+      path: "brandAndCategories.categories",
+      select: "name _id", // ✅ only name
+    })
+    .populate({
+      path: "brandAndCategories.tags",
+      select: "name -_id", // ✅ only name
+    });
+
+  if (!result) return null;
+
+  // 🔥 Manual cleanup
+  const obj = result.toObject();
+
+  return {
+    ...obj,
+
+    // description clean
+    description: {
+      name: obj.description?.name,
+      unit: obj.description?.unit,
+      description: obj.description?.description,
+      shortdescription: obj.description?.shortdescription,
+    },
+
+    // productInfo clean
+    productInfo: {
+      price: obj.productInfo?.price,
+      salePrice: obj.productInfo?.salePrice,
+      quantity: obj.productInfo?.quantity,
+      sku: obj.productInfo?.sku,
+      width: obj.productInfo?.width,
+      height: obj.productInfo?.height,
+      length: obj.productInfo?.length,
+      isExternal: obj.productInfo?.isExternal,
+      external: obj.productInfo?.external,
+    },
+
+    // specifications clean
+    specifications: obj.specifications?.map((spec: any) => ({
+      key: spec.key,
+      value: spec.value,
+    })),
+  };
 };
 
 const updateProductOnDB = async (
@@ -299,6 +344,7 @@ const productcollection = async () => {
   const products = await ProductModel.find()
     .populate("brandAndCategories.categories", "name")
     .populate("brandAndCategories.tags", "name")
+    .populate("brandAndCategories.brand", "name")
     .select(
       "featuredImg description.name  productInfo.price productInfo.salePrice"
     )

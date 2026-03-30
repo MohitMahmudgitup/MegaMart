@@ -10,7 +10,7 @@ export default function Home() {
     <div className="space-y-4  md:space-y-16 lg:space-y-20 2xl:px-0 md:px-8 px-0 ">
 
       <ProductCollection />
-      <div className=" bg-white md:rounded-lg  p-4 ">
+      <div className=" bg-white md:rounded-lg  px-4 pb-4">
         <BestSeller />
       </div>
       <DiscountBanner />
