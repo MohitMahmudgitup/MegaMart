@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
-import phone from '../../../public/phone.png'
 
 export default function MonetizePage() {
   return (
@@ -34,14 +33,14 @@ export default function MonetizePage() {
           {/* Right Content - Dashboard Mockup */}
           <div className="relative flex justify-center mt-8 lg:mt-0">
             <div className="relative w-full max-w-md sm:max-w-lg lg:max-w-xl">
-              <Image
+              {/* <Image
                 src={phone}
                 alt="Megamart Dashboard Interface showing mobile and desktop views"
                 width={600}
                 height={400}
                 className="w-full "
                 priority
-              />
+              /> */}
             </div>
           </div>
         </div>
