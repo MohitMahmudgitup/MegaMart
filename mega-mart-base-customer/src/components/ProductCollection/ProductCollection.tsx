@@ -21,7 +21,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Grid, List, Filter } from "lucide-react";
-import { useGetAllProductsQuery } from "@/redux/featured/product/productApi";
+import { useProductcollectionsQuery } from "@/redux/featured/product/productApi";
 import Link from "next/link";
 import { ProductCollectionSkeleton } from "./ProductCollectionSkeleton";
 
@@ -209,8 +209,8 @@ function FilterPanel({
               className="w-full"
             />
             <div className="flex justify-between text-sm text-muted-foreground">
-              <span>BDT{priceRange[0]}.00</span>
-              <span>BDT{priceRange[1]}.00</span>
+              <span>{priceRange[0]}৳</span>
+              <span>{priceRange[1]}৳</span>
             </div>
           </div>
         </CardContent>
@@ -292,7 +292,7 @@ function FilterPanel({
   );
 }
 export function ProductCollection() {
-  const { data, isLoading, error } = useGetAllProductsQuery({});
+  const { data, isLoading, error } = useProductcollectionsQuery({});
   const [productData, setProductData] = useState<Product[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -448,11 +448,11 @@ export function ProductCollection() {
       </div>
     );
   }
-   const slugify = (text: string) => {
+  const slugify = (text: string) => {
     return text
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^\w-]+/g, "");
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^\w-]+/g, "");
   }
 
 
@@ -575,18 +575,17 @@ export function ProductCollection() {
 
             {/* Products Grid */}
             {sortedProducts.length > 0 ? (
-<div
-  className={`md:bg-white block md:grid md:p-4 md:rounded-lg gap-2 md:gap-6
-    ${
-      viewMode === "grid"
-        ? "columns-2 md:columns-none md:grid-cols-3"
-        : "columns-1"
-    }`}
->
+              <div
+                className={`md:bg-white block md:grid md:p-4 md:rounded-lg gap-2 md:gap-6
+    ${viewMode === "grid"
+                    ? "columns-2 md:columns-none md:grid-cols-3"
+                    : "columns-1"
+                  }`}
+              >
 
 
                 {sortedProducts.map((product) => (
-                    
+
                   <Card
                     key={product._id}
                     className={`overflow-hidden mb-2 md:md-0  border transition-shadow hover:shadow-sm
@@ -650,7 +649,7 @@ export function ProductCollection() {
                             )}
                           </div>
                         </div>
-                       
+
 
                         {/* Actions */}
                         <div className="flex flex-col sm:flex-row gap-3">

@@ -3,7 +3,7 @@ import sendResponse from "../../utils/sendResponse";
 import httpStatus from "http-status";
 import { productServices } from "./product.service";
 
-const getAllProduct = catchAsync(async (req, res) => {
+export const getAllProduct = catchAsync(async (req, res) => {
   const {data, meta} = await productServices.getAllProductFromDB(req.query as Record<string, string>);
 
   sendResponse(res, {
@@ -15,7 +15,7 @@ const getAllProduct = catchAsync(async (req, res) => {
   });
 });
 
-const getProductsByCategoryandTag = catchAsync(async (req, res) => {
+export const getProductsByCategoryandTag = catchAsync(async (req, res) => {
   const { category, tag,slug } = req.query;
   
   const result = await productServices.getProductsByCategoryandTag(
@@ -32,7 +32,7 @@ const getProductsByCategoryandTag = catchAsync(async (req, res) => {
   });
  })
 
-const getSingleProduct = catchAsync(async (req, res) => {
+export const getSingleProduct = catchAsync(async (req, res) => {
   const id = req.params.id;
   const productId = id.split("-").pop();
   const result = await productServices.getSingleProductFromDB(productId as string);
@@ -45,7 +45,7 @@ const getSingleProduct = catchAsync(async (req, res) => {
   });
 });
 
-const createProduct = catchAsync(async (req, res) => {
+export const createProduct = catchAsync(async (req, res) => {
   const files = req.files as {
     [fieldname: string]: Express.Multer.File[];
   };
@@ -68,7 +68,7 @@ const createProduct = catchAsync(async (req, res) => {
   });
 });
 
-const updateProduct = catchAsync(async (req, res) => {
+export const updateProduct = catchAsync(async (req, res) => {
   const { id } = req.params;
 
   const files = req.files as {
@@ -98,7 +98,7 @@ const updateProduct = catchAsync(async (req, res) => {
 });
 
 
-const deleteProduct = catchAsync(async (req, res) => {
+export const deleteProduct = catchAsync(async (req, res) => {
   await productServices.deleteProduct(req.params.id);
 
   sendResponse(res, {
@@ -109,7 +109,7 @@ const deleteProduct = catchAsync(async (req, res) => {
   });
 });
 
-const inventoryStats = catchAsync(async (req, res) => {
+export const inventoryStats = catchAsync(async (req, res) => {
  const result = await productServices.inventoryStats(req.params.id);
 
   sendResponse(res, {
@@ -121,7 +121,7 @@ const inventoryStats = catchAsync(async (req, res) => {
 });
 
 
-const bestSellingProducts = catchAsync(async (req, res) => {
+export const bestSellingProducts = catchAsync(async (req, res) => {
   const result = await productServices.bestSellingProducts(req.query.category as string);
 
   sendResponse(res, {
@@ -133,8 +133,8 @@ const bestSellingProducts = catchAsync(async (req, res) => {
 });
 
 
-
-const NewArrivalsListData = catchAsync(async (req, res) => {
+// --------------------------------------------data manager--------------------------------------------------
+export const newArrivalsListData = catchAsync(async (req, res) => {
   const result = await productServices.NewArrivalsListData();
   sendResponse(res, {
     success: true,
@@ -144,20 +144,13 @@ const NewArrivalsListData = catchAsync(async (req, res) => {
   });
 });
 
+export const productcollections = catchAsync(async (req, res) => {
+  const result = await productServices.productcollection();
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.CREATED,
+    message: 'Product collection retrieved successfully!',
+    data: result,
+  });
+});
 
-
-
-
-
-
-export const productControllers = {
-  createProduct,
-  getSingleProduct,
-  getAllProduct,
-  updateProduct,
-  getProductsByCategoryandTag,
-  deleteProduct,
-  inventoryStats,
-  bestSellingProducts,
-  NewArrivalsListData
-};

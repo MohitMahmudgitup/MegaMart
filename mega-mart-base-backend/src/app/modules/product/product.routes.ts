@@ -1,6 +1,6 @@
 import express from "express";
 import validateRequest from "../../middlewares/validateRequest";
-import { productControllers } from "./product.controller";
+import { bestSellingProducts, createProduct, deleteProduct, getAllProduct, getProductsByCategoryandTag, getSingleProduct, inventoryStats, newArrivalsListData, productcollections, updateProduct     } from "./product.controller";
 import { createProductZodSchema, updateProductZodSchema } from "./product.validations";
 import { multerUpload } from "../../config/multer.config";
 
@@ -13,13 +13,13 @@ router.post(
     { name: 'featuredImgFile', maxCount: 1 },
   ]),
   validateRequest(createProductZodSchema),
-  productControllers.createProduct
+  createProduct
 );
-router.get("/", productControllers.getAllProduct);
-router.get('/best-selling-products', productControllers.bestSellingProducts);
-router.get('/products/by', productControllers.getProductsByCategoryandTag)
-router.get('/inventory/stats', productControllers.inventoryStats);
-router.get("/:id", productControllers.getSingleProduct);
+router.get("/", getAllProduct);
+router.get('/best-selling-products', bestSellingProducts);
+router.get('/products/by', getProductsByCategoryandTag)
+router.get('/inventory/stats', inventoryStats);
+router.get("/:id", getSingleProduct);
 router.patch(
   '/update-product/:id',
   multerUpload.fields([
@@ -27,14 +27,15 @@ router.patch(
     { name: 'featuredImgFile', maxCount: 1 },
   ]),
   validateRequest(updateProductZodSchema),
-  productControllers.updateProduct
+  updateProduct
 );
 
 
-router.delete('/delete-product/:id', productControllers.deleteProduct);
+router.delete('/delete-product/:id', deleteProduct);
 // ---------------------------------------- data Manager ------------------------------------------------
 
-router.get('/type/new-arrivals', productControllers.NewArrivalsListData);
+router.get('/type/new-arrivals', newArrivalsListData);
+router.get('/type/product-collection', productcollections);
 
 
 

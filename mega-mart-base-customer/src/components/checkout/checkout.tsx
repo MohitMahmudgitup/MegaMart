@@ -925,7 +925,7 @@ export default function CheckoutPage() {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {/* SSL Commerz Option */}
-                      <button
+                      {/* <button
                         type="button"
                         onClick={() => setPaymentMethod('card')}
                         className={`relative rounded-xl border-2 p-4 text-left transition-all duration-200 hover:shadow-md ${
@@ -974,7 +974,7 @@ export default function CheckoutPage() {
                             <CheckCircle2 className="w-5 h-5 text-orange-500" />
                           </div>
                         )}
-                      </button>
+                      </button> */}
 
                       {/* Cash on Delivery Option */}
                       <button
@@ -1298,10 +1298,10 @@ export default function CheckoutPage() {
                                   {/* Price */}
                                   <div className="text-right">
                                     <p className="text-base font-bold text-gray-900">
-                                      ${(item?.productId[0]?.productInfo?.salePrice * item?.quantity).toFixed(2)}
+                                      ৳{(item?.productId[0]?.productInfo?.salePrice * item?.quantity).toFixed(2)}
                                     </p>
                                     <p className="text-xs text-gray-500">
-                                      ${item?.productId[0]?.productInfo?.salePrice} each
+                                      ৳{item?.productId[0]?.productInfo?.salePrice} each
                                     </p>
                                   </div>
                                 </div>
@@ -1375,7 +1375,7 @@ export default function CheckoutPage() {
                     <span className="text-sm font-medium text-gray-900">Select Shipping Location</span>
                     {shipping.shippingLocation && (
                       <span className="text-xs text-orange-600 font-medium">
-                        ${shipping.shippingCharge}
+                        ৳{shipping.shippingCharge}
                       </span>
                     )}
                   </div>
@@ -1403,7 +1403,7 @@ export default function CheckoutPage() {
                           <p className="text-xs text-gray-500">Inside Dhaka city</p>
                         </div>
                       </div>
-                      <span className="text-sm font-semibold text-gray-900">$70</span>
+                      <span className="text-sm font-semibold text-gray-900">৳70</span>
                     </label>
 
                     {/* Outside Dhaka Option */}
@@ -1428,19 +1428,19 @@ export default function CheckoutPage() {
                           <p className="text-xs text-gray-500">Rest of Bangladesh</p>
                         </div>
                       </div>
-                      <span className="text-sm font-semibold text-gray-900">$120</span>
+                      <span className="text-sm font-semibold text-gray-900">৳120</span>
                     </label>
                   </div>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="text-gray-900">${subTotal.toFixed(2)}</span>
+                  <span className="text-gray-900">৳{subTotal.toFixed(2)}</span>
                 </div>
                 {/* Shipping Cost Display */}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping</span>
                   {shipping.shippingCharge > 0 ? (
-                    <span className="text-gray-900 font-medium">${shipping.shippingCharge}</span>
+                    <span className="text-gray-900 font-medium">৳{shipping.shippingCharge}</span>
                   ) : (
                     <span className="text-amber-600 text-xs">Please select location</span>
                   )}
@@ -1458,14 +1458,14 @@ export default function CheckoutPage() {
                         ({appliedCoupon.code})
                       </span>
                     </span>
-                    <span className="text-green-600 font-semibold">-${discount.toFixed(2)}</span>
+                    <span className="text-green-600 font-semibold">-৳{discount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="border-t pt-3">
                   <div className="flex justify-between font-medium">
                     <span className="text-gray-900">Total</span>
                     <span className="text-gray-900 text-lg">
-                      ${(subTotal + shipping.shippingCharge - discount).toFixed(2)}
+                      ৳{(subTotal + shipping.shippingCharge - discount).toFixed(2)}
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Including VAT</p>

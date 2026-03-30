@@ -314,6 +314,22 @@ const NewArrivalsListData = async () => {
   return products;
 };
 
+
+const productcollection = async () => {
+  const products = await ProductModel.find()
+    .populate("brandAndCategories.categories", "name")
+    .populate("brandAndCategories.tags", "name")
+    .select(
+      "featuredImg description.name  productInfo.price productInfo.salePrice"
+    )
+    .lean();
+
+  return products;
+};
+
+
+
+
 export const productServices = {
   createProductOnDB,
   getSingleProductFromDB,
@@ -323,5 +339,6 @@ export const productServices = {
   deleteProduct,
   inventoryStats,
   bestSellingProducts,
-  NewArrivalsListData
+  NewArrivalsListData,
+  productcollection
 };
