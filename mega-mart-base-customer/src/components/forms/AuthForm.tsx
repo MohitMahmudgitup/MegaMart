@@ -25,7 +25,6 @@ type FormData = {
 
 export default function AuthForm({ type }: AuthFormProps) {
   const { data: settings} = useGetSettingsQuery();
-  console.log(settings)
   const [forgotPassword, setForgotPassword] = useState(false);
 
   const site: any = settings?.[0];
@@ -135,10 +134,7 @@ export default function AuthForm({ type }: AuthFormProps) {
 
                 {/* Remember + Forgot */}
                 <div className="flex justify-between items-center text-sm">
-                  {/* <label className="flex items-center gap-2">
-                    <input type="checkbox" className="accent-black" />
-                    Remember me
-                  </label> */}
+          
                   {type === 'login' && (
                     <div onClick={() => setForgotPassword(true)} className="hover:underline cursor-pointer text-blue-600">
                       Forgot password?

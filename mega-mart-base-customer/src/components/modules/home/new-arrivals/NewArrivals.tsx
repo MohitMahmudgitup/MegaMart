@@ -3,9 +3,8 @@ import React, { useEffect } from "react";
 import SectionHeader from "./SectionHeader";
 import { useMemo, useState } from "react";
 import NewArrivalsCard from "@/components/cards/NewArrivalsCard";
-import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
-import { useGetAllProductsQuery } from "@/redux/featured/product/productApi";
+
+import { useNewArrivalsListDataQuery } from "@/redux/featured/product/productApi";
 import Link from "next/link";
 import { NewArrivalsSkeleton } from "./NewArrivalsSkeleton";
 
@@ -37,7 +36,7 @@ interface Product {
 
 
 const NewArrivals = () => {
-  const { data, isLoading } = useGetAllProductsQuery({});
+  const { data, isLoading } = useNewArrivalsListDataQuery();
   const [tab, setTab] = useState<string>("");
 
   const categoryTabs = useMemo(() => {
@@ -96,8 +95,6 @@ const NewArrivals = () => {
 
   return (
     < div className="py-6">
-
-
       <SectionHeader
         title="New Arrivals"
         tabs={categoryTabs}

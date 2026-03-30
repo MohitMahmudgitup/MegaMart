@@ -32,6 +32,9 @@ router.patch(
 
 
 router.delete('/delete-product/:id', productControllers.deleteProduct);
+// ---------------------------------------- data Manager ------------------------------------------------
+
+router.get('/type/new-arrivals', productControllers.NewArrivalsListData);
 
 
 

@@ -132,6 +132,24 @@ const bestSellingProducts = catchAsync(async (req, res) => {
   });
 });
 
+
+
+const NewArrivalsListData = catchAsync(async (req, res) => {
+  const result = await productServices.NewArrivalsListData();
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.CREATED,
+    message: 'New Arrivals retrieved successfully!',
+    data: result,
+  });
+});
+
+
+
+
+
+
+
 export const productControllers = {
   createProduct,
   getSingleProduct,
@@ -140,5 +158,6 @@ export const productControllers = {
   getProductsByCategoryandTag,
   deleteProduct,
   inventoryStats,
-  bestSellingProducts
+  bestSellingProducts,
+  NewArrivalsListData
 };

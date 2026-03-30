@@ -49,6 +49,14 @@ const productApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: { data: any }) => response.data,
     }),
+
+    newArrivalsListData: builder.query<any, void>({
+      query: () => ({
+        url: "/product/type/new-arrivals",
+        method: "GET",
+      }),
+      transformResponse: (response: { data: any }) => response.data,
+    }),
   }),
 });
 
@@ -59,4 +67,6 @@ export const {
   useCreateProductMutation,
   useGetAllProductsbyCategoryNameQuery,
   useGetBestSellingProductsQuery,
+  useLazyGetBestSellingProductsQuery,
+  useNewArrivalsListDataQuery,
 } = productApi;

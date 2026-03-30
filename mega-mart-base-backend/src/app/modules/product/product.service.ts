@@ -2,6 +2,7 @@ import { deleteImageFromCLoudinary } from "../../config/cloudinary.config";
 import AppError from "../../errors/handleAppError";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { OrderModel } from "../order/order.model";
+import { TagModel } from "../tags/tags.model";
 import { ProductSearchableFields } from "./product.const";
 import { TProduct } from "./product.interface";
 import { ProductModel } from "./product.model";
@@ -297,6 +298,21 @@ export const bestSellingProducts = async (
   return result;
 };
 
+// -------------------------------------------------------------data Manager ------------------------------------------------
+const NewArrivalsListData = async () => {
+  const tag = await TagModel.findOne({ slug: "New-Arrivals" }).lean();
+  if (!tag) return [];
+  const products = await ProductModel.find({
+    "brandAndCategories.tags": tag._id
+  })
+  .populate("brandAndCategories.categories", "name")
+    .select(
+      "featuredImg description.name description.description productInfo.price productInfo.salePrice"
+    )
+    .lean();
+
+  return products;
+};
 
 export const productServices = {
   createProductOnDB,
@@ -306,5 +322,6 @@ export const productServices = {
   getProductsByCategoryandTag,
   deleteProduct,
   inventoryStats,
-  bestSellingProducts
+  bestSellingProducts,
+  NewArrivalsListData
 };
