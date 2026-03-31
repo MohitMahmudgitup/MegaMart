@@ -7,11 +7,18 @@ import { bannerServices } from "./banner.service";
 
 
 const createBanner = catchAsync(async (req, res) => {
+  console.log("file:", req.file);
+
+  if (!req.file) {
+    throw new Error("Image is required");
+  }
+
   const bannerData = {
     ...req.body,
-    image: req.file?.path,
+    image: req.file.path,
     discount: Number(req.body.discount),
   };
+
   const result = await bannerServices.createBannerFromDB(bannerData);
 
   sendResponse(res, {

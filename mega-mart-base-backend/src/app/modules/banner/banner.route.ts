@@ -12,6 +12,7 @@ const router = Router()
 
 
 router.post('/create', multerUpload.single('image'), validateRequest(createBannerSchema), bannerController.createBanner)
+
 router.patch(
   '/update/:id',
   multerUpload.single('image'),
