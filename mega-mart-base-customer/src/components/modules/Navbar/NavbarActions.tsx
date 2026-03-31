@@ -27,6 +27,7 @@ import { selectCustomer } from "@/redux/featured/customer/customerSlice";
 import CartSidebar from "@/components/navBer/CartSidebar";
 import { Badge } from "@/components/ui/badge";
 import PopupProduct from "@/components/modules/Navbar/PopupProduct";
+import PopupProductmobile from "./PopupProductmobile";
 
 // TypeScript types
 interface CartItem {
@@ -47,15 +48,13 @@ type NavbarActionsProps = {
   setHideSearch: React.Dispatch<React.SetStateAction<boolean>>;
   searchQuery: string;
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+  searchOpen: boolean;
+  setSearchOpen: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch , searchQuery, setSearchQuery }) => {
+const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch , searchQuery, setSearchQuery , searchOpen, setSearchOpen  }) => {
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
-  const [searchOpen, setSearchOpen] = useState<boolean>(false);
-
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
-
-
   const customerData: Customer = useAppSelector(selectCustomer) || {};
   const cartItems = customerData?.cartItem?.[0]?.productInfo || [];
   const currentUser: CurrentUser | null = useAppSelector(selectCurrentUser);
@@ -95,10 +94,15 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
     <div className="flex items-center gap-2 relative">
       {/* Search */}
       <div className="relative flex items-center z-50  ">
-        <div className={`cursor-pointer  rounded-full transition  ${hideSearch ? "block" : " hidden md:block" } `}
+        <div className={`cursor-pointer  rounded-full transition  md:block hidden `}
           onClick={() =>  handaleSearchOpen()}
         >
           {searchOpen ? <X size={18} /> : <Search size={18} />}
+        </div>
+         <div className={`cursor-pointer  rounded-full transition  ${hideSearch ? "block" : " hidden md:block" } `}
+          onClick={() =>  handaleSearchOpen()}
+        >
+           <Search size={18} />
         </div>
 
         <AnimatePresence>
@@ -282,8 +286,8 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
 
       {searchQuery.length > 0 && searchOpen && (
 
-        <div
-          className="fixed inset-0 z-40 flex items-start justify-center bg-black/40 pt-14 overflow-y-auto"
+     
+          <div className="fixed inset-0 z-40  items-start justify-center bg-black/40 overflow-y-auto pt-14 md:flex hidden "
           onClick={() => setSearchOpen(false)}
         >
           <PopupProduct
@@ -293,6 +297,19 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
         </div>
 
       )}
+      {searchQuery.length > 0  && searchOpen && (
+
+        <div
+          className="fixed inset-0 z-40 flex items-start justify-center  mt-27 overflow-y-auto md:hidden "
+          onClick={() => setSearchOpen(false)}
+        >
+          <PopupProductmobile
+            onClose={() => setSearchOpen(false)}
+            setSearchQuery={setSearchQuery}
+          />
+        </div>
+
+       )} 
 
 
     </div>

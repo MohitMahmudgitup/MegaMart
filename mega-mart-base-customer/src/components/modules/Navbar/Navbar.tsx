@@ -18,7 +18,7 @@ import { setCustomer } from "@/redux/featured/customer/customerSlice";
 import { useGetMeQuery } from "@/redux/featured/auth/authApi";
 import { useGetAllCategoryQuery } from "@/redux/featured/category/categoryApi";
 import CategoryList from "./CategoryList";
-import { Search } from "lucide-react";
+import { Search , X } from "lucide-react";
 
 export interface MegaMenuItem {
   title: string;
@@ -53,6 +53,7 @@ const Navbar = ({
     const handleScroll = () => {
       if (window.scrollY > lastScrollY && window.scrollY > 50) {
         setHideSearch(true);
+        setSearchOpen(false);
       }
       if (window.scrollY < lastScrollY && window.scrollY < 50) {
         setHideSearch(false);
@@ -108,6 +109,19 @@ const Navbar = ({
     Categories: categoriesData,
   };
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchOpen, setSearchOpen] = useState<boolean>(false);
+  console.log(searchOpen)
+  const handaleSearchOpen = () => {
+    setSearchOpen(true);
+    setHideSearch(false);
+  }
+  const handaleSearchOpenX = () => {
+    setSearchOpen(true);
+    setHideSearch(true);
+    setSearchQuery("");
+  }
+ 
+
   return (
     <nav className={`w-full fixed top-0 z-50 2xl:px-0 md:px-8 px-0 ${hideSearch ? "" : "bg-white rounded-xl md:bg-transparent md:rounded-none"}`}>
       <div className={`2xl:max-w-7xl  bg-white mx-auto px-2 md:px-4 lg:px-6 sm:py-3   ${hideSearch ? "rounded-xl py-2 " : "rounded-t-xl md:rounded-xl p-2"}`}>
@@ -138,6 +152,9 @@ const Navbar = ({
             setHideSearch={setHideSearch}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
+            searchOpen={searchOpen}
+            setSearchOpen={setSearchOpen}
+
           />
         </div>
 
@@ -150,7 +167,7 @@ const Navbar = ({
             : "opacity-100 translate-y-0 rounded-b-xl bg-white "
           }`}
       >
-        <div className="flex items-center gap-2 pr-1 pl-4 py-1 bg-[#F3F3F6] rounded-full">
+        <div className="flex items-center gap-2 pr-1 pl-4 py-1 bg-[#F3F3F6] rounded-full" onClick={handaleSearchOpen} >
 
           <input
             type="text"
@@ -158,10 +175,11 @@ const Navbar = ({
             className="w-full outline-none text-sm bg-transparent placeholder:text-gray-400"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            
           />
 
-          <div className="p-2 rounded-full bg-white hover:bg-zinc-200 cursor-pointer transition">
-            <Search className="w-5 h-5 text-black" />
+          <div className="p-2 rounded-full bg-white hover:bg-zinc-200 cursor-pointer transition"  onClick={handaleSearchOpenX}>
+            { searchOpen ? <X className="w-5 h-5 text-black"  /> : <Search className="w-5 h-5 text-black" />}
           </div>
 
         </div>
