@@ -42,11 +42,17 @@ interface CurrentUser {
   name?: string | null;
   email?: string | null;
 }
+type NavbarActionsProps = {
+  hideSearch: boolean;
+  setHideSearch: React.Dispatch<React.SetStateAction<boolean>>;
+  searchQuery: string;
+  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+};
 
-const NavbarActions: React.FC = () => {
+const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch , searchQuery, setSearchQuery }) => {
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
+
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
 
@@ -79,14 +85,18 @@ const NavbarActions: React.FC = () => {
 
   // Helper to get safe string
   const safeString = (value: string | null | undefined) => value || "";
+  const handaleSearchOpen = () => {
+    setSearchOpen(!searchOpen);
+    setHideSearch(false);
+  }
 
+  
   return (
-    <div className="flex items-center gap-3 relative">
+    <div className="flex items-center gap-2 relative">
       {/* Search */}
       <div className="relative flex items-center z-50  ">
-        <div className="cursor-pointer p-2 rounded-full transition bg-zinc-100 hover:bg-zinc-200"
-
-          onClick={() => setSearchOpen(!searchOpen)}
+        <div className={`cursor-pointer  rounded-full transition  ${hideSearch ? "block" : " hidden md:block" } `}
+          onClick={() =>  handaleSearchOpen()}
         >
           {searchOpen ? <X size={18} /> : <Search size={18} />}
         </div>
@@ -106,7 +116,7 @@ const NavbarActions: React.FC = () => {
               transition={{ duration: 0.3 }}
               className="absolute bg-white px-3 py-1 border rounded-lg text-sm outline-none
                  -left-40 sm:-left-52
-                 w-[150px] sm:w-[200px]"
+                 w-[150px] sm:w-[200px] md:block hidden"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -240,12 +250,12 @@ const NavbarActions: React.FC = () => {
         </DropdownMenu>
 
       ) : (
-        <div className="flex md:h-12 h-9 relative md:w-52 w-32   rounded-full ">
+        <div className="flex md:h-12 h-9   relative md:w-52 w-18   rounded-full ">
           <Link href="/auth/register">
             <Button
               size="sm"
               variant="secondary"
-              className="rounded-l-full px-3 md:pl-6 pl-4 md:pr-9 pr-4 h-full py-0 absolute  md:right-20 right-14  md:py-2 text-xs md:text-sm"
+              className="rounded-l-full px-3 md:pl-6 pl-4 md:pr-9 pr-4 h-full py-0 absolute sm:block hidden  md:right-20 right-14  md:py-2 text-xs md:text-sm"
             >
               <p className=" text-xs md:text-sm">Sign Up</p>
 

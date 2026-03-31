@@ -12,7 +12,7 @@ const DashboardLayout = ({ children , showSidebar }: { children: React.ReactNode
      <div className="bg-[#5f63684b] w-[500px] h-[500px] absolute rounded-full -left-90 top-[800px] -z-10 "></div> */}
 
       <Navbar showSidebar={showSidebar} />
-      <div className="2xl:max-w-7xl 2xl:px-0 md:px-8 px-0 mx-auto min-h-screen pt-20">
+      <div className="2xl:max-w-7xl 2xl:px-0 md:px-8 px-0 mx-auto min-h-screen sm:pt-20 pt-28.5">
         {children}
       </div>
       <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden">
