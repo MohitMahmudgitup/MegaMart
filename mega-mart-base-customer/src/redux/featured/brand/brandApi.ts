@@ -30,6 +30,14 @@
         }),
         transformResponse: (response: { data: any }) => response.data,
       }),
+
+
+      getsliderImage: builder.query<any, void>({
+        query: () => ({
+          url: "/brand/type/slider-images",
+          method: "GET",
+        }),
+      }),
     }),
   });
 
@@ -38,4 +46,6 @@
     useGetSingleBrandQuery,
     useLazyGetSingleBrandQuery,
     useCreateBrandMutation,
+    useUpdateBrandMutation,
+    useGetsliderImageQuery,
   } = brandApi;

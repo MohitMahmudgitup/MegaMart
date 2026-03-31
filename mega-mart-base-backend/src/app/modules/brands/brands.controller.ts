@@ -156,6 +156,18 @@ const getProductsByBrand = catchAsync(async (req, res) => {
   });
 });
 
+// ------------------------------ data managemant-------------------------------
+const getsliderImage = catchAsync(async (req, res) => {
+  const result = await brandServices.getProductsByBrand( );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Brands retrieve successfully!',
+    data: result,
+  });
+})
+
 export const brandsControllers = {
   getAllBrands,
   getSingleBrand,
@@ -163,4 +175,5 @@ export const brandsControllers = {
   updateBrand,
   deleteBrand,
   getProductsByBrand,
+  getsliderImage
 };

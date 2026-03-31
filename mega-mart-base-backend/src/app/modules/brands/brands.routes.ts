@@ -34,4 +34,6 @@ router.patch(
 router.get('/products/:id', brandsControllers.getProductsByBrand);
 router.delete('/delete/:id', brandsControllers.deleteBrand);
 
+router.get('/type/slider-images', brandsControllers.getsliderImage);
+
 export const BrandRoutes = router;

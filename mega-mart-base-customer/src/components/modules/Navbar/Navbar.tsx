@@ -110,7 +110,6 @@ const Navbar = ({
   };
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
-  console.log(searchOpen)
   const handaleSearchOpen = () => {
     setSearchOpen(true);
     setHideSearch(false);

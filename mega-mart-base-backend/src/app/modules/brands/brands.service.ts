@@ -59,10 +59,16 @@ export const DeleteBrandOnDB = async (id: string) => {
   return updatedBrand;
 };
 
+const getProductsByBrand = async () => {
+    const result = await BrandModel.find({}, { "images.image": 1, _id: 0 });
+  return result;
+}
+
 export const brandServices = {
   getAllBrandsFromDB,
   getSingleBrandFromDB,
   createBrandOnDB,
   updateBrandOnDB,
   DeleteBrandOnDB,
+  getProductsByBrand
 };

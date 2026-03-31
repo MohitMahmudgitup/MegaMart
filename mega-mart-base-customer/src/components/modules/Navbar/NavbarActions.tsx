@@ -94,11 +94,12 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
     <div className="flex items-center gap-2 relative">
       {/* Search */}
       <div className="relative flex items-center z-50  ">
-        <div className={`cursor-pointer  rounded-full transition  block md:hidden `}
+        {/* <div className={`cursor-pointer  rounded-full transition  hidden `}
           onClick={() =>  handaleSearchOpen()}
         >
           {searchOpen ? <X size={18} /> : <Search size={18} />}
-        </div>
+        </div> */}
+
          <div className={`cursor-pointer  rounded-full transition  ${hideSearch ? "block" : " hidden md:block" } `}
           onClick={() =>  handaleSearchOpen()}
         >
