@@ -109,7 +109,7 @@ export default function ShoppingPage() {
       </div>
 
       {/* Icons & Auth buttons */}
-      <NavbarActions />
+      {/* <NavbarActions /> */}
     </div>
   );
 }
