@@ -53,6 +53,14 @@ const productApi = baseApi.injectEndpoints({
       
       transformResponse: (response: { message: string }) => response,
     }),
+
+    getSingleEditProduct: builder.query<IProduct, string>({
+      query: id => ({
+        url: `/product/edit/${id}`,
+        method: 'GET',
+      }),
+      transformResponse: (response: { data: IProduct }) => response.data,
+    }),
   }),
 });
 
@@ -62,5 +70,6 @@ export const {
   useCreateProductMutation,
   useDeleteProductMutation,
   useUpdateProductMutation,
-  useProductInventoryQuery
+  useProductInventoryQuery,
+  useGetSingleEditProductQuery
 } = productApi;

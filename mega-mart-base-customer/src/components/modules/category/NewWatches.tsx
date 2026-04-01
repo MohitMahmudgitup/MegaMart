@@ -48,6 +48,7 @@ interface NewWatchesProps {
 }
 
 export default function NewWatches({ data = [] }: NewWatchesProps) {
+  console.log(data)
   if (!data || data.length === 0) {
     return null;
   }

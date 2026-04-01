@@ -154,3 +154,17 @@ export const productcollections = catchAsync(async (req, res) => {
   });
 });
 
+
+export const getSingleEditProduct = catchAsync(async (req, res) => {
+  const id = req.params.id;
+  const productId = id.split("-").pop();
+  const result = await productServices.getSingleEditProductFromDB(productId as string);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Product retrieve successfully!",
+    data: result,
+  });
+});
+

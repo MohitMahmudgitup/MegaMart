@@ -39,6 +39,7 @@ import {
 import { updateProductZodSchema } from "./formSchema"; // Assuming this path is correct
 import {
   useGetSingleProductQuery,
+  useGetSingleEditProductQuery,
   useUpdateProductMutation,
 } from "@/redux/featured/products/productsApi";
 import toast from "react-hot-toast";
@@ -79,7 +80,8 @@ export default function EditProductForm({ id }: { id: string }) {
   const dispatch = useAppDispatch();
 
   const { data: editableProduct, isLoading: isProductLoading } =
-    useGetSingleProductQuery(id);
+    useGetSingleEditProductQuery(id);
+    console.log(editableProduct)
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
 
   const { data: categoriesDatau, isLoading: isCategoriesLoading } =

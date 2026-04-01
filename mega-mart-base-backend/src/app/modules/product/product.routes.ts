@@ -1,8 +1,9 @@
 import express from "express";
 import validateRequest from "../../middlewares/validateRequest";
-import { bestSellingProducts, createProduct, deleteProduct, getAllProduct, getProductsByCategoryandTag, getSingleProduct, inventoryStats, newArrivalsListData, productcollections, updateProduct     } from "./product.controller";
+import { bestSellingProducts, createProduct, deleteProduct, getAllProduct, getProductsByCategoryandTag,getSingleEditProduct, getSingleProduct, inventoryStats, newArrivalsListData, productcollections, updateProduct     } from "./product.controller";
 import { createProductZodSchema, updateProductZodSchema } from "./product.validations";
 import { multerUpload } from "../../config/multer.config";
+
 
 const router = express.Router();
 
@@ -36,6 +37,7 @@ router.delete('/delete-product/:id', deleteProduct);
 
 router.get('/type/new-arrivals', newArrivalsListData);
 router.get('/type/product-collection', productcollections);
+router.get('/edit/:id', getSingleEditProduct);
 
 
 

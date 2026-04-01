@@ -13,158 +13,154 @@ import Discount from "./Discount";
 import SaveMoreSection from "./SaveMoreSection";
 import AppPromo from "./AppPromo";
 import { skipToken } from "@reduxjs/toolkit/query";
-import type { Metadata } from "next";
+import { useMemo } from "react";
 import { BestSellingSkeleton } from "./BestSellingSkeleton";
 import { NewWatchesSkeleton } from "./NewWatchesSkeleton";
 import { DiscountSkeleton } from "./DiscountSkeleton";
-import { useMemo } from "react";
-
-export const metadata: Metadata = {
-  title: "Category",
-};
-
-interface Category {
-  _id: string;
-  name: string;
-  slug: string;
-  details?: string;
-  bannerImg?: string;
-  isFeatured?: boolean;
-  [key: string]: any;
-}
 
 export default function CategoryRouteSection({ slug }: { slug: string }) {
-  const { data: products, isLoading: productsLoading } = useGetAllProductsbyCategoryNameQuery(
-    slug ? { slug } : skipToken
-  );
+  const decodedSlug = decodeURIComponent(slug);
 
-  const { data: bestSellingProducts, isLoading: bestSellingLoading } = useGetBestSellingProductsQuery(
-    slug === "all" ? {} : { category: slug }
-  );
+  const { data: categories, isLoading: categoriesLoading } =
+    useGetAllCategoryQuery();
 
-  const { data: categories, isLoading: categoriesLoading } = useGetAllCategoryQuery();
+  // ✅ FIND CATEGORY OR SUBCATEGORY + PARENT SLUG
+  const { matchedCategory, parentSlug } = useMemo(() => {
+    if (!categories) return { matchedCategory: null, parentSlug: slug };
 
-  const decodedSlug = decodeURIComponent(slug as string);
+    for (const cat of categories) {
+      // যদি main category match করে
+      if (cat.slug === decodedSlug) {
+        return {
+          matchedCategory: cat,
+          parentSlug: cat.slug,
+        };
+      }
 
-  const filteredCategories: Category[] | undefined = categories?.filter(
-    (cat: Category) => cat.slug === decodedSlug
-  );
+      // যদি subcategory match করে
+      const sub = cat.subCategories?.find(
+        (s: any) => s.slug === decodedSlug
+      );
 
-  // Check if discount products exist
+      if (sub) {
+        return {
+          matchedCategory: sub,
+          parentSlug: cat.slug, // 🔥 parent দিয়ে fetch হবে
+        };
+      }
+    }
+
+    return { matchedCategory: null, parentSlug: slug };
+  }, [categories, decodedSlug, slug]);
+
+  // ✅ FETCH PRODUCTS (always by parent)
+  const { data: products, isLoading: productsLoading } =
+    useGetAllProductsbyCategoryNameQuery(
+      parentSlug ? { slug: parentSlug } : skipToken
+    );
+
+  const { data: bestSellingProducts, isLoading: bestSellingLoading } =
+    useGetBestSellingProductsQuery(
+      parentSlug === "all" ? {} : { category: parentSlug }
+    );
+
+  // ✅ FILTER PRODUCTS (category + subcategory)
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+
+    return products.filter((product: any) => {
+      const categories = product.brandAndCategories?.categories || [];
+
+      return categories.some((cat: any) => {
+        // main category match
+        if (cat.slug === decodedSlug) return true;
+
+        // subcategory match
+        return cat.subCategories?.some(
+          (sub: any) => sub.slug === decodedSlug
+        );
+      });
+    });
+  }, [products, decodedSlug]);
+
+  // ✅ DISCOUNT FILTER
   const discountProducts = useMemo(() => {
-    return products?.filter((product: any) =>
-      product.brandAndCategories?.tags?.some((tag: any) =>
-        tag.name === "10% Discount"
+    return filteredProducts.filter((product: any) =>
+      product.brandAndCategories?.tags?.some(
+        (tag: any) => tag.name === "10% Discount"
       )
-    ) || [];
-  }, [products]);
-  
+    );
+  }, [filteredProducts]);
 
   return (
-    <>
-      <div className="space-y-16">
-        {slug === "all" ? (
-          ""
-        ) : categoriesLoading ? (
-          <section className="w-full bg-gray-50 md:rounded-lg overflow-hidden p-6 md:p-12 animate-pulse">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10">
-              <div className="flex-1 max-w-lg space-y-4">
-                <div className="h-8 bg-gray-200 rounded-full w-32"></div>
-                <div className="h-10 bg-gray-200 rounded w-full"></div>
-                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-              </div>
-              <div className="relative w-full md:w-1/2 lg:w-[55%] aspect-[4/3] bg-gray-200 rounded-xl"></div>
-            </div>
-          </section>
-        ) : filteredCategories?.length ? (
-          filteredCategories.map((category: Category) => (
-<section
-  key={category._id}
-  className="
-    w-full md:rounded-lg overflow-hidden
-    p-6 md:p-12
-    flex flex-col md:flex-row items-center justify-between
-    gap-8 md:gap-12
-    bg-gradient-to-br from-indigo-200 via-white to-violet-200
-    transition-all duration-500
-  "
->
-  {/* Left Content */}
-  <div className="flex-1 max-w-lg space-y-5">
-    <Badge
-      className="
-        px-4 py-1.5 rounded-full
-        bg-gradient-to-r from-indigo-600 to-violet-600
-        text-white text-xs font-semibold
-        w-fit shadow-md
-      "
-    >
+    <div className="space-y-16">
+      {/* 🔥 CATEGORY / SUBCATEGORY BANNER */}
+      {slug !== "all" &&
+        (categoriesLoading ? (
+          <div className="p-10 animate-pulse bg-gray-100 rounded-lg" />
+        ) : matchedCategory ? (
+       <section className="relative w-full h-screen rounded-2xl overflow-hidden px-4 md:px-6 lg:px-8">
+  {/* Background Image */}
+  <div className="absolute inset-0">
+    <Image
+      src={matchedCategory.bannerImg || "/watches.png"}
+      alt={matchedCategory.name}
+      fill
+      className="object-cover w-full h-full  "
+      priority
+    />
+    {/* Dark overlay for text readability */}
+    <div className="absolute inset-0 bg-black/30"></div>
+  </div>
+
+  {/* Content */}
+  <div className="relative z-10 flex flex-col items-start justify-center h-full max-w-6xl mx-auto px-6 md:px-12 space-y-6 text-white">
+    <Badge className="bg-indigo-500 text-white px-4 py-1 text-sm font-semibold rounded-full">
       ● New Arrival
     </Badge>
 
-    <h2 className="text-lg sm:text-3xl md:text-4xl font-bold leading-snug text-gray-900">
-      {category.name}
-    </h2>
+    <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold leading-tight">
+      {matchedCategory.name}
+    </h1>
 
-    <p className="text-gray-600 text-sm sm:text-base md:text-lg leading-relaxed">
-      {category.details}
+    <p className="text-base sm:text-lg md:text-xl max-w-xl">
+      {matchedCategory.details}
     </p>
-  </div>
 
-  {/* Image */}
-  <div
-    className="
-      relative w-full md:w-1/2 lg:w-[55%]
-      aspect-[4/3]
-      rounded-2xl overflow-hidden
-      mt-8 md:mt-0
-      group
-    "
-  >
-    <Image
-      src={category.bannerImg || "/watches.png"}
-      alt={category.name}
-      fill
-      priority
-      className="
-        object-cover object-center
-      "
-    />
-
-    {/* Subtle overlay */}
-    {/* <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" /> */}
+    <button className="mt-4 px-8 py-3 bg-indigo-600 hover:bg-indigo-700 transition rounded-lg font-semibold text-white text-lg">
+      Explore
+    </button>
   </div>
 </section>
+        ) : null)}
 
+      {/* ✅ BEST SELLING */}
+      {/* {bestSellingLoading ? (
+        <BestSellingSkeleton />
+      ) : bestSellingProducts?.length > 0 ? (
+        <BestSelling data={bestSellingProducts} />
+      ) : null} */}
 
+      {/* ✅ PRODUCTS */}
+      {productsLoading ? (
+        <NewWatchesSkeleton />
+      ) : filteredProducts.length > 0 ? (
+        <NewWatches data={filteredProducts} />
+      ) : (
+        <p className="text-center text-gray-500">
+          No products found
+        </p>
+      )}
 
-          ))
-        ) : null}
+      {/* ✅ DISCOUNT */}
+      {productsLoading ? (
+        <DiscountSkeleton />
+      ) : discountProducts.length > 0 ? (
+        <Discount data={discountProducts} />
+      ) : null}
 
-        {/* Best Selling Section - Only show if has data or loading */}
-        {bestSellingLoading ? (
-          <BestSellingSkeleton />
-        ) : bestSellingProducts && bestSellingProducts.length > 0 ? (
-          <BestSelling data={bestSellingProducts} />
-        ) : null}
-
-        {/* New Watches Section - Only show if has data or loading */}
-        {productsLoading ? (
-          <NewWatchesSkeleton />
-        ) : products && products.length > 0 ? (
-          <NewWatches data={products} />
-        ) : null}
-
-        {/* Discount Section - Only show if has discount products or loading */}
-        {productsLoading ? (
-          <DiscountSkeleton />
-        ) : discountProducts.length > 0 ? (
-          <Discount data={products || []} />
-        ) : null}
-
-        <SaveMoreSection />
-        <AppPromo />
-      </div>
-    </>
+      <SaveMoreSection />
+      <AppPromo />
+    </div>
   );
 }

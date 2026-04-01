@@ -19,7 +19,6 @@ const HomePage = () => {
   return (
     <main className="space-y-4 md:space-y-16 lg:space-y-20 ">
       <HeroSection />
-
       <div className=" bg-white md:rounded-lg  p-4 ">
         <NewArrivals />
         <BestSeller />
