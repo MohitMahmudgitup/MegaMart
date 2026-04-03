@@ -238,7 +238,7 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
             form.setValue("description.slug", newSlug, { shouldValidate: true });
           }
 
-        
+
           if (importedData.description) {
             setDescription(importedData.description);
           }
@@ -316,24 +316,24 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
       label: tag.name,
     })) ?? [];
 
-const simplifiedSubCategories: Option[] =
-  subCategoriesData?.map((subCat: any) => ({
-    value: subCat._id,
-    label: subCat.name,
-  })) ?? [];
+  const simplifiedSubCategories: Option[] =
+    subCategoriesData?.map((subCat: any) => ({
+      value: subCat._id,
+      label: subCat.name,
+    })) ?? [];
 
-console.log("Simplified SubCategories:", simplifiedSubCategories);
   return (
+
     <Form {...form}>
       <form
         id="addProductForm"
         onSubmit={form.handleSubmit(onSubmit, onErrors)}
-        className="grid grid-cols-1 xl:grid-cols-2 gap-6 2xl:gap-16"
+        className="grid grid-cols-1 xl:grid-cols-2 gap-6 2xl:gap-6"
       >
         {/* LEFT COLUMN */}
-        <div className="space-y-6 bg-white p-6 rounded-xl shadow-sm">
+        <div className="space-y-6 ">
           {/* Basic Details */}
-          <div className="space-y-4">
+          <div className="space-y-4 md:p-6 p-4  bg-white  rounded-xl shadow-sm">
             <h2 className="text-xl font-semibold">Basic Details</h2>
             <FormField
               control={form.control}
@@ -361,21 +361,6 @@ console.log("Simplified SubCategories:", simplifiedSubCategories);
                 </FormItem>
               )}
             />
-
-
-            {/* <FormField
-              control={form.control}
-              name="description.slug"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Slug</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Auto-generated slug" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
 
             <FormField
               control={form.control}
@@ -408,78 +393,76 @@ console.log("Simplified SubCategories:", simplifiedSubCategories);
                 </FormItem>
               )}
             />
-          </div>
+            <FormField
+              control={form.control}
+              name="shopId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Select Shop</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      // ১️⃣ shopId form এ সেট করো
+                      field.onChange(value);
 
-          <FormField
-            control={form.control}
-            name="shopId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Select Shop</FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    // ১️⃣ shopId form এ সেট করো
-                    field.onChange(value);
-
-                    // ২️⃣ নির্বাচিত shop খুঁজে vendorId সেট করো
-                    const selectedShop = shopData?.find(
-                      (shop: any) => shop._id === value
-                    );
-
-                    if (selectedShop) {
-                      form.setValue(
-                        "vendorId",
-                        selectedShop.vendorId ?? selectedShop.vendorId?._id
+                      // ২️⃣ নির্বাচিত shop খুঁজে vendorId সেট করো
+                      const selectedShop = shopData?.find(
+                        (shop: any) => shop._id === value
                       );
-                    } else {
-                      form.setValue("vendorId", "");
-                    }
-                  }}
-                  value={field.value} // ✅ defaultValue নয়, "value" ব্যবহার করো
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a Shop" />
-                    </SelectTrigger>
-                  </FormControl>
 
-                  <SelectContent>
-                    {isShopDataLoading ? (
-                      <SelectItem disabled value="loading">
-                        <span className="animate-pulse text-gray-400">
-                          Loading Shops...
-                        </span>
-                      </SelectItem>
-                    ) : shopData && shopData.length > 0 ? (
-                      <>
-                        {(currentUser?.role === "vendor"
-                          ? shopData.filter(
-                            (shop: any) =>
-                              shop.vendorId?._id === currentUser?._id
-                          )
-                          : shopData
-                        ).map((shop: any) => (
-                          <SelectItem key={shop._id} value={shop._id}>
-                            {shop.basicInfo.name}
-                          </SelectItem>
-                        ))}
-                      </>
-                    ) : (
-                      <SelectItem disabled value="no-shops">
-                        <span className="text-sm text-gray-500">
-                          No shops available
-                        </span>
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                      if (selectedShop) {
+                        form.setValue(
+                          "vendorId",
+                          selectedShop.vendorId ?? selectedShop.vendorId?._id
+                        );
+                      } else {
+                        form.setValue("vendorId", "");
+                      }
+                    }}
+                    value={field.value} // ✅ defaultValue নয়, "value" ব্যবহার করো
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a Shop" />
+                      </SelectTrigger>
+                    </FormControl>
 
+                    <SelectContent>
+                      {isShopDataLoading ? (
+                        <SelectItem disabled value="loading">
+                          <span className="animate-pulse text-gray-400">
+                            Loading Shops...
+                          </span>
+                        </SelectItem>
+                      ) : shopData && shopData.length > 0 ? (
+                        <>
+                          {(currentUser?.role === "vendor"
+                            ? shopData.filter(
+                              (shop: any) =>
+                                shop.vendorId?._id === currentUser?._id
+                            )
+                            : shopData
+                          ).map((shop: any) => (
+                            <SelectItem key={shop._id} value={shop._id}>
+                              {shop.basicInfo.name}
+                            </SelectItem>
+                          ))}
+                        </>
+                      ) : (
+                        <SelectItem disabled value="no-shops">
+                          <span className="text-sm text-gray-500">
+                            No shops available
+                          </span>
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
           {/* Product Info & Pricing */}
-          <div className="space-y-4">
+          <div className="space-y-4 md:p-6 p-4 bg-white  rounded-xl shadow-sm">
             <h2 className="text-xl font-semibold">Product Info & Pricing</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -556,127 +539,129 @@ console.log("Simplified SubCategories:", simplifiedSubCategories);
                 )}
               />
             </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="description.unit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Select Unit</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select unit" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="pcs">pcs</SelectItem>
+                        <SelectItem value="kg">kg</SelectItem>
+                        <SelectItem value="box">box</SelectItem>
+                        <SelectItem value="set">set</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description.status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="publish">Publish</SelectItem>
+                        <SelectItem value="draft">Draft</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
-              name="description.unit"
+              name="productType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Select Unit</FormLabel>
+                  <FormLabel>Product Type</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select unit" />
+                        <SelectValue placeholder="Select product type" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="pcs">pcs</SelectItem>
-                      <SelectItem value="kg">kg</SelectItem>
-                      <SelectItem value="box">box</SelectItem>
-                      <SelectItem value="set">set</SelectItem>
+                      <SelectItem value="simple">Simple</SelectItem>
+                      <SelectItem value="variable">Variable</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="description.status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="productInfo.width"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Width</FormLabel>
                     <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
+                      <Input placeholder="e.g., 120cm" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="publish">Publish</SelectItem>
-                      <SelectItem value="draft">Draft</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <FormField
-            control={form.control}
-            name="productType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Product Type</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select product type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="simple">Simple</SelectItem>
-                    <SelectItem value="variable">Variable</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="productInfo.width"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Width</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., 120cm" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="productInfo.height"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Height</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., 75cm" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="productInfo.length"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Length</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., 60cm" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="productInfo.height"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Height</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., 75cm" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="productInfo.length"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Length</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., 60cm" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
 
+
+
           {/* External Product Section */}
-          <div className="space-y-4">
+          <div className="space-y-4 md:p-6 p-4 bg-white  rounded-xl shadow-sm">
             <h2 className="text-xl font-semibold">External Product</h2>
             <FormField
               control={form.control}
@@ -735,55 +720,62 @@ console.log("Simplified SubCategories:", simplifiedSubCategories);
             )}
           </div>
 
-          <div>
+          <div className="space-y-4 md:p-6 p-4 bg-white  rounded-xl shadow-sm">
             <h2 className="text-lg font-semibold">Product Specifications</h2>
-
-            {fields.map((field, index) => (
-              <div
-                key={field.id}
-                className="flex items-center gap-4 border p-3 rounded-lg"
-              >
-                <FormField
-                  control={form.control}
-                  name={`specifications.${index}.key`}
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>Key</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter Key" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name={`specifications.${index}.value`}
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>Value</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter Value" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={() => remove(index)}
+            <div className="space-y-3">
+              {fields.map((item, index) => (
+                <div
+                  key={item.id}
+                  className="flex flex-col md:flex-row items-start md:items-end gap-4 border p-4 rounded-lg"
                 >
-                  Remove
-                </Button>
-              </div>
-            ))}
+                  {/* Key Field */}
+                  <FormField
+                    control={form.control}
+                    name={`specifications.${index}.key`}
+                    render={({ field }) => (
+                      <FormItem className="w-full">
+                        <FormLabel>Key</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Color" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
+                  {/* Value Field */}
+                  <FormField
+                    control={form.control}
+                    name={`specifications.${index}.value`}
+                    render={({ field }) => (
+                      <FormItem className="w-full">
+                        <FormLabel>Value</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Red" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Remove Button */}
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="w-full md:w-auto"
+                    onClick={() => remove(index)}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            {/* Add Button */}
             <Button
               type="button"
               variant="outline"
+              className="w-full md:w-fit"
               onClick={() => append({ key: "", value: "" })}
             >
               + Add Specification
@@ -794,8 +786,8 @@ console.log("Simplified SubCategories:", simplifiedSubCategories);
         </div>
 
         {/* RIGHT COLUMN */}
-        <div className="space-y-6 bg-white p-6 rounded-xl shadow-sm">
-          <div className="space-y-4">
+        <div className="space-y-6 ">
+          <div className="space-y-4 bg-white md:p-6 p-4 rounded-xl shadow-sm">
             <h2 className="text-xl font-semibold">Product Media</h2>
             <ImageUploader
               setGalleryImage={setGalleryImage}
@@ -822,172 +814,146 @@ console.log("Simplified SubCategories:", simplifiedSubCategories);
           </div>
 
           {/* Organization */}
-          <div className="space-y-4">
+          <div className="space-y-6 bg-white md:p-6 p-4 rounded-xl shadow-sm">
             <h2 className="text-xl font-semibold">Organization</h2>
-            <FormField
-              control={form.control}
-              name="brandAndCategories.brand"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Brand</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a brand" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isBrandsLoading ? (
-                        <SelectItem disabled value="loading">
-                          <span className="animate-pulse text-gray-400">
-                            Loading Brands...
-                          </span>
-                        </SelectItem>
-                      ) : (brands ?? []).length > 0 ? (
-                        (brands ?? []).map((brand: any) => (
-                          <SelectItem key={brand._id} value={brand._id}>
-                            {brand.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem disabled value="no-brands">
-                          No brands available
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="brandAndCategories.categories"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Categories</FormLabel>
-                  <FormControl>
-                    {isCategoriesLoading ? (
-                      <Input
-                        className="animate-pulse"
-                        placeholder="Loading Categories..."
-                      />
-                    ) : (
-                      <MultipleSelector
-                        value={
-                          field.value
-                            .map((val) =>
-                              simplifiedCategories.find(
-                                (opt) => opt.value === val
-                              )
-                            )
-                            .filter(Boolean) as Option[]
-                        }
-                        onChange={(options) =>
-                          field.onChange(options.map((opt) => opt.value))
-                        }
-                        defaultOptions={simplifiedCategories}
-                        placeholder="Select categories..."
-                        emptyIndicator={
-                          <p className="text-center text-sm">
-                            No categories found.
-                          </p>
-                        }
-                      />
-                    )}
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            
-            <FormField
-              control={form.control}
-              name="brandAndCategories.subCategories"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Subcategories</FormLabel>
-                  <FormControl>
-                    {isCategoriesLoading ? (
-                      <Input
-                        className="animate-pulse"
-                        placeholder="Loading Subcategories..."
-                      />
-                    ) : (
-                      <MultipleSelector
-                        value={
-                          (field.value ?? []) 
-                            .map((val) =>
-                              simplifiedSubCategories.find(
-                                (opt) => opt.value === val
-                              )
-                            )
-                            .filter(Boolean) as Option[]
-                        }
-                        onChange={(options) =>
-                          field.onChange(options.map((opt) => opt.value))
-                        }
-                        defaultOptions={simplifiedSubCategories}
-                        placeholder="Select subcategories..."
-                        emptyIndicator={
-                          <p className="text-center text-sm">
-                            No subcategories found.
-                          </p>
-                        }
-                      />
-                    )}
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-         
 
-            <FormField
-              control={form.control}
-              name="brandAndCategories.tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags</FormLabel>
-                  <FormControl>
-                    {isTagsLoading ? (
-                      <Input
-                        className="animate-pulse"
-                        placeholder="Loading Tags...."
-                      />
-                    ) : (
-                      <MultipleSelector
-                        value={
-                          field.value
+            {/* GRID WRAPPER */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              {/* Brand */}
+              <FormField
+                control={form.control}
+                name="brandAndCategories.brand"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Brand</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a brand" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isBrandsLoading ? (
+                          <SelectItem disabled value="loading">
+                            <span className="animate-pulse text-gray-400">
+                              Loading Brands...
+                            </span>
+                          </SelectItem>
+                        ) : (brands ?? []).length > 0 ? (
+                          brands?.map((brand: any) => (
+                            <SelectItem key={brand._id} value={brand._id}>
+                              {brand.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem disabled value="no-brands">
+                            No brands available
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Categories */}
+              <FormField
+                control={form.control}
+                name="brandAndCategories.categories"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Categories</FormLabel>
+                    <FormControl>
+                      {isCategoriesLoading ? (
+                        <Input className="animate-pulse" placeholder="Loading Categories..." />
+                      ) : (
+                        <MultipleSelector
+                          value={field.value
+                            .map((val) =>
+                              simplifiedCategories.find((opt) => opt.value === val)
+                            )
+                            .filter(Boolean) as Option[]}
+                          onChange={(options) =>
+                            field.onChange(options.map((opt) => opt.value))
+                          }
+                          defaultOptions={simplifiedCategories}
+                          placeholder="Select categories..."
+                        />
+                      )}
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Subcategories */}
+              <FormField
+                control={form.control}
+                name="brandAndCategories.subCategories"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Subcategories</FormLabel>
+                    <FormControl>
+                      {isCategoriesLoading ? (
+                        <Input className="animate-pulse" placeholder="Loading Subcategories..." />
+                      ) : (
+                        <MultipleSelector
+                          value={(field.value ?? [])
+                            .map((val) =>
+                              simplifiedSubCategories.find((opt) => opt.value === val)
+                            )
+                            .filter(Boolean) as Option[]}
+                          onChange={(options) =>
+                            field.onChange(options.map((opt) => opt.value))
+                          }
+                          defaultOptions={simplifiedSubCategories}
+                          placeholder="Select subcategories..."
+                        />
+                      )}
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Tags */}
+              <FormField
+                control={form.control}
+                name="brandAndCategories.tags"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tags</FormLabel>
+                    <FormControl>
+                      {isTagsLoading ? (
+                        <Input className="animate-pulse" placeholder="Loading Tags..." />
+                      ) : (
+                        <MultipleSelector
+                          value={field.value
                             .map((val) =>
                               simplifiedTags.find((opt) => opt.value === val)
                             )
-                            .filter(Boolean) as Option[]
-                        }
-                        onChange={(options) =>
-                          field.onChange(options.map((opt) => opt.value))
-                        }
-                        defaultOptions={simplifiedTags}
-                        placeholder="Select tags..."
-                        emptyIndicator={
-                          <p className="text-center text-sm">No tags found.</p>
-                        }
-                      />
-                    )}
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                            .filter(Boolean) as Option[]}
+                          onChange={(options) =>
+                            field.onChange(options.map((opt) => opt.value))
+                          }
+                          defaultOptions={simplifiedTags}
+                          placeholder="Select tags..."
+                        />
+                      )}
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+            </div>
           </div>
 
 
           {/* Product Variants Section */}
-          <div className="space-y-4">
+          <div className="space-y-4 bg-white md:p-6 p-4 rounded-xl shadow-sm">
             <h2 className="text-xl font-semibold">Product Variants</h2>
             <p className="text-sm text-gray-500">
               Add different variants of your product (e.g., different colors, sizes, etc.)
@@ -1104,10 +1070,13 @@ console.log("Simplified SubCategories:", simplifiedSubCategories);
           </div>
 
           {/* Action Buttons */}
-          <div className="md:flex gap-4 pt-4 justify-end">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t mt-6">
+
+            {/* Save Draft */}
             <Button
               type="button"
               variant="outline"
+              className="w-full sm:w-auto flex items-center justify-center"
               disabled={!form.formState.isValid || form.formState.isSubmitting}
               onClick={() => {
                 form.setValue("description.status", "draft");
@@ -1115,16 +1084,24 @@ console.log("Simplified SubCategories:", simplifiedSubCategories);
                 form.handleSubmit(onSubmit, onErrors)();
               }}
             >
-              <Save className="mr-2 h-4 w-4 hidden md:flex" /> Save as Draft
+              <Save className="mr-2 h-4 w-4" />
+              Save as Draft
             </Button>
+
+            {/* Publish */}
             <Button
               type="submit"
-              className="mt-2 md:mt-0"
+              className="w-full sm:w-auto flex items-center justify-center"
               disabled={!form.formState.isValid || form.formState.isSubmitting}
             >
-              {form.formState.isSubmitting
-                ? "Publishing..."
-                : "Publish Product"}
+              {form.formState.isSubmitting ? (
+                <>
+                  <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                  Publishing...
+                </>
+              ) : (
+                "Publish Product"
+              )}
             </Button>
           </div>
         </div>

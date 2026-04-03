@@ -1,26 +1,17 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  BarChart3,
-  Package,
-  Plus,
-  ShoppingBag,
-  TrendingUp,
-} from "lucide-react";
 import Link from "next/link";
+import { Plus, BarChart3, Package, ShoppingBag, TrendingUp } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/all-shop/stats-card";
 import { SearchAndFilters } from "@/components/all-shop/search-filters";
 import { ShopCard } from "@/components/all-shop/shop-card";
 import { ShopDetailsModal } from "@/components/all-shop/shop-details-modal";
 import PaginationControls from "@/components/categorise/PaginationControls";
-import {
-  useGetAllShopsQuery,
-  useGetAllShopStatsQuery,
-} from "@/redux/featured/shop/shopApi";
+import { useGetAllShopsQuery, useGetAllShopStatsQuery } from "@/redux/featured/shop/shopApi";
 import ShopsPageSkeleton from "../loadings/ShopsPageSkeleton";
 
 export default function ShopsPage() {
@@ -31,9 +22,9 @@ export default function ShopsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const ITEMS_PER_PAGE = 6; 
+  const ITEMS_PER_PAGE = 6;
 
-  const { data: shopData = [], isLoading , refetch } = useGetAllShopsQuery();
+  const { data: shopData = [], isLoading, refetch } = useGetAllShopsQuery();
   const { data: statsResponse } = useGetAllShopStatsQuery();
 
   const categories = ["all", "Electronics", "Fashion", "Home", "Food", "Sports"];
@@ -68,7 +59,6 @@ export default function ShopsPage() {
       ]
     : [];
 
-  // Filtered shops based on search and filters
   const filteredShops = useMemo(() => {
     const normalizedSearch = searchTerm.toLowerCase();
     return shopData.filter((shop: any) => {
@@ -83,7 +73,6 @@ export default function ShopsPage() {
     });
   }, [shopData, searchTerm, selectedCategory, selectedStatus]);
 
-  // Pagination
   const totalPages = Math.ceil(filteredShops.length / ITEMS_PER_PAGE);
   const paginatedShops = useMemo(() => {
     const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -110,23 +99,22 @@ export default function ShopsPage() {
     setIsModalOpen(true);
   };
 
-  
-  if (isLoading) return <ShopsPageSkeleton/>
+  if (isLoading) return <ShopsPageSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      <div className="w-full mx-auto space-y-6">
-        {/* Header with Add Shop Button */}
-        <div className="flex justify-between items-center">
+    <div className="min-h-screen ">
+      <div className=" space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-2xl font-bold text-gray-900">Shops</h1>
-          <Link href={"/admin/create-shop"}>
-            <Button variant="default" className="bg-black text-white hover:bg-black/80">
-              <Plus className="mr-2 h-4 w-4" /> Add New Shop
+          <Link href="/admin/create-shop">
+            <Button className="bg-black text-white hover:bg-black/80 flex items-center gap-2 w-full sm:w-auto">
+              <Plus className="h-4 w-4" /> Add New Shop
             </Button>
           </Link>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {statsData.map((stat, index) => (
             <StatsCard
@@ -139,7 +127,7 @@ export default function ShopsPage() {
           ))}
         </div>
 
-        {/* Search and Filters */}
+        {/* Search & Filters */}
         <SearchAndFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -152,8 +140,8 @@ export default function ShopsPage() {
         />
 
         {/* Shops Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mappedShops.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {mappedShops.length ? (
             mappedShops.map((shop: any) => (
               <ShopCard
                 key={shop.id}
@@ -167,43 +155,39 @@ export default function ShopsPage() {
           ) : (
             <Card className="bg-white col-span-full flex flex-col items-center justify-center p-10 rounded-xl shadow-lg">
               <CardContent className="text-center">
-                <div className="mb-4">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-16 w-16 text-gray-300 mx-auto"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-16 w-16 text-gray-300 mx-auto mb-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
                 <h2 className="text-gray-700 text-2xl font-semibold mb-2">No Shops Found</h2>
-                <p className="text-gray-500">
-                  Sorry we could not find any shops matching your criteria.
-                </p>
+                <p className="text-gray-500">Sorry, no shops match your criteria.</p>
               </CardContent>
             </Card>
           )}
         </div>
 
-        {/* PaginationControls */}
+        {/* Pagination */}
         {totalPages > 1 && (
-            <PaginationControls
-              currentPage={currentPage}
-              totalItems={filteredShops.length}
-              itemsPerPage={ITEMS_PER_PAGE}
-              onPageChange={(page) => setCurrentPage(page)}
-            />
+          <PaginationControls
+            currentPage={currentPage}
+            totalItems={filteredShops.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={setCurrentPage}
+          />
         )}
       </div>
 
-      {/* Shop Details Modal */}
+      {/* Shop Modal */}
       {selectedShop && (
         <ShopDetailsModal
           shop={selectedShop}

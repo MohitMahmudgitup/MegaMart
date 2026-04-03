@@ -1,4 +1,3 @@
-// components/search-filters.tsx
 "use client"
 
 import { Input } from "@/components/ui/input"
@@ -28,19 +27,19 @@ export function SearchAndFilters({
   statuses,
 }: SearchAndFiltersProps) {
   return (
-    <Card className="bg-white">
+    <Card className="bg-white shadow-sm rounded-lg">
       <CardContent className="p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <div className="relative flex-1 w-full sm:w-auto">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Search shops"
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10"
+              className="pl-10 w-full"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Select value={selectedCategory} onValueChange={onCategoryChange}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="All Categories" />

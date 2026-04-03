@@ -45,7 +45,7 @@ export default function OperationalSettingsSection({
             defaultValue={formData.currency}
             onValueChange={value => handleInputChange('currency', value)}
           >
-            <SelectTrigger className="border-gray-300">
+            <SelectTrigger className="border-gray-300 w-full">
               <SelectValue placeholder="Select Currency" />
             </SelectTrigger>
             <SelectContent className="max-h-[300px]">
@@ -68,7 +68,7 @@ export default function OperationalSettingsSection({
             defaultValue={formData.timezone}
             onValueChange={value => handleInputChange('timezone', value)}
           >
-            <SelectTrigger className="border-gray-300">
+            <SelectTrigger className="border-gray-300 w-full">
               <SelectValue placeholder="Select Timezone" />
             </SelectTrigger>
             <SelectContent className="max-h-[300px]">

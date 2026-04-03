@@ -211,7 +211,7 @@ export default function ShopInformationForm() {
   };
 
   return (
-    <div className="w-full mx-auto md:p-6 bg-gray-50 min-h-screen">
+    <div className="w-full ">
       <div className="space-y-6">
         <ShopInfoSectionAdmin
           title={'Shop Information'}
@@ -220,6 +220,8 @@ export default function ShopInformationForm() {
           setLogo={setLogo}
           setCover={setCover}
         />
+        <div className=" grid grid-cols-1  md:grid-cols-2 gap-6">
+
 
         <OperationalSettingsSection
           formData={formData}
@@ -230,6 +232,8 @@ export default function ShopInformationForm() {
           formData={formData}
           handleInputChange={handleInputChange}
         />
+
+        </div>
 
         <BusinessAddressSection
           formData={formData}

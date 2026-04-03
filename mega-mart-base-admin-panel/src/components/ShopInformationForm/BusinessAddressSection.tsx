@@ -88,7 +88,7 @@ export default function BusinessAddressSection({
               value={formData.country}
               onValueChange={(value) => handleInputChange("country", value)}
             >
-              <SelectTrigger className="border-gray-300">
+              <SelectTrigger className="border-gray-300 w-full">
                 <SelectValue placeholder="Select Country" />
               </SelectTrigger>
               <SelectContent>
