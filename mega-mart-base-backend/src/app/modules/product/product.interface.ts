@@ -1,6 +1,5 @@
 import { Types } from "mongoose";
 
-
 export interface IVariant {
   color: string;
   size: string;
@@ -8,10 +7,11 @@ export interface IVariant {
   stock: number;
 }
 
-
+// Updated Brand & Categories type with subCategories
 export type TBrandAndCategories = {
   brand: Types.ObjectId;
   categories: Types.ObjectId[];
+  subCategories?: Types.ObjectId[]; // optional array of subcategory IDs
   tags: Types.ObjectId[];
 };
 
@@ -53,8 +53,8 @@ export type TProduct = {
   description: TDescription;
   productType: 'simple' | 'variable';
   productInfo: TProductInfo;
-  specifications?: [{ key: string; value: string }];
+  specifications?: { key: string; value: string }[];
   variants?: IVariant[];
   deletedImages?: string[];
-  gender?: 'male' | 'female' | 'unisex';
+  gender?: 'male' | 'female' | 'unisex' | 'kids';
 };

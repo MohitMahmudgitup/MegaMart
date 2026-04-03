@@ -1,6 +1,6 @@
 import express from "express";
 import validateRequest from "../../middlewares/validateRequest";
-import { bestSellingProducts, createProduct, deleteProduct, getAllProduct, getProductsByCategoryandTag,getSingleEditProduct, getSingleProduct, inventoryStats, newArrivalsListData, productcollections, updateProduct     } from "./product.controller";
+import { bestSellingProducts, createProduct, deleteProduct, getAllProduct, getProductsByCategoryandsubcategory,getSingleEditProduct, getSingleProduct, inventoryStats, newArrivalsListData, productcollections, updateProduct     } from "./product.controller";
 import { createProductZodSchema, updateProductZodSchema } from "./product.validations";
 import { multerUpload } from "../../config/multer.config";
 
@@ -18,7 +18,7 @@ router.post(
 );
 router.get("/", getAllProduct);
 router.get('/best-selling-products', bestSellingProducts);
-router.get('/products/by', getProductsByCategoryandTag)
+router.get("/category/:id", getProductsByCategoryandsubcategory);
 router.get('/inventory/stats', inventoryStats);
 router.get("/:id", getSingleProduct);
 router.patch(

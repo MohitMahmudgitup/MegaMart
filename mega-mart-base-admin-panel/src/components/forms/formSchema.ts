@@ -9,6 +9,9 @@ const brandAndCategoryZodSchema = z.object({
   categories: z
     .array(z.string({ error: () => "Category ID must be a string!" }))
     .min(1, { message: "At least one category is required!" }),
+  subCategories: z
+    .array(z.string({ error: () => "Subcategory ID must be a string!" }))
+    .optional(),
   tags: z
     .array(z.string({ error: () => "Tag ID must be a string!" }))
     .min(1, { message: "At least one tag is required!" }),

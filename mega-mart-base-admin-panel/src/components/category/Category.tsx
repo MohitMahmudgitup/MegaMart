@@ -85,10 +85,6 @@ export default function Category({
       reset({
         name: editCategory.name || "",
         details: editCategory.details || "",
-        subCategories: editCategory.subCategories.map((sub: SubCategory) => ({
-          value: sub._id,
-          label: sub.name,
-        })),
         iconName: editCategory.icon?.name || "",
         iconUrl: editCategory.icon?.url || "",
       });
@@ -238,21 +234,7 @@ export default function Category({
                     />
                   </div>
 
-                  <div>
-                    <Label>Select SubCategory</Label>
-                    <MultipleSelector
-                      commandProps={{ label: "Select SubCategory" }}
-                      defaultOptions={simplifiedCategories}
-                      placeholder="Select SubCategory"
-                      hideClearAllButton
-                      hidePlaceholderWhenSelected
-                      emptyIndicator={
-                        <p className="text-center text-sm">No results found</p>
-                      }
-                      value={watch("subCategories")}
-                      onChange={(val) => setValue("subCategories", val)}
-                    />
-                  </div>
+                 
 
                   <div className="*:not-first:mt-2">
                     <div className="flex-1 space-y-2">

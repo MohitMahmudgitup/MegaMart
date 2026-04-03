@@ -86,10 +86,21 @@ const deleteCategory = catchAsync(async (req, res) => {
   });
 });
 
+const getProductInCategory = catchAsync(async (req, res) => {
+  const result = await categoryServices.getAllProductinCategoryFromDB();
+    sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Products in category retrieved successfully!",
+    data: result,
+  });
+});
+
 export const categoryControllers = {
   getAllCategory,
   getSingleCategory,
   createCategory,
   deleteCategory,
   editCategory,
+  getProductInCategory
 };

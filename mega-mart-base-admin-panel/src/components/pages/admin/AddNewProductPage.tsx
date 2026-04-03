@@ -12,7 +12,6 @@ const AddNewProductPage = () => {
   const [formKey, setFormKey] = useState(0);
 
   const handleImport = useCallback((productData: any) => {
-    console.log('Product data received in AddNewProductPage:', productData);
     setImportedData(productData);
     // Force form to re-render with new data
     setFormKey(prev => prev + 1);

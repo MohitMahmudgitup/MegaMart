@@ -31,5 +31,8 @@ router.patch(
   categoryControllers.editCategory
 );
 router.delete("/delete-category/:id", categoryControllers.deleteCategory);
+router.get('/type/products-in-category', categoryControllers.getProductInCategory);
+
+
 
 export const CategoryRoutes = router;

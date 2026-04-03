@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { deleteImageFromCLoudinary } from "../../config/cloudinary.config";
 import AppError from "../../errors/handleAppError";
 import { QueryBuilder } from "../../utils/QueryBuilder";
@@ -6,6 +7,7 @@ import { TagModel } from "../tags/tags.model";
 import { ProductSearchableFields } from "./product.const";
 import { TProduct } from "./product.interface";
 import { ProductModel } from "./product.model";
+import { subCategoryModel } from "../subcategory/subcategory.model";
 
 const createProductOnDB = async (payload: TProduct) => {
   const result = await ProductModel.create(payload);
@@ -13,128 +15,113 @@ const createProductOnDB = async (payload: TProduct) => {
 };
 
 const getAllProductFromDB = async (query: Record<string, string>) => {
-
-
-  const productQuery = new QueryBuilder(ProductModel.find()
+  // 1️⃣ Fetch all products with populate
+  const products = await ProductModel.find()
     .populate("brandAndCategories.brand")
     .populate("brandAndCategories.categories")
-    .populate("brandAndCategories.tags"), query)
+    .populate("brandAndCategories.tags")
+    .populate("brandAndCategories.subCategories")
+    .lean(); // lean() converts mongoose docs to plain objects
 
-  const allProducts = productQuery.search(ProductSearchableFields).filter().sort().paginate();
+  // 2️⃣ Attach subCategories inside each category
+  const data = products.map((product) => {
+    const { categories, subCategories } = product.brandAndCategories || {};
 
-  const [data, meta] = await Promise.all([
-    allProducts.build().exec(),
-    productQuery.getMeta()
-  ])
+    const newCategories = categories?.map((cat: any) => ({
+      ...cat,
+      subCategories: subCategories || [], // attach subCategories here
+    }));
+
+    return {
+      ...product,
+      brandAndCategories: {
+        ...product.brandAndCategories,
+        categories: newCategories,
+        subCategories: undefined,
+      },
+    };
+  });
+
   return {
-    data, meta
-  }
-
+    data,
+    meta: { total: data.length }, // optional, you can add pagination meta
+  };
 };
 
-const getProductsByCategoryandTag = async (category: string, tag: string, slug: string) => {
-  const categories = category ? (category as string).split(",") : [];
+// productServices.ts
 
-  const tags = tag ? (tag as string).split(",") : [];
+export const getProductsByCategoryandSubcategory = async (id: string) => {
+  const queryId = new Types.ObjectId(id);
 
   const products = await ProductModel.aggregate([
-  {
-    $lookup: {
-      from: 'categories',
-      localField: 'brandAndCategories.categories',
-      foreignField: '_id',
-      as: 'categoryDetails',
+    // 🔹 Lookup Categories
+    {
+      $lookup: {
+        from: "categories",
+        localField: "brandAndCategories.categories",
+        foreignField: "_id",
+        as: "categoryData",
+      },
     },
-  },
-  {
-    $lookup: {
-      from: 'tags',
-      localField: 'brandAndCategories.tags',
-      foreignField: '_id',
-      as: 'tagDetails',
-    },
-  },
-  {
-    $lookup: {
-      from: 'brands',
-      localField: 'brandAndCategories.brand',
-      foreignField: '_id',
-      as: 'brandDetails',
-    },
-  },
 
-  // ✅ Subcategory lookup
-  {
-    $lookup: {
-      from: 'subcategories',
-      localField: 'categoryDetails.subCategories',
-      foreignField: '_id',
-      as: 'subCategoryDetails',
+    // 🔹 Lookup SubCategories (direct from product)
+    {
+      $lookup: {
+        from: "subcategories",
+        localField: "brandAndCategories.subCategories",
+        foreignField: "_id",
+        as: "subCategoryData",
+      },
     },
-  },
 
-  {
-    $addFields: {
-      brandAndCategories: {
-        brand: { $arrayElemAt: ['$brandDetails', 0] },
-        categories: {
+    // 🔹 Match Category / Tag / SubCategory
+    {
+      $match: {
+        $or: [
+          { "brandAndCategories.categories": queryId },
+          { "brandAndCategories.tags": queryId },
+          { "brandAndCategories.subCategories": queryId },
+        ],
+      },
+    },
+
+    // 🔹 Attach subCategories inside each category
+    {
+      $addFields: {
+        "brandAndCategories.categories": {
           $map: {
-            input: '$categoryDetails',
-            as: 'cat',
+            input: "$categoryData",
+            as: "cat",
             in: {
               $mergeObjects: [
-                '$$cat',
+                "$$cat",
                 {
-                  subCategories: {
-                    $filter: {
-                      input: '$subCategoryDetails',
-                      as: 'sub',
-                      cond: {
-                        $in: ['$$sub._id', '$$cat.subCategories'],
-                      },
-                    },
-                  },
+                  subCategories: "$subCategoryData", // 👈 attach here
                 },
               ],
             },
           },
         },
-        tags: '$tagDetails',
       },
     },
-  },
 
-  {
-    $match: {
-      'description.status': 'publish',
-      ...(categories.length
-        ? { 'brandAndCategories.categories.name': { $in: categories } }
-        : {}),
-      ...(slug
-        ? { 'brandAndCategories.categories.slug': slug }
-        : {}),
-      ...(tags.length
-        ? { 'brandAndCategories.tags.name': { $in: tags } }
-        : {}),
+    // 🔹 Remove extra fields
+    {
+      $project: {
+        categoryData: 0,
+        subCategoryData: 0,
+        "brandAndCategories.subCategories": 0,
+      },
     },
-  },
-
-  {
-    $project: {
-      categoryDetails: 0,
-      tagDetails: 0,
-      brandDetails: 0,
-      subCategoryDetails: 0,
-    },
-  },
-]);
+  ]);
 
   return products;
 };
 
+
 const getSingleProductFromDB = async (id: string) => {
   const result = await ProductModel.findById(id)
-    .select("-vendorId -shopId") // ❌ remove vendorId, shopId
+    .select("-vendorId -shopId") 
     .populate({
       path: "brandAndCategories.brand",
       select: "name -_id", // ✅ only name
@@ -142,6 +129,10 @@ const getSingleProductFromDB = async (id: string) => {
     .populate({
       path: "brandAndCategories.categories",
       select: "name _id", // ✅ only name
+    })
+    .populate({
+      path: "brandAndCategories.subCategories",
+      select: "name -_id", // ✅ only name
     })
     .populate({
       path: "brandAndCategories.tags",
@@ -395,8 +386,47 @@ const getSingleEditProductFromDB = async (id: string) => {
   const result = await ProductModel.findById(id)
     .populate("brandAndCategories.brand")
     .populate("brandAndCategories.categories")
+    .populate("brandAndCategories.subCategories")
     .populate("brandAndCategories.tags");
   return result;
+};
+
+
+const getCategory = async () => {
+  const products = await ProductModel.find()
+    .populate({
+      path: "brandAndCategories.categories",
+      select: "name slug image bannerImg isFeatured createdAt updatedAt subCategories",
+      populate: {
+        path: "subCategories", // প্রতিটি category-এর ভিতরে subCategories populate
+        select: "name slug details image bannerImg isFeatured createdAt updatedAt",
+      },
+    })
+    .lean(); // plain JS object
+
+  const data = products.map((product) => {
+    const { categories } = product.brandAndCategories || {};
+
+    const newCategories = categories?.map((cat: any) => ({
+      _id: cat._id,
+      name: cat.name,
+      slug: cat.slug,
+      image: cat.image,
+      bannerImg: cat.bannerImg,
+      isFeatured: cat.isFeatured,
+      createdAt: cat.createdAt,
+      updatedAt: cat.updatedAt,
+      subCategories: cat.subCategories || [], 
+    }));
+
+    return {
+      brandAndCategories: {
+        categories: newCategories,
+      },
+    };
+  });
+
+  return data;
 };
 
 
@@ -405,11 +435,12 @@ export const productServices = {
   getSingleProductFromDB,
   getAllProductFromDB,
   updateProductOnDB,
-  getProductsByCategoryandTag,
+  getProductsByCategoryandSubcategory,
   deleteProduct,
   inventoryStats,
   bestSellingProducts,
   NewArrivalsListData,
   productcollection,
-  getSingleEditProductFromDB
+  getSingleEditProductFromDB,
+  getCategory
 };

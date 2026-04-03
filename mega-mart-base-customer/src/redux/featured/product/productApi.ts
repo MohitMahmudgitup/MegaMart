@@ -19,11 +19,10 @@ const productApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: { data: any }) => response.data,
     }),
-    getAllProductsbyCategoryName: builder.query<any, { slug?: string }>({
-      query: (params) => ({
-        url: "/product/products/by",
+    getAllProductsbyCategoryName: builder.query<any, { id?: string }>({
+      query: ({ id }) => ({
+        url: `/product/category/${id}`,
         method: "GET",
-        params,
       }),
       transformResponse: (response: { data: any }) => response.data,
     }),
@@ -57,7 +56,7 @@ const productApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: { data: any }) => response.data,
     }),
-      productcollections: builder.query<any, void>({
+    productcollections: builder.query<any, void>({
       query: () => ({
         url: "/product/type/product-collection",
         method: "GET",

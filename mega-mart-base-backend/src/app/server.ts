@@ -14,10 +14,10 @@ async function main() {
      console.log("✅ MongoDB connected successfully");
 
     server = app.listen(port, () => {
-      console.log(`Example app listening on port ${port}`);
+      console.log(`Example app listening on port ${port}`); 
     });
   } catch (err) { 
-    console.log(err); 
+    console.log(err);  
   } 
 }
  

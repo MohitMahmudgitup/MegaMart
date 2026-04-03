@@ -16,7 +16,7 @@ import { selectCurrentUser, setUser } from "@/redux/featured/auth/authSlice";
 import { useEffect, useMemo, useState } from "react";
 import { setCustomer } from "@/redux/featured/customer/customerSlice";
 import { useGetMeQuery } from "@/redux/featured/auth/authApi";
-import { useGetAllCategoryQuery } from "@/redux/featured/category/categoryApi";
+import { useGetProductInCategoryQuery } from "@/redux/featured/category/categoryApi";
 import CategoryList from "./CategoryList";
 import { Search , X } from "lucide-react";
 
@@ -44,7 +44,7 @@ const Navbar = ({
   const [hideSearch, setHideSearch] = useState(false);
 
   const { data: user } = useGetMeQuery(undefined);
-  const { data: categories, isLoading } = useGetAllCategoryQuery();
+  const { data: categories, isLoading } = useGetProductInCategoryQuery();
 
   // 🔥 Scroll Animation Logic
   useEffect(() => {
@@ -96,11 +96,11 @@ const Navbar = ({
 
     return categories.slice(0, 9).map((category: any) => ({
       title: category.name,
-      link: category.slug,
+      link: category._id,
       items:
         category.subCategories?.map((subCat: any) => ({
           label: subCat.name,
-          link: subCat.slug,
+          link: subCat._id,
         })) || [],
     }));
   }, [categories]);

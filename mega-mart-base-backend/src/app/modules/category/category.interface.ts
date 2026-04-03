@@ -13,6 +13,6 @@ export type TCategory = {
   image: string;
   bannerImg: string;
   isFeatured: boolean;
-  subCategories: Types.ObjectId[];
+  brand: Types.ObjectId[];
   deletedImages?: string[];
 };

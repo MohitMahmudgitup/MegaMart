@@ -15,22 +15,21 @@ export const getAllProduct = catchAsync(async (req, res) => {
   });
 });
 
-export const getProductsByCategoryandTag = catchAsync(async (req, res) => {
-  const { category, tag,slug } = req.query;
-  
-  const result = await productServices.getProductsByCategoryandTag(
-    category as string,
-    tag as string,
-    slug as string
-  );
+// productController.ts
+export const getProductsByCategoryandsubcategory = catchAsync(
+  async (req, res) => {
+    const id = req.params.id;
 
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: 'Products retrieve successfully!',
-    data: result,
-  });
- })
+    const result = await productServices.getProductsByCategoryandSubcategory(id);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "Products retrieved successfully!",
+      data: result,
+    });
+  }
+);
 
 export const getSingleProduct = catchAsync(async (req, res) => {
   const id = req.params.id;
@@ -167,4 +166,15 @@ export const getSingleEditProduct = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
+export const getCategory = catchAsync(async (req, res) => {
+  const result = await productServices.getCategory();
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Category retrieve successfully!",
+    data: result,
+  });
+});
+
 

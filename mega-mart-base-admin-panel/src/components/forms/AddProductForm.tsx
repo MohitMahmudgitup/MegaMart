@@ -42,6 +42,7 @@ import { useGetAllTagsQuery } from "@/redux/featured/tags/tagsApi";
 import RichTextEditor from "../editor/RichTextEditor";
 import { useGetAllBrandsQuery } from "@/redux/featured/brands/brandsApi";
 import { selectCurrentUser } from "@/redux/featured/auth/authSlice";
+import { useGetAllSubCategoriesQuery } from "@/redux/featured/subcategories/subcategoryApi";
 
 export type Option = {
   value: string;
@@ -63,7 +64,7 @@ interface AddProductFormProps {
 export default function AddProductForm({ importedData }: AddProductFormProps) {
 
 
-  
+
   const currentUser: any = useAppSelector(selectCurrentUser);
   const [description, setDescription] = useState("");
   const [hasImported, setHasImported] = useState(false);
@@ -72,13 +73,15 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
   const [createProduct] = useCreateProductMutation();
   const { data: categoriesData, isLoading: isCategoriesLoading } =
     useGetAllCategoriesQuery(undefined);
+  const { data: subCategoriesData, isLoading: isSubCategoriesLoading } =
+    useGetAllSubCategoriesQuery(undefined);
   const { data: tagsData, isLoading: isTagsLoading } =
     useGetAllTagsQuery(undefined);
   const { data: brands, isLoading: isBrandsLoading } =
     useGetAllBrandsQuery(undefined);
   const { data: shopData, isLoading: isShopDataLoading } =
     useGetAllShopsQuery();
- 
+
   const [featuredImage, setFeaturedImage] = useState<File | null>(null);
   const [galleryImage, setGalleryImage] = useState<File[]>([]);
 
@@ -92,6 +95,7 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
       brandAndCategories: {
         brand: "",
         categories: [],
+        subCategories: [],
         tags: [],
       },
       description: {
@@ -119,7 +123,7 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
         status: "publish",
       },
       specifications: [{ key: "", value: "" }],
-      variants :[
+      variants: [
         {
           color: "Default",
           size: "Default",
@@ -163,16 +167,16 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
 
       if (importedData) {
         payload = {
-         ...data,
-         description: {
-           ...data.description,
-           description: description,
-           status: data.productInfo.status,
-         },
-         featuredImg: importedData.images[0] || '',
-         gallery: importedData.images.slice(1) || []
-       };
-        
+          ...data,
+          description: {
+            ...data.description,
+            description: description,
+            status: data.productInfo.status,
+          },
+          featuredImg: importedData.images[0] || '',
+          gallery: importedData.images.slice(1) || []
+        };
+
       } else {
         payload = {
           ...data,
@@ -190,7 +194,7 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
 
       const res = await createProduct(formData).unwrap();
       toast.success("Product Created successfully!", { id: submitToast });
-      
+
       form.reset();
       setFeaturedImage(null);
       setGalleryImage([]);
@@ -206,7 +210,7 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
 
   };
 
-  const onErrors = (errors: any) => {};
+  const onErrors = (errors: any) => { };
 
   useEffect(() => {
     if (tagsData) {
@@ -217,10 +221,11 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
     }
   }, [dispatch, tagsData, categoriesData]);
 
+
   // Handle imported data from AliExpress
   useEffect(() => {
     if (importedData && !hasImported) {
-      
+
       const importData = async () => {
         try {
           // Set basic details
@@ -233,6 +238,7 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
             form.setValue("description.slug", newSlug, { shouldValidate: true });
           }
 
+        
           if (importedData.description) {
             setDescription(importedData.description);
           }
@@ -270,10 +276,10 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
             for (let i = currentLength - 1; i >= 0; i--) {
               removeVariant(i);
             }
-            
+
             // Wait a bit for state to update
             await new Promise(resolve => setTimeout(resolve, 100));
-            
+
             // Add imported variants
             importedData.variants.forEach((variant: any) => {
               appendVariant({
@@ -310,6 +316,13 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
       label: tag.name,
     })) ?? [];
 
+const simplifiedSubCategories: Option[] =
+  subCategoriesData?.map((subCat: any) => ({
+    value: subCat._id,
+    label: subCat.name,
+  })) ?? [];
+
+console.log("Simplified SubCategories:", simplifiedSubCategories);
   return (
     <Form {...form}>
       <form
@@ -348,7 +361,7 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
                 </FormItem>
               )}
             />
-            
+
 
             {/* <FormField
               control={form.control}
@@ -378,7 +391,7 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
               )}
             />
 
-            
+
 
             <FormField
               control={form.control}
@@ -441,9 +454,9 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
                       <>
                         {(currentUser?.role === "vendor"
                           ? shopData.filter(
-                              (shop: any) =>
-                                shop.vendorId?._id === currentUser?._id
-                            )
+                            (shop: any) =>
+                              shop.vendorId?._id === currentUser?._id
+                          )
                           : shopData
                         ).map((shop: any) => (
                           <SelectItem key={shop._id} value={shop._id}>
@@ -777,7 +790,7 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
             </Button>
           </div>
 
-          
+
         </div>
 
         {/* RIGHT COLUMN */}
@@ -890,6 +903,50 @@ export default function AddProductForm({ importedData }: AddProductFormProps) {
                 </FormItem>
               )}
             />
+            
+            
+            <FormField
+              control={form.control}
+              name="brandAndCategories.subCategories"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Subcategories</FormLabel>
+                  <FormControl>
+                    {isCategoriesLoading ? (
+                      <Input
+                        className="animate-pulse"
+                        placeholder="Loading Subcategories..."
+                      />
+                    ) : (
+                      <MultipleSelector
+                        value={
+                          (field.value ?? []) 
+                            .map((val) =>
+                              simplifiedSubCategories.find(
+                                (opt) => opt.value === val
+                              )
+                            )
+                            .filter(Boolean) as Option[]
+                        }
+                        onChange={(options) =>
+                          field.onChange(options.map((opt) => opt.value))
+                        }
+                        defaultOptions={simplifiedSubCategories}
+                        placeholder="Select subcategories..."
+                        emptyIndicator={
+                          <p className="text-center text-sm">
+                            No subcategories found.
+                          </p>
+                        }
+                      />
+                    )}
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+         
+
             <FormField
               control={form.control}
               name="brandAndCategories.tags"

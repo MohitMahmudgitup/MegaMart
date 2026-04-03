@@ -13,6 +13,7 @@ type Props = {
 };
 
 const CategoryMenuSection = ({ title, items,link }: Props) => {
+  console.log({ title, items, link });
 
   return (
     <div className="break-inside-avoid mb-4">

@@ -50,6 +50,7 @@ import { selectShops, setShops } from "@/redux/featured/shop/shopSlice";
 import { useGetAllTagsQuery } from "@/redux/featured/tags/tagsApi";
 import RichTextEditor from "../editor/RichTextEditor";
 import { useGetAllBrandsQuery } from "@/redux/featured/brands/brandsApi";
+import { useGetAllSubCategoriesQuery } from "@/redux/featured/subcategories/subcategoryApi";
 
 export type Option = {
   value: string;
@@ -81,8 +82,9 @@ export default function EditProductForm({ id }: { id: string }) {
 
   const { data: editableProduct, isLoading: isProductLoading } =
     useGetSingleEditProductQuery(id);
-    console.log(editableProduct)
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
+  const { data: subCategoriesData, isLoading: isSubCategoriesLoading } =
+    useGetAllSubCategoriesQuery(undefined);
 
   const { data: categoriesDatau, isLoading: isCategoriesLoading } =
     useGetAllCategoriesQuery(undefined);
@@ -138,6 +140,7 @@ export default function EditProductForm({ id }: { id: string }) {
           categories: product.brandAndCategories.categories.map(
             (cat: any) => cat._id
           ),
+          subCategories: product.brandAndCategories.subCategories?.map((subCat: any) => subCat._id) || [],
           tags: product.brandAndCategories.tags.map((tag: any) => tag._id),
         },
         description: {
@@ -251,6 +254,12 @@ export default function EditProductForm({ id }: { id: string }) {
       label: tag.name,
     })) ?? [];
 
+  const simplifiedSubCategories: Option[] =
+    subCategoriesData?.map((subCat: any) => ({
+      value: subCat._id,
+      label: subCat.name,
+    })) ?? [];
+
   if (!isReady) return <FormSkeleton />;
   if (isLoading) return <FormSkeleton />;
 
@@ -305,7 +314,7 @@ export default function EditProductForm({ id }: { id: string }) {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="description.shortdescription"
@@ -799,6 +808,44 @@ export default function EditProductForm({ id }: { id: string }) {
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="brandAndCategories.subCategories"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Subcategories</FormLabel>
+                  <FormControl>
+                    {isSubCategoriesLoading ? (
+                      <Input
+                        className="animate-pulse"
+                        placeholder="Loading Subcategories..."
+                      />
+                    ) : (
+                      <MultipleSelector
+                        value={
+                          (field.value ?? []).map((val) =>
+                            simplifiedSubCategories.find((opt) => opt.value === val)
+                          ).filter(Boolean) as Option[]
+                        }
+                        onChange={(options) =>
+                          field.onChange(options.map((opt) => opt.value))
+                        }
+                        defaultOptions={simplifiedSubCategories}
+                        placeholder="Select subcategories..."
+                        emptyIndicator={
+                          <p className="text-center text-sm">
+                            No subcategories found.
+                          </p>
+                        }
+                      />
+                    )}
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="brandAndCategories.tags"

@@ -1,38 +1,41 @@
+"use client";
+
 import type React from "react";
 import Link from "next/link";
 import { Home, Heart, MessageCircleMore } from "lucide-react";
 import MobileMenu from "../modules/Navbar/MobileMenu";
-
+import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 
 export default function SmallNavbar({ showSidebar }: { showSidebar?: any }) {
+  const pathname = usePathname();
+
   return (
-    <nav className="bg-white/90 backdrop-blur-md border border-gray-200 fixed bottom-4 inset-x-4 z-50 rounded-full shadow-xl">
-      <div className="flex items-center justify-around py-2">
+    <nav className="fixed bottom-4 inset-x-4 z-50">
+      <div className="bg-white/70 backdrop-blur-xl border border-gray-200 rounded-full shadow-2xl px-4 py-2 flex items-center justify-around">
 
-        <NavItem icon={Home} href="/" isActive />
+        <NavItem icon={Home} href="/" active={pathname === "/"} />
+        <NavItem
+          icon={Heart}
+          href="/dashboard/wishlistItems"
+          active={pathname === "/dashboard/wishlistItems"}
+        />
 
-        <NavItem icon={Heart} href="/dashboard/wishlistItems" />
-
-        {/* WhatsApp */}
-        <Link
-          href="https://wa.me/8801630075111"
+        {/* WhatsApp Magic Button */}
+        <motion.a
+          href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}`}
           target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Chat on WhatsApp"
-          className="relative flex items-center justify-center p-3 rounded-full hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl"
+          whileTap={{ scale: 0.9 }}
+          whileHover={{ scale: 1.15 }}
+          className="relative flex items-center justify-center p-3 rounded-full bg-green-500 text-white shadow-lg"
         >
           <MessageCircleMore className="w-5 h-5" />
-          <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 text-[10px] sm:text-xs font-bold bg-red-500 text-white rounded-full border-2 border-white shadow-sm animate-pulse">
-            1
-          </span>
-        </Link>
 
-        {!showSidebar && (
-          <div className="flex-shrink-0">
-            <MobileMenu />
-            {/* <TextAlignEnd /> */}
-          </div>
-        )}
+          {/* Glow Effect */}
+          <span className="absolute inset-0 rounded-full bg-green-400 blur-xl opacity-40 animate-pulse"></span>
+        </motion.a>
+
+        {!showSidebar && <MobileMenu />}
       </div>
     </nav>
   );
@@ -41,20 +44,31 @@ export default function SmallNavbar({ showSidebar }: { showSidebar?: any }) {
 interface NavItemProps {
   icon: React.ComponentType<{ className?: string }>;
   href: string;
-  isActive?: boolean;
+  active?: boolean;
 }
 
-function NavItem({ icon: Icon, href, isActive = false }: NavItemProps) {
+function NavItem({ icon: Icon, href, active = false }: NavItemProps) {
   return (
-    <Link href={href}>
-      <div
-        className={`flex items-center justify-center p-3 transition-all duration-300 ${isActive
-            ? "text-white bg-black rounded-full shadow-md scale-110"
-            : "text-gray-500 hover:text-orange-500 hover:scale-110"
-          }`}
+    <Link href={href} className="relative flex flex-col items-center">
+      <motion.div
+        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.2 }}
+        className="relative z-10 p-3"
       >
-        <Icon className="w-5 h-5" />
-      </div>
+        <Icon
+          className={`w-5 h-5 transition-colors duration-300 ${
+            active ? "text-white" : "text-gray-500"
+          }`}
+        />
+      </motion.div>
+
+      {active && (
+        <motion.div
+          layoutId="active-pill"
+          className="absolute inset-0 bg-black rounded-full"
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        />
+      )}
     </Link>
   );
 }

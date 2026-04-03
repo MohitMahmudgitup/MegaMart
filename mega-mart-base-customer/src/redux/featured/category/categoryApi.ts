@@ -22,6 +22,15 @@ const shopApi = baseApi.injectEndpoints({
         method: "GET",
       }),
     }),
+
+     getProductInCategory: builder.query<any, void>({
+      query: () => ({
+        url: "/category/type/products-in-category",
+        method: "GET",
+      }),
+      transformResponse: (response: { data: any }) => response.data,
+    }),
+
   }),
 });
 
@@ -29,4 +38,5 @@ export const {
   useGetAllCategoryQuery,
   useGetSingleCategoryQuery,
   useCreateCategoryMutation,
+  useGetProductInCategoryQuery
 } = shopApi;

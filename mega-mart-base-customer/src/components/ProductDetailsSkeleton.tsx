@@ -13,7 +13,7 @@ export function ProductDetailsSkeleton() {
           <div className="mt-4 grid grid-cols-4 gap-3">
             {[...Array(4)].map((_, i) => (
               <div
-                key={i}
+                key={i} 
                 className="relative aspect-square rounded-lg overflow-hidden bg-gray-200"
               />
             ))}
