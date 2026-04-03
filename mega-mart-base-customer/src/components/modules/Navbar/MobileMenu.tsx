@@ -1,4 +1,3 @@
-
 "use client";
 import {
   Accordion,
@@ -18,37 +17,32 @@ import { Menu } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { megaMenuItems } from "@/data/megaMenuItems";
-import { useGetAllCategoryQuery } from "@/redux/featured/category/categoryApi";
+import { useGetProductInCategoryQuery } from "@/redux/featured/category/categoryApi";
 import { MegaMenuItem } from "./Navbar";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 const MobileMenu = () => {
-
-
-  const { data: categories } = useGetAllCategoryQuery();
-
+  const { data: categories } = useGetProductInCategoryQuery();
+  const [isOpen, setIsOpen] = useState(false); // control Sheet open state
 
   const categoriesData: MegaMenuItem[] = useMemo(() => {
-    if (!categories) return;
-
+    if (!categories) return [];
     return categories.slice(0, 9).map((category: any) => ({
       title: category.name,
-      link: category.slug,
+      link: category._id,
       items:
         category.subCategories?.map((subCat: any) => ({
           label: subCat.name,
-          link: subCat.slug,
+          link: subCat._id,
         })) || [],
     }));
   }, [categories]);
 
-
-  const allMenuLabels = Object.keys(megaMenuItems) as Array<
-    keyof typeof megaMenuItems
-  >;
+  // Close menu when clicking any link
+  const handleCloseMenu = () => setIsOpen(false);
 
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button
           variant="ghost"
@@ -64,22 +58,24 @@ const MobileMenu = () => {
         <SheetHeader>
           <SheetTitle className="sr-only">Mobile Navigation Menu</SheetTitle>
         </SheetHeader>
-        <div className="flex flex-col gap-6 mt-4 ">
-          
+        <div className="flex flex-col gap-6 mt-4">
           {/* NAV LINKS */}
           <Accordion type="multiple" className="w-full">
-                <Link
+            <Link
               href="/"
-              className="block text-sm hover:text-black
-            font-semibold mt-6"
+              onClick={handleCloseMenu}
+              className="block text-sm hover:text-black font-semibold mt-6"
             >
               Home
             </Link>
-            <Link href="/about" className="block text-sm hover:text-black
-            font-semibold mt-6">
+            <Link
+              href="/about"
+              onClick={handleCloseMenu}
+              className="block text-sm hover:text-black font-semibold mt-6"
+            >
               About
             </Link>
-          
+
             {categoriesData?.map((category, catIndex) => (
               <AccordionItem
                 key={category.link || catIndex}
@@ -93,28 +89,30 @@ const MobileMenu = () => {
                     <li key={subIndex} className="list-none">
                       <Link
                         href={`/category/${sub.link}`}
+                        onClick={handleCloseMenu}
                         className="block hover:text-black transition-colors"
                       >
                         {sub.label}
                       </Link>
-
                     </li>
                   ))}
                 </AccordionContent>
               </AccordionItem>
             ))}
 
-
             {/* Shops */}
             <Link
               href="/shops"
-              className="block text-sm hover:text-black
-            font-semibold mt-6"
+              onClick={handleCloseMenu}
+              className="block text-sm hover:text-black font-semibold mt-6"
             >
               Shops
             </Link>
-            <Link href="/contact-us" className="block text-sm hover:text-black
-            font-semibold mt-6">
+            <Link
+              href="/contact-us"
+              onClick={handleCloseMenu}
+              className="block text-sm hover:text-black font-semibold mt-6"
+            >
               Contact Us
             </Link>
           </Accordion>

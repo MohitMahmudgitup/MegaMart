@@ -586,7 +586,7 @@ export default function CheckoutPage() {
   };
   
   return (
-    <div className="min-h-screen bg-[#FFFFFF] py-4 md:py-8">
+    <div className="min-h-screen  pt-12 md:py-8 rounded-2xl  mr-4">
       <div className="w-full  md:px-4 max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6 md:mb-8">

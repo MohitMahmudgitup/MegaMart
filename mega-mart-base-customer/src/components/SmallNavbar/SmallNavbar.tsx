@@ -35,7 +35,7 @@ export default function SmallNavbar({ showSidebar }: { showSidebar?: any }) {
           <span className="absolute inset-0 rounded-full bg-green-400 blur-xl opacity-40 animate-pulse"></span>
         </motion.a>
 
-        {!showSidebar && <MobileMenu />}
+        {!showSidebar && <MobileMenu/>}
       </div>
     </nav>
   );
