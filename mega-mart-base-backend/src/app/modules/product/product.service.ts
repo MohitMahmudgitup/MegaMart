@@ -427,7 +427,7 @@ const getCategory = async () => {
   });
 
   return data;
-};
+}; 
 
 
 export const productServices = {
