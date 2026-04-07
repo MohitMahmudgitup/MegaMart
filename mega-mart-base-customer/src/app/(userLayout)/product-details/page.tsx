@@ -2,9 +2,19 @@
 "use client";
 
 import Image from "next/image";
+import "./productDetails.css"
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+
+// Swiper imports
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Thumbs, FreeMode } from "swiper/modules";
+import type { Swiper as SwiperType } from "swiper";
+import  "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/thumbs";
+import "swiper/css/free-mode";
 
 import {
   Heart,
@@ -20,10 +30,7 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import { useGetAllProductsQuery, useGetSingleProductQuery } from "@/redux/featured/product/productApi";
-import {
-  useGetSingleCustomerQuery,
-  useUpdateCustomerMutation,
-} from "@/redux/featured/customer/customerApi";
+import { useGetSingleCustomerQuery, useUpdateCustomerMutation } from "@/redux/featured/customer/customerApi";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { selectCurrentUser } from "@/redux/featured/auth/authSlice";
 import { useRouter } from "next/navigation";
@@ -68,13 +75,15 @@ export default function ProductDetailsPage({ productId }: any) {
   const [isaddLoading, setIsaddLoading] = useState(false);
   const [showZoom, setShowZoom] = useState(false);
   const [viewAllText, setViewAllText] = useState(false);
+  const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
+  const [mainSwiperIndex, setMainSwiperIndex] = useState(0);
+  const mainSwiperRef = useRef<SwiperType | null>(null);
+
   const dispatch = useAppDispatch();
   const [updateCustomer] = useUpdateCustomerMutation();
   const router = useRouter();
   const { data: currentProduct, isLoading } = useGetSingleProductQuery(productId)
   const { data: productsData } = useGetAllProductsQuery({});
-
-
 
   const currentUser = useAppSelector(selectCurrentUser);
 
@@ -102,7 +111,6 @@ export default function ProductDetailsPage({ productId }: any) {
     return uniqueSizes;
   }, [variants]);
 
-  const [mainIdx, setMainIdx] = useState(0);
   const [color, setColor] = useState<ColorOption | null>(null);
   const [size, setSize] = useState<SizeOption | null>(null);
   const [qty, setQty] = useState(1);
@@ -110,8 +118,6 @@ export default function ProductDetailsPage({ productId }: any) {
     type: "cart" | "wish";
     text: string;
   }>(null);
-
-
 
   const images: ProductImage[] = useMemo(() => {
     if (!currentProduct) {
@@ -125,7 +131,6 @@ export default function ProductDetailsPage({ productId }: any) {
 
     const imageList = [];
 
-    // Add featured image
     if (currentProduct.featuredImg) {
       imageList.push({
         src: currentProduct.featuredImg,
@@ -133,13 +138,11 @@ export default function ProductDetailsPage({ productId }: any) {
       });
     }
 
-    // Add gallery images
     if (currentProduct.gallery && currentProduct.gallery.length > 0) {
       currentProduct.gallery.forEach((img: string, index: number) => {
         imageList.push({
           src: img,
-          alt: `${currentProduct.description?.name || "Product"} - Image ${index + 2
-            }`,
+          alt: `${currentProduct.description?.name || "Product"} - Image ${index + 2}`,
         });
       });
     }
@@ -170,7 +173,7 @@ export default function ProductDetailsPage({ productId }: any) {
     ));
   }, [color, variants, sizes]);
 
-  // Get available colors (show all colors, not filtered by size)
+  // Get available colors
   const availableColors = useMemo(() => {
     return colors;
   }, [colors]);
@@ -204,7 +207,6 @@ export default function ProductDetailsPage({ productId }: any) {
       };
     }
 
-    // Use variant price if available, otherwise use product info price
     const variantPrice = selectedVariant?.price;
     const salePrice = variantPrice ?? currentProduct.productInfo?.salePrice ?? 0;
     const regularPrice = currentProduct.productInfo?.price || salePrice;
@@ -212,7 +214,6 @@ export default function ProductDetailsPage({ productId }: any) {
     const compareAtPrice =
       regularPrice > salePrice ? regularPrice : salePrice * 1.3;
 
-    // Use variant stock if available, otherwise use product info quantity
     const stock = selectedVariant?.stock ?? currentProduct.productInfo?.quantity ?? 0;
 
     return {
@@ -254,7 +255,6 @@ export default function ProductDetailsPage({ productId }: any) {
   const discountPct = useMemo(() => {
     if (product.compareAt <= product.price) return 0;
     const diff = product.compareAt - product.price;
-
     return Math.round((diff / product.compareAt) * 100);
   }, [product.compareAt, product.price]);
 
@@ -276,7 +276,6 @@ export default function ProductDetailsPage({ productId }: any) {
       }));
   }, [productsData, currentProduct]);
 
-  // ---- Static data for vouchers and reviews (you can make these dynamic too) ----
   const vouchers = [
     {
       label: "20%",
@@ -315,7 +314,6 @@ export default function ProductDetailsPage({ productId }: any) {
     },
   ];
 
-  // ---- handlers ----
   const handleQty = (dir: "dec" | "inc") =>
     setQty((q) => {
       const next = dir === "inc" ? q + 1 : q - 1;
@@ -331,7 +329,6 @@ export default function ProductDetailsPage({ productId }: any) {
       return;
     }
 
-    // Check if variants exist and color/size are not selected
     if (currentProduct?.variants && currentProduct.variants.length > 0) {
       if (!color || !size) {
         toast.error("Please select color and size before adding to cart");
@@ -445,86 +442,92 @@ export default function ProductDetailsPage({ productId }: any) {
 
   return (
     <div className="max-w-full mx-auto 2xl:px-0 md:px-8 px-2">
-      {showZoom && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/40 backdrop-blur-md">
-          {/* Zoomed image */}
-          <div className="relative max-w-3xl w-full p-4">
-            <Image
-              src={images[mainIdx]?.src || "/placeholder.png"}
-              alt={images[mainIdx]?.alt || "Product image"}
-              width={800}
-              height={800}
-              className="object-contain rounded-xl"
-            />
 
-            {/* Cancel / Close button */}
-            <button
-              onClick={() => setShowZoom(false)}
-              className="absolute top-8 right-8 w-10 h-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-gray-700 shadow-md hover:bg-white/100 hover:scale-110 transition-all duration-200"
-              aria-label="Close zoom"
-            >
-              ✕
-            </button>
-
-          </div>
-        </div>
-
-      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* LEFT: media */}
-        <div className="">
-          {/* Main image */}
+        {/* LEFT: media with Swiper */}
+        <div>
+          {/* Main Swiper */}
           <div
             onClick={() => setShowZoom(true)}
             className="relative cursor-pointer aspect-square rounded-xl overflow-hidden bg-white shadow-sm ring-1 ring-gray-200"
           >
-            <Image
-              src={images[mainIdx]?.src || "/placeholder.png"}
-              alt={images[mainIdx]?.alt || "Product image"}
-              fill
-              className="object-cover"
-              sizes="(max-width:768px) 100vw, 600px"
-              priority
-            />
+            <Swiper
+              modules={[Navigation, Thumbs, FreeMode]}
+              thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
+              onSwiper={(swiper) => { mainSwiperRef.current = swiper; }}
+              onSlideChange={(swiper) => setMainSwiperIndex(swiper.activeIndex)}
+              navigation={
+                images.length > 1
+                  ? {
+                    nextEl: ".next-btn",
+                    prevEl: ".prev-btn",
+                  }
+                  : false
+              }
+              loop={false}
+              className="w-full h-full"
+              style={{ width: "100%", height: "100%" }}
+            >
+              {images.map((img, i) => (
+                <SwiperSlide key={img.src + i} style={{ width: "100%", height: "100%" }}>
+                  <div className="relative w-full h-full">
+                    <Image
+                      src={img.src}
+                      alt={img.alt}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width:768px) 100vw, 600px"
+                      priority={i === 0}
+                    />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
           </div>
 
-          {/* Thumbnails */}
+          {/* Thumbnail Swiper */}
           {images.length > 1 && (
-            <div className="mt-4 grid grid-cols-4 gap-3">
-              {images.map((img, i) => (
-                <button
-                  key={img.src + i}
-                  onClick={() => {
-                    setMainIdx(i);
-                    setShowZoom(true);
-                  }}
-                  aria-label={`Show image ${i + 1}`}
-                  className={cn(
-                    "relative aspect-square rounded-lg overflow-hidden ring-1 transition",
-                    mainIdx === i
-                      ? "ring-orange-500"
-                      : "ring-gray-200 hover:ring-gray-300"
-                  )}
-                >
-                  <Image
-                    src={img.src}
-                    alt={img.alt}
-                    fill
-                    className="object-cover"
-                  />
-                </button>
-              ))}
+            <div className="mt-4">
+              <Swiper
+                modules={[Thumbs, FreeMode]}
+                onSwiper={setThumbsSwiper}
+                spaceBetween={12}
+                slidesPerView={4}
+                freeMode={true}
+                watchSlidesProgress={true}
+                className="thumbs-swiper"
+              >
+                {images.map((img, i) => (
+                  <SwiperSlide key={img.src + i}>
+                    <button
+                      aria-label={`Show image ${i + 1}`}
+                      className={cn(
+                        "relative aspect-square w-full rounded-lg overflow-hidden ring-1 transition block",
+                        mainSwiperIndex === i
+                          ? "ring-orange-500"
+                          : "ring-gray-200 hover:ring-gray-300"
+                      )}
+                    >
+                      <Image
+                        src={img.src}
+                        alt={img.alt}
+                        fill
+                        className="object-cover"
+                      />
+                    </button>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             </div>
           )}
         </div>
-
 
         {/* RIGHT: details */}
         <div className="bg-white rounded-lg p-6 border ">
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mb-2">
-            {product.badges.includes("SALE"  )  && (
+            {product.badges.includes("SALE") && (
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-500 text-white">
                 SALE
               </span>
@@ -552,11 +555,9 @@ export default function ProductDetailsPage({ productId }: any) {
           </div>
           <div className="relative">
             <p
-              className={`text-gray-600 text-sm mt-2 ${viewAllText ? "" : "line-clamp-3"
-                }`}
+              className={`text-gray-600 text-sm mt-2 ${viewAllText ? "" : "line-clamp-3"}`}
               dangerouslySetInnerHTML={{ __html: product?.shortdescription || "" }}
             />
-
             {product?.shortdescription?.length > 200 && (
               <span
                 onClick={() => setViewAllText(!viewAllText)}
@@ -567,15 +568,9 @@ export default function ProductDetailsPage({ productId }: any) {
             )}
           </div>
 
-
           {/* Brand and categories */}
           {(product.brand || product.categories.length > 0) && (
             <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-gray-600">
-              {/* {product.brand && (
-                <span className="bg-gray-100 px-2 py-1 rounded">
-                  Brand: {product.brand}
-                </span>
-              )} */}
               {product.categories.map((category: any) => (
                 <span
                   key={category._id}
@@ -724,8 +719,7 @@ export default function ProductDetailsPage({ productId }: any) {
 
           {/* actions */}
           <div className="mt-6 space-y-2">
-
-            <div className={`grid  gap-2 ${currentProduct?.variants?.length > 0 && (!color || !size) ? 'grid-cols-1' : 'grid-cols-2'}`}>
+            <div className={`grid gap-2 ${currentProduct?.variants?.length > 0 && (!color || !size) ? 'grid-cols-1' : 'grid-cols-2'}`}>
               <Button
                 onClick={addToCart}
                 disabled={product.specifications.quantity === 0 || isAddedToCart || currentProduct.variants.length > 0 && (!color || !size) || isVariantOutOfStock}
@@ -733,10 +727,10 @@ export default function ProductDetailsPage({ productId }: any) {
                   "w-full text-white",
                   {
                     "bg-gray-500 hover:bg-gray-600":
-                      product.specifications.quantity === 0 || isVariantOutOfStock, // stock out
-                    "bg-green-600 hover:bg-green-600 text-black": isAddedToCart, // already added
+                      product.specifications.quantity === 0 || isVariantOutOfStock,
+                    "bg-green-600 hover:bg-green-600 text-black": isAddedToCart,
                     "bg-orange-500 hover:bg-orange-600":
-                      product.specifications.quantity > 0 && !isAddedToCart && !isVariantOutOfStock, // normal add
+                      product.specifications.quantity > 0 && !isAddedToCart && !isVariantOutOfStock,
                   }
                 )}
               >
@@ -755,43 +749,38 @@ export default function ProductDetailsPage({ productId }: any) {
                       : "Add to Cart"}
               </Button>
 
-              {
-                currentProduct?.variants?.length > 0 && (!color || !size) ? (null) :
-                  (
-                    <Link href="/dashboard/checkout">
-                      <Button
-                        onClick={addToCart}
-                        disabled={product.specifications.quantity === 0 || isAddedToCart || currentProduct.variants.length > 0 && (!color || !size) || isVariantOutOfStock}
-                        className={clsx(
-                          "w-full text-white",
-                          {
-                            "bg-gray-500 hover:bg-gray-600":
-                              product.specifications.quantity === 0 || isVariantOutOfStock, // stock out
-                            "bg-green-600 hover:bg-green-600 text-black": isAddedToCart, // already added
-                            "bg-blue-500 hover:bg-blue-600":
-                              product.specifications.quantity > 0 && !isAddedToCart && !isVariantOutOfStock, // normal add
-                          }
-                        )}
-                      >
-                        {isaddLoading ? (
-                          <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <ClipboardCheck className="w-4 h-4 mr-2" />
-                        )}
+              {currentProduct?.variants?.length > 0 && (!color || !size) ? null : (
+                <Link href="/dashboard/checkout">
+                  <Button
+                    onClick={addToCart}
+                    disabled={product.specifications.quantity === 0 || isAddedToCart || currentProduct.variants.length > 0 && (!color || !size) || isVariantOutOfStock}
+                    className={clsx(
+                      "w-full text-white",
+                      {
+                        "bg-gray-500 hover:bg-gray-600":
+                          product.specifications.quantity === 0 || isVariantOutOfStock,
+                        "bg-green-600 hover:bg-green-600 text-black": isAddedToCart,
+                        "bg-blue-500 hover:bg-blue-600":
+                          product.specifications.quantity > 0 && !isAddedToCart && !isVariantOutOfStock,
+                      }
+                    )}
+                  >
+                    {isaddLoading ? (
+                      <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <ClipboardCheck className="w-4 h-4 mr-2" />
+                    )}
 
-                        {currentProduct?.variants?.length > 0 && (!color || !size)
-                          ? "Select Color & Size"
-                          : product.specifications.quantity === 0 || isVariantOutOfStock
-                            ? "Out of Stock"
-                            : isAddedToCart
-                              ? "Added to Cart"
-                              : "Buy Now"}
-                      </Button>
-                    </Link>
-                  )
-              }
-
-
+                    {currentProduct?.variants?.length > 0 && (!color || !size)
+                      ? "Select Color & Size"
+                      : product.specifications.quantity === 0 || isVariantOutOfStock
+                        ? "Out of Stock"
+                        : isAddedToCart
+                          ? "Added to Cart"
+                          : "Buy Now"}
+                  </Button>
+                </Link>
+              )}
             </div>
             <Button
               variant="outline"
@@ -837,38 +826,28 @@ export default function ProductDetailsPage({ productId }: any) {
           </div>
         </div>
       </div>
-      
-<div className=" mt-6 z-30 bg-white/80  rounded-lg border border-gray-200  sticky top-6">
-  <div className="max-w-7xl mx-auto px-3 sm:px-6">
-    <div className="flex gap-2 sm:gap-3 overflow-x-auto no-scrollbar py-3">
 
-      {/* Button */}
-      <button
-        onClick={() => scrollToSection(whyRef, -100)}
-        className="flex-shrink-0 px-4 py-2 text-sm sm:text-base font-medium rounded-full 
-        bg-amber-600 text-white hover:bg-amber-700 transition-all duration-200"
-      >
-        Why Choose
-      </button>
+      <div className=" mt-6 z-30 bg-white/80  rounded-lg border border-gray-200  sticky top-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6">
+          <div className="flex gap-2 sm:gap-3 overflow-x-auto no-scrollbar py-3">
+            <button
+              onClick={() => scrollToSection(whyRef, -100)}
+              className="flex-shrink-0 px-4 py-2 text-sm sm:text-base font-medium rounded-full 
+              bg-amber-600 text-white hover:bg-amber-700 transition-all duration-200"
+            >
+              Why Choose
+            </button>
 
-      <button
-        onClick={() => scrollToSection(specRef, -100)}
-        className="flex-shrink-0 px-4 py-2 text-sm sm:text-base font-medium rounded-full 
-        bg-gray-100 text-gray-700 hover:bg-amber-600 hover:text-white transition-all duration-200"
-      >
-        Specifications
-      </button>
-
-      {/* Future Buttons */}
-      {/* 
-      <button className="tab-btn">Reviews</button>
-      <button className="tab-btn">Vouchers</button>
-      <button className="tab-btn">Related</button> 
-      */}
-
-    </div>
-  </div>
-</div>
+            <button
+              onClick={() => scrollToSection(specRef, -100)}
+              className="flex-shrink-0 px-4 py-2 text-sm sm:text-base font-medium rounded-full 
+              bg-gray-100 text-gray-700 hover:bg-amber-600 hover:text-white transition-all duration-200"
+            >
+              Specifications
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* WHY CHOOSE */}
       <div ref={whyRef} className="mt-10">
@@ -902,197 +881,104 @@ export default function ProductDetailsPage({ productId }: any) {
             <div>
               <h3 className="font-semibold mb-3">Product Details</h3>
               <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
-  <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200">
 
-    {/* SKU */}
-    {product.specifications.sku && (
-      <tr className="hover:bg-gray-50 transition">
-        <td className="py-3 px-4 text-gray-500 font-medium w-1/3">SKU</td>
-        <td className="py-3 px-4 font-semibold text-gray-800">
-          {product.specifications.sku}
-        </td>
-      </tr>
-    )}
+                  {product.specifications.sku && (
+                    <tr className="hover:bg-gray-50 transition">
+                      <td className="py-3 px-4 text-gray-500 font-medium w-1/3">SKU</td>
+                      <td className="py-3 px-4 font-semibold text-gray-800">
+                        {product.specifications.sku}
+                      </td>
+                    </tr>
+                  )}
 
-    {/* Status */}
-    <tr className="hover:bg-gray-50 transition">
-      <td className="py-3 px-4 text-gray-500 font-medium">Status</td>
-      <td className="py-3 px-4 capitalize text-gray-800">
-        {product.specifications.status || "Available"}
-      </td>
-    </tr>
+                  <tr className="hover:bg-gray-50 transition">
+                    <td className="py-3 px-4 text-gray-500 font-medium">Status</td>
+                    <td className="py-3 px-4 capitalize text-gray-800">
+                      {product.specifications.status || "Available"}
+                    </td>
+                  </tr>
 
-    {/* Stock */}
-    <tr className="hover:bg-gray-50 transition">
-      <td className="py-3 px-4 text-gray-500 font-medium">Stock</td>
-      <td className="py-3 px-4 text-gray-800">
-        {product.specifications.quantity} units
-      </td>
-    </tr>
+                  <tr className="hover:bg-gray-50 transition">
+                    <td className="py-3 px-4 text-gray-500 font-medium">Stock</td>
+                    <td className="py-3 px-4 text-gray-800">
+                      {product.specifications.quantity} units
+                    </td>
+                  </tr>
 
-    {/* Dimensions */}
-    {(product.specifications.dimensions.length ||
-      product.specifications.dimensions.width ||
-      product.specifications.dimensions.height) && (
-      <tr className="hover:bg-gray-50 transition">
-        <td className="py-3 px-4 text-gray-500 font-medium">Dimensions</td>
-        <td className="py-3 px-4 text-gray-800">
-          {[
-            product.specifications.dimensions.length &&
-              `L: ${product.specifications.dimensions.length}`,
-            product.specifications.dimensions.width &&
-              `W: ${product.specifications.dimensions.width}`,
-            product.specifications.dimensions.height &&
-              `H: ${product.specifications.dimensions.height}`,
-          ]
-            .filter(Boolean)
-            .join(", ")}
-        </td>
-      </tr>
-    )}
+                  {(product.specifications.dimensions.length ||
+                    product.specifications.dimensions.width ||
+                    product.specifications.dimensions.height) && (
+                      <tr className="hover:bg-gray-50 transition">
+                        <td className="py-3 px-4 text-gray-500 font-medium">Dimensions</td>
+                        <td className="py-3 px-4 text-gray-800">
+                          {[
+                            product.specifications.dimensions.length &&
+                            `L: ${product.specifications.dimensions.length}`,
+                            product.specifications.dimensions.width &&
+                            `W: ${product.specifications.dimensions.width}`,
+                            product.specifications.dimensions.height &&
+                            `H: ${product.specifications.dimensions.height}`,
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </td>
+                      </tr>
+                    )}
 
-    {/* Brand */}
-    {product.brand && (
-      <tr className="hover:bg-gray-50 transition">
-        <td className="py-3 px-4 text-gray-500 font-medium">Brand</td>
-        <td className="py-3 px-4 text-gray-800 font-medium">
-          {product.brand}
-        </td>
-      </tr>
-    )}
+                  {product.brand && (
+                    <tr className="hover:bg-gray-50 transition">
+                      <td className="py-3 px-4 text-gray-500 font-medium">Brand</td>
+                      <td className="py-3 px-4 text-gray-800 font-medium">
+                        {product.brand}
+                      </td>
+                    </tr>
+                  )}
 
-    {/* Tags */}
-    {product.tags.length > 0 && (
-      <tr className="hover:bg-gray-50 transition">
-        <td className="py-3 px-4 text-gray-500 font-medium">Tags</td>
-        <td className="py-3 px-4 flex flex-wrap gap-2">
-          {product.tags.map((tag: any, i: number) => (
-            <span
-              key={i}
-              className="px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded-md"
-            >
-              {tag.name}
-            </span>
-          ))}
-        </td>
-      </tr>
-    )}
+                  {product.tags.length > 0 && (
+                    <tr className="hover:bg-gray-50 transition">
+                      <td className="py-3 px-4 text-gray-500 font-medium">Tags</td>
+                      <td className="py-3 px-4 flex flex-wrap gap-2">
+                        {product.tags.map((tag: any, i: number) => (
+                          <span
+                            key={i}
+                            className="px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded-md"
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
+                      </td>
+                    </tr>
+                  )}
 
-    {/* Dynamic Specifications */}
-    {product.specificationsList?.length > 0 &&
-      product.specificationsList.map((spec: any, index: number) => (
-        <tr key={index} className="hover:bg-gray-50 transition">
-          <td className="py-3 px-4 text-gray-500 font-medium">
-            {spec.key}
-          </td>
-          <td className="py-3 px-4 text-gray-800">
-            {spec.value}
-          </td>
-        </tr>
-      ))}
-  </tbody>
-</table>
+                  {product.specificationsList?.length > 0 &&
+                    product.specificationsList.map((spec: any, index: number) => (
+                      <tr key={index} className="hover:bg-gray-50 transition">
+                        <td className="py-3 px-4 text-gray-500 font-medium">
+                          {spec.key}
+                        </td>
+                        <td className="py-3 px-4 text-gray-800">
+                          {spec.value}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
 
-            {/* Features & Benefits + Care Instructions */}
+            {/* Features & Benefits */}
             <div className="space-y-5">
-              {/* Features */}
               <div>
-
                 <h3 className="font-semibold mb-3">Features & Benefits</h3>
                 <p
                   className={`text-gray-600 text-sm mt-2 `}
                   dangerouslySetInnerHTML={{ __html: product.description }}
                 />
-
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Customer Reviews */}
-      {/* <div ref={reviewRef} className="space-y-4 mt-10">
-        <h2 className="text-xl font-semibold">Customer Reviews</h2>
-        <div className="space-y-4">
-          {reviews.map((review, index) => (
-            <Card key={index} className="border rounded-lg">
-              <CardContent className="p-4">
-     
-     
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold">{review.name}</span>
-                  <div className="flex items-center text-yellow-500">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${i < review.rating
-                          ? "fill-yellow-500"
-                          : "fill-gray-200"
-                          }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm text-gray-500">{review.date}</span>
-                </div>
-
-               
-               
-                <p className="mt-2 text-gray-700 whitespace-pre-line">
-                  {review.review}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div> */}
-
-      {/* Available Vouchers */}
-      {/* <div ref={voucherRef} className="w-full mx-auto mt-10">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <span className="text-xl">🔷</span> Available Vouchers
-        </h2>
-
-        <div className="space-y-3">
-          {vouchers.map((voucher, idx) => (
-            <Card key={idx} className="rounded-lg border border-gray-200">
-              <div className="flex flex-col sm:flex-row justify-between">
-                
-                <div className="flex items-center flex-1 p-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-semibold ${voucher.labelColor}`}
-                  >
-                    {voucher.label}
-                  </span>
-                  <div className="ml-4">
-                    <h3 className="font-semibold">{voucher.title}</h3>
-                    <p className="text-gray-600 text-sm">
-                      {voucher.description}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 mt-1">
-                      <span>Min. purchase: {voucher.minPurchase}</span>
-                      <span>⏳ Expires: {voucher.expires}</span>
-                    </div>
-                  </div>
-                </div>
-
-               
-                <div className="flex justify-between md:flex-col items-center md:justify-center p-4 w-full sm:w-32 border-t sm:border-t-0 sm:border-l border-gray-200 sm:border-dashed">
-                  <span className="font-bold text-lg">{voucher.code}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-1 flex items-center gap-1"
-                    onClick={() => navigator.clipboard.writeText(voucher.code)}
-                  >
-                    <Copy className="w-4 h-4" /> Copy
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div> */}
 
       {/* Related Products */}
       <NewArrivals />
@@ -1104,7 +990,6 @@ export default function ProductDetailsPage({ productId }: any) {
 /* --------- Helpers --------- */
 
 function Stars({ value }: { value: number }) {
-  // render 5 stars with partial fill
   const full = Math.floor(value);
   const half = value - full >= 0.5;
   return (

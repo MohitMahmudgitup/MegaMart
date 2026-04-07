@@ -18,5 +18,5 @@ export function RedirectComponent({ children }: { children: React.ReactNode }) {
     }
   }, [currentUser, pathname, router]);
 
-  return <>{children}</>;
+  return <>{children}</>; 
 }
