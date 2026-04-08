@@ -71,12 +71,9 @@ const SectionHeader = ({
           </div>
         )}
 
-        {action}
-
         {/* View All Button */}
         {viewAllLinkState && (
-          <div className="rounded-full hidden lg:block font-medium text-xs md:text-base xl:text-sm
-            px-3 xl:px-5 py-2
+          <div className="rounded-full hidden lg:block font-medium text-xs md:text-base xl:text-sm px-3 xl:px-5 py-2
               bg-[#F3F4F6] hover:bg-black
             transition group cursor-pointer">
             <Link href="/product-collection">

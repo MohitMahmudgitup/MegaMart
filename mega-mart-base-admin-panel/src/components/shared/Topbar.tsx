@@ -92,7 +92,7 @@ export function TopNavbar({ isSidebarOpen, toggleSidebar }: TopNavbarProps) {
 
         {/* CTA Buttons — hidden on mobile */}
         <div className="hidden md:flex items-center gap-2">
-          <Link href="/admin/create-shop">
+          <Link href={`/admin/create-shop`} className="hidden md:inline-block">
             <Button
               size="sm"
               className="h-8 gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 shadow-sm transition-all duration-150"
@@ -101,7 +101,7 @@ export function TopNavbar({ isSidebarOpen, toggleSidebar }: TopNavbarProps) {
               Create Shop
             </Button>
           </Link>
-          <Link href="https://mega-mart.store" target="_blank" rel="noopener noreferrer">
+          <Link href={`${process.env.NEXT_PUBLIC_CUSTOMER_URL}`} target="_blank" rel="noopener noreferrer">
             <Button
               variant="outline"
               size="sm"

@@ -69,8 +69,8 @@ interface CustomerSettings {
 
 export default function ShopSettingsPage() {
   const [showNavigation, setShowNavigation] = useState(false);
-  const [updateSettings ] = useUpdateSettingsMutation()
-  
+  const [updateSettings] = useUpdateSettingsMutation()
+
   const [shopInfo, setShopInfo] = useState<ShopInfo>({
     name: "Your Store Name",
     tagline: "Your store's tagline",
@@ -121,7 +121,7 @@ export default function ShopSettingsPage() {
   const handleSave = (): void => {
     toast.success("Shop settings saved successfully!");
   };
-  
+
   const generateTimeOptions = (): string[] => {
     const times: string[] = [];
     for (let i = 0; i < 24; i++) {
@@ -189,24 +189,39 @@ export default function ShopSettingsPage() {
 
   return (
     <div className="flex flex-col lg:flex-row bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-      <main className="flex-1 p-6 lg:p-12">
-        <header className="mb-8 flex items-center justify-between">
+      <main className="flex-1 mt-16  ">
+        <header className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+          {/* Left Content */}
           <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Shop Settings</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Configure store information and policies</p>
+            <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 dark:text-white tracking-tight">
+              Shop Settings
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Configure your store information, navigation, and policies
+            </p>
           </div>
-          <div>
-            <Button variant="outline" onClick={()=>setShowNavigation(true)}>Navigation setting</Button>
+
+          {/* Right Button */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="default"
+              className="rounded-xl px-5 py-2 text-sm font-medium shadow-sm hover:shadow-md transition-all"
+              onClick={() => setShowNavigation(true)}
+            >
+              Navigation Settings
+            </Button>
           </div>
+
         </header>
 
         {/* Shop Information and Settings */}
-    {/* Navigation Settings Popup */}
-{
-  showNavigation && (
-    <ShowNavigation setShowNavigation={setShowNavigation} />
-  )
-}
+        {/* Navigation Settings Popup */}
+        {
+          showNavigation && (
+            <ShowNavigation setShowNavigation={setShowNavigation} />
+          )
+        }
 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -218,23 +233,23 @@ export default function ShopSettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="store-name">Store Name</Label>
-                <Input id="store-name" value={shopInfo.name} onChange={(e) => setShopInfo({...shopInfo, name: e.target.value})} placeholder="Your Store Name" />
+                <Input id="store-name" value={shopInfo.name} onChange={(e) => setShopInfo({ ...shopInfo, name: e.target.value })} placeholder="Your Store Name" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="store-tagline">Store Tagline</Label>
-                <Input id="store-tagline" value={shopInfo.tagline} onChange={(e) => setShopInfo({...shopInfo, tagline: e.target.value})} placeholder="Your store&apos;s tagline" />
+                <Input id="store-tagline" value={shopInfo.tagline} onChange={(e) => setShopInfo({ ...shopInfo, tagline: e.target.value })} placeholder="Your store&apos;s tagline" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="store-description">Store Description</Label>
-                <textarea id="store-description" className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" value={shopInfo.description} onChange={(e) => setShopInfo({...shopInfo, description: e.target.value})} placeholder="Store description" />
+                <textarea id="store-description" className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" value={shopInfo.description} onChange={(e) => setShopInfo({ ...shopInfo, description: e.target.value })} placeholder="Store description" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="store-email">Store Email</Label>
-                <Input id="store-email" type="email" value={shopInfo.email} onChange={(e) => setShopInfo({...shopInfo, email: e.target.value})} placeholder="contact@yourstore.com" />
+                <Input id="store-email" type="email" value={shopInfo.email} onChange={(e) => setShopInfo({ ...shopInfo, email: e.target.value })} placeholder="contact@yourstore.com" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="store-phone">Store Phone</Label>
-                <Input id="store-phone" value={shopInfo.phone} onChange={(e) => setShopInfo({...shopInfo, phone: e.target.value})} placeholder="+1 (555) 123-4567" />
+                <Input id="store-phone" value={shopInfo.phone} onChange={(e) => setShopInfo({ ...shopInfo, phone: e.target.value })} placeholder="+1 (555) 123-4567" />
               </div>
             </CardContent>
           </Card>
@@ -248,30 +263,30 @@ export default function ShopSettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="address-1">Address Line 1</Label>
-                <Input id="address-1" value={shopAddress.address1} onChange={(e) => setShopAddress({...shopAddress, address1: e.target.value})} placeholder="123 Main Street" />
+                <Input id="address-1" value={shopAddress.address1} onChange={(e) => setShopAddress({ ...shopAddress, address1: e.target.value })} placeholder="123 Main Street" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="address-2">Address Line 2</Label>
-                <Input id="address-2" value={shopAddress.address2} onChange={(e) => setShopAddress({...shopAddress, address2: e.target.value})} placeholder="Suite 100 (optional)" />
+                <Input id="address-2" value={shopAddress.address2} onChange={(e) => setShopAddress({ ...shopAddress, address2: e.target.value })} placeholder="Suite 100 (optional)" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
-                  <Input id="city" value={shopAddress.city} onChange={(e) => setShopAddress({...shopAddress, city: e.target.value})} placeholder="City" />
+                  <Input id="city" value={shopAddress.city} onChange={(e) => setShopAddress({ ...shopAddress, city: e.target.value })} placeholder="City" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="state">State/Province</Label>
-                  <Input id="state" value={shopAddress.state} onChange={(e) => setShopAddress({...shopAddress, state: e.target.value})} placeholder="State" />
+                  <Input id="state" value={shopAddress.state} onChange={(e) => setShopAddress({ ...shopAddress, state: e.target.value })} placeholder="State" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="postal-code">Postal Code</Label>
-                  <Input id="postal-code" value={shopAddress.postalCode} onChange={(e) => setShopAddress({...shopAddress, postalCode: e.target.value})} placeholder="10001" />
+                  <Input id="postal-code" value={shopAddress.postalCode} onChange={(e) => setShopAddress({ ...shopAddress, postalCode: e.target.value })} placeholder="10001" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="country">Country</Label>
-                  <Select  value={shopAddress.country} onValueChange={(value) => setShopAddress({...shopAddress, country: value})}>
+                  <Select value={shopAddress.country} onValueChange={(value) => setShopAddress({ ...shopAddress, country: value })}>
                     <SelectValue placeholder="Select country" />
                     <SelectContent>
                       <SelectItem value="USA">USA</SelectItem>
@@ -294,7 +309,7 @@ export default function ShopSettingsPage() {
               {renderOperatingHours()}
             </CardContent>
           </Card>
-          
+
           {/* Shop Policies */}
           <Card>
             <CardHeader>
@@ -307,40 +322,40 @@ export default function ShopSettingsPage() {
                   <Label htmlFor="guest-checkout-switch">Allow Guest Checkout</Label>
                   <p className="text-sm text-gray-400">Allow purchases without account</p>
                 </div>
-                <Switch checked={shopPolicies.guestCheckout} onCheckedChange={(checked) => setShopPolicies({...shopPolicies, guestCheckout: checked})} />
+                <Switch checked={shopPolicies.guestCheckout} onCheckedChange={(checked) => setShopPolicies({ ...shopPolicies, guestCheckout: checked })} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="account-verification-switch">Require Account Verification</Label>
                   <p className="text-sm text-gray-400">Email verification for new accounts</p>
                 </div>
-                <Switch checked={shopPolicies.accountVerification} onCheckedChange={(checked) => setShopPolicies({...shopPolicies, accountVerification: checked})} />
+                <Switch checked={shopPolicies.accountVerification} onCheckedChange={(checked) => setShopPolicies({ ...shopPolicies, accountVerification: checked })} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="enable-reviews-switch">Enable Reviews</Label>
                   <p className="text-sm text-gray-400">Allow product reviews</p>
                 </div>
-                <Switch checked={shopPolicies.enableReviews} onCheckedChange={(checked) => setShopPolicies({...shopPolicies, enableReviews: checked})} />
+                <Switch checked={shopPolicies.enableReviews} onCheckedChange={(checked) => setShopPolicies({ ...shopPolicies, enableReviews: checked })} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="auto-approve-reviews-switch">Auto-approve Reviews</Label>
                   <p className="text-sm text-gray-400">Automatically publish reviews</p>
                 </div>
-                <Switch checked={shopPolicies.autoApproveReviews} onCheckedChange={(checked) => setShopPolicies({...shopPolicies, autoApproveReviews: checked})} />
+                <Switch checked={shopPolicies.autoApproveReviews} onCheckedChange={(checked) => setShopPolicies({ ...shopPolicies, autoApproveReviews: checked })} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="min-order-amount">Minimum Order Amount</Label>
-                <Input id="min-order-amount" type="number" value={shopPolicies.minOrderAmount} onChange={(e) => setShopPolicies({...shopPolicies, minOrderAmount: parseFloat(e.target.value) || 0})} placeholder="Minimum order amount" />
+                <Input id="min-order-amount" type="number" value={shopPolicies.minOrderAmount} onChange={(e) => setShopPolicies({ ...shopPolicies, minOrderAmount: parseFloat(e.target.value) || 0 })} placeholder="Minimum order amount" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="free-shipping-threshold">Free Shipping Threshold</Label>
-                <Input id="free-shipping-threshold" type="number" value={shopPolicies.freeShippingThreshold} onChange={(e) => setShopPolicies({...shopPolicies, freeShippingThreshold: parseFloat(e.target.value) || 0})} placeholder="Free shipping threshold" />
+                <Input id="free-shipping-threshold" type="number" value={shopPolicies.freeShippingThreshold} onChange={(e) => setShopPolicies({ ...shopPolicies, freeShippingThreshold: parseFloat(e.target.value) || 0 })} placeholder="Free shipping threshold" />
               </div>
             </CardContent>
           </Card>
-          
+
           {/* Inventory Settings */}
           <Card>
             <CardHeader>
@@ -353,22 +368,22 @@ export default function ShopSettingsPage() {
                   <Label htmlFor="track-inventory-switch">Track Inventory</Label>
                   <p className="text-sm text-gray-400">Monitor stock levels</p>
                 </div>
-                <Switch checked={inventorySettings.trackInventory} onCheckedChange={(checked) => setInventorySettings({...inventorySettings, trackInventory: checked})} />
+                <Switch checked={inventorySettings.trackInventory} onCheckedChange={(checked) => setInventorySettings({ ...inventorySettings, trackInventory: checked })} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="allow-backorders-switch">Allow Backorders</Label>
                   <p className="text-sm text-gray-400">Sell out-of-stock items</p>
                 </div>
-                <Switch checked={inventorySettings.allowBackorders} onCheckedChange={(checked) => setInventorySettings({...inventorySettings, allowBackorders: checked})} />
+                <Switch checked={inventorySettings.allowBackorders} onCheckedChange={(checked) => setInventorySettings({ ...inventorySettings, allowBackorders: checked })} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="low-stock-threshold">Low Stock Threshold</Label>
-                <Input id="low-stock-threshold" type="number" value={inventorySettings.lowStockThreshold} onChange={(e) => setInventorySettings({...inventorySettings, lowStockThreshold: parseInt(e.target.value) || 0})} placeholder="10" />
+                <Input id="low-stock-threshold" type="number" value={inventorySettings.lowStockThreshold} onChange={(e) => setInventorySettings({ ...inventorySettings, lowStockThreshold: parseInt(e.target.value) || 0 })} placeholder="10" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="out-of-stock-behavior">Out of Stock Behavior</Label>
-                <Select value={inventorySettings.outOfStockBehavior} onValueChange={(value) => setInventorySettings({...inventorySettings, outOfStockBehavior: value})}>
+                <Select value={inventorySettings.outOfStockBehavior} onValueChange={(value) => setInventorySettings({ ...inventorySettings, outOfStockBehavior: value })}>
                   <SelectValue placeholder="Select behavior" />
                   <SelectContent>
                     <SelectItem value="hide">Hide Product</SelectItem>
@@ -379,7 +394,7 @@ export default function ShopSettingsPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           {/* Customer Settings */}
           <Card>
             <CardHeader>
@@ -392,25 +407,25 @@ export default function ShopSettingsPage() {
                   <Label htmlFor="customer-registration-switch">Customer Registration</Label>
                   <p className="text-sm text-gray-400">Allow new customer registration</p>
                 </div>
-                <Switch checked={customerSettings.registration} onCheckedChange={(checked) => setCustomerSettings({...customerSettings, registration: checked})} />
+                <Switch checked={customerSettings.registration} onCheckedChange={(checked) => setCustomerSettings({ ...customerSettings, registration: checked })} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="customer-wishlist-switch">Customer Wishlist</Label>
                   <p className="text-sm text-gray-400">Enable wishlist feature</p>
                 </div>
-                <Switch checked={customerSettings.wishlist} onCheckedChange={(checked) => setCustomerSettings({...customerSettings, wishlist: checked})} />
+                <Switch checked={customerSettings.wishlist} onCheckedChange={(checked) => setCustomerSettings({ ...customerSettings, wishlist: checked })} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="order-history-switch">Order History</Label>
                   <p className="text-sm text-gray-400">Show customer order history</p>
                 </div>
-                <Switch checked={customerSettings.orderHistory} onCheckedChange={(checked) => setCustomerSettings({...customerSettings, orderHistory: checked})} />
+                <Switch checked={customerSettings.orderHistory} onCheckedChange={(checked) => setCustomerSettings({ ...customerSettings, orderHistory: checked })} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password-requirements">Password Requirements</Label>
-                <Select value={customerSettings.passwordRequirements} onValueChange={(value) => setCustomerSettings({...customerSettings, passwordRequirements: value})}>
+                <Select value={customerSettings.passwordRequirements} onValueChange={(value) => setCustomerSettings({ ...customerSettings, passwordRequirements: value })}>
                   <SelectValue placeholder="Select strength" />
                   <SelectContent>
                     <SelectItem value="weak">Weak</SelectItem>

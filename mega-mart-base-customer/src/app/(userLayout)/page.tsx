@@ -11,7 +11,7 @@ import AppPromo from "@/components/modules/home/app-promo/AppPromo";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "CartX | Your Cart Your Choice",
+  title: "Syed Aowlia Online Shop | Home",
   description: "Vendor management website",
 };
 

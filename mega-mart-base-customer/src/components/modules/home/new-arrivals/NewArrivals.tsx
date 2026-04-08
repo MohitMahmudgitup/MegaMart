@@ -75,7 +75,7 @@ const NewArrivals = () => {
       );
     });
 
-    return filteredProducts.slice(0, 5);
+    return filteredProducts.slice(0, 25);
   }, [data, tab, categoryTabs]);
 
   const transformedArrivals = useMemo(() => {
@@ -105,37 +105,31 @@ const NewArrivals = () => {
       />
 
 
-
-
       <section className="mt-8">
-        <div className="  columns-2
-      sm:columns-3
-      lg:columns-5
-      gap-4
-      space-y-4">
-          {transformedArrivals.map((product: any) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4  2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5">
+          {[...transformedArrivals].slice().reverse().map((product: any) => (
             <NewArrivalsCard key={product.id} {...product} />
           ))}
         </div>
       </section>
 
-     
-          <div className="rounded-lg text-center mt-8 lg:hidden block font-semibold text-sm md:text-base xl:text-sm
+
+      <div className="rounded-lg text-center mt-8 lg:hidden block font-semibold text-sm md:text-base xl:text-sm
             px-3 xl:px-5 py-4
               bg-black hover:bg-black
             transition group cursor-pointer">
-            <Link href="/product-collection">
-              <span className="
+        <Link href="/product-collection">
+          <span className="
                 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400
                 bg-clip-text text-transparent
                 group-hover:text-white
                 transition-all duration-300
               ">
-                View All
-              </span>
-            </Link>
-          </div>
-   
+            View All
+          </span>
+        </Link>
+      </div>
+
     </div>
   );
 };
