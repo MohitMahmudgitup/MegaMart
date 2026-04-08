@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeleteBannerMutation, useGetAllBannersQuery } from "@/redux/featured/Banner/bannerApi";
+import { useCreateBannerMutation, useDeleteBannerMutation, useGetAllBannersQuery } from "@/redux/featured/Banner/bannerApi";
 import { BannerCard, Banner } from "./BannerCard";
 import BannerCreateUpdate from "./BannerModal";
 import Swal from "sweetalert2";

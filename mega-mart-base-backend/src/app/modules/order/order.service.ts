@@ -7,9 +7,8 @@ import { nanoid } from 'nanoid';
 import { QueryBuilder } from '../../utils/QueryBuilder';
 
 const getAllOrdersFromDB = async (query: Record<string, string>) => {
-  const attributeQuery = new QueryBuilder(OrderModel.find(), query)
+  const attributeQuery = new QueryBuilder(OrderModel.find(), query);
 
-  const SearchableFields = ['_id'];
   const allAttributes = attributeQuery
     .search(['_id'])
     .filter()
@@ -19,6 +18,7 @@ const getAllOrdersFromDB = async (query: Record<string, string>) => {
   allAttributes.modelQuery = allAttributes.modelQuery.populate([
     {
       path: 'orderInfo.productInfo',
+      select: '_id featuredImg description.name', // only needed fields
     },
     {
       path: 'orderInfo.shopInfo',
@@ -35,30 +35,50 @@ const getAllOrdersFromDB = async (query: Record<string, string>) => {
     attributeQuery.getMeta(),
   ]);
 
-  const result = { data, meta };
+  // 🔥 CLEAN DATA HERE
+  const cleanedData = data.map((order) => {
+    const orderObj = order.toObject();
 
-  return result;
+    orderObj.orderInfo = orderObj.orderInfo.map((item: any) => {
+      if (item.productInfo) {
+        item.productInfo = {
+          _id: item.productInfo._id,
+          name: item.productInfo.description?.name,
+          featuredImg: item.productInfo.featuredImg,
+        };
+      }
+
+      return item;
+    });
+
+    return orderObj;
+  });
+
+  return {
+    data: cleanedData,
+    meta,
+  };
 };
 
 const getMyOrdersFromDB = async (
   customerId: string,
   query: Record<string, string>
 ) => {
-  
+
   const ordersQuery = new QueryBuilder(OrderModel.find({ 'orderInfo.orderBy': customerId })
-    .populate( 'paymentId', 'orderId customerId transactionId status amount createdAt updatedAt' )
+    .populate('paymentId', 'orderId customerId transactionId status amount createdAt updatedAt')
     .populate('orderInfo.productInfo', 'description featuredImg'), query)
- 
+
   const allCoupons = ordersQuery.search(OrderSearchableFields).filter().sort().paginate();
- 
-   const [data, meta] = await Promise.all([
-     allCoupons.build().exec(),
-     ordersQuery.getMeta()
-   ])
-   
-   return {
-     data, meta
-   }
+
+  const [data, meta] = await Promise.all([
+    allCoupons.build().exec(),
+    ordersQuery.getMeta()
+  ])
+
+  return {
+    data, meta
+  }
 };
 
 const getSingleOrderFromDB = async (id: string) => {
@@ -88,11 +108,11 @@ const cancelOrderIntoDB = async (id: string) => {
   }
 
 
-   const result = await OrderModel.findByIdAndUpdate(
-     id,
-     { 'orderInfo.$[].isCancelled': true, 'orderInfo.$[].status': 'cancelled' },
-     { new: true, runValidators: true }
-   );
+  const result = await OrderModel.findByIdAndUpdate(
+    id,
+    { 'orderInfo.$[].isCancelled': true, 'orderInfo.$[].status': 'cancelled' },
+    { new: true, runValidators: true }
+  );
 
   return result;
 };
@@ -132,6 +152,16 @@ const updatetrackingLinkIntoDB = async (
   return result;
 };
 
+const deleteOrderFromDB = async (id: string) => {
+  const isExist = await OrderModel.findById(id);
+  if (!isExist) {
+    throw new AppError(404, 'Order not found');
+  }
+  const result = await OrderModel.findByIdAndDelete(id);
+  return result;
+};
+
+
 export const orderServices = {
   getAllOrdersFromDB,
   getSingleOrderFromDB,
@@ -140,4 +170,5 @@ export const orderServices = {
   cancelOrderIntoDB,
   updateStatsIntoDB,
   updatetrackingLinkIntoDB,
+  deleteOrderFromDB
 };

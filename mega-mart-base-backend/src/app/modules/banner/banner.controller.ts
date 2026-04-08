@@ -7,7 +7,7 @@ import { bannerServices } from "./banner.service";
 
 
 const createBanner = catchAsync(async (req, res) => {
-  console.log("file:", req.file);
+
 
   if (!req.file) {
     throw new Error("Image is required");
@@ -15,7 +15,6 @@ const createBanner = catchAsync(async (req, res) => {
 
   const bannerData = {
     ...req.body,
-    image: req.file.path,
     discount: Number(req.body.discount),
   };
 

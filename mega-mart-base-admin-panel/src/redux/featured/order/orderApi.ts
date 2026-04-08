@@ -41,6 +41,12 @@ const orderApi = baseApi.injectEndpoints({
         body: trackCode,
       }),
     }),
+    deleteOrder: builder.mutation({
+      query: id => ({
+        url: `/order/${id}`,
+        method: 'DELETE',
+      }),
+    }),
   }),
 });
 
@@ -49,5 +55,6 @@ export const {
   useGetSingleOrderQuery,
   useCreateOrderMutation,
   useUpdateStatsMutation,
-  useUpdatetrackCodeMutation
+  useUpdatetrackCodeMutation,
+  useDeleteOrderMutation,
 } = orderApi;

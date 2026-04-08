@@ -8,6 +8,7 @@ import {
   useUpdatetrackCodeMutation,
 } from "@/redux/featured/order/orderApi";
 import { Button } from "../ui/button";
+import error from "next/error";
 
 export type OrderPayload = {
   invoice: string;
@@ -54,7 +55,7 @@ const SendtoSteadFastCourierModal = ({
     if (isOpen) {
       if (initialData) {
         setFormData({
-          invoice: initialData?.orderInfo![0]?.trackingNumber,
+          invoice: initialData?.orderInfo?.[0]?.trackingNumber || "",
           recipient_name:
             `${initialData.customerInfo?.firstName || ''} ${initialData.customerInfo?.lastName || ''}`.trim() || "",
           recipient_phone: initialData.customerInfo?.phone || "",

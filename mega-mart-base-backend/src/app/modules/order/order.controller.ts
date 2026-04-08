@@ -93,6 +93,18 @@ const updatetrackingLink = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
+const deleteOrder = catchAsync(async (req, res) => {
+  const id = req.params.id;
+  await orderServices.deleteOrderFromDB(id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Order deleted successfully!',
+    data: [],
+  });
+});
 export const orderControllers = {
   getAllOrder,
   getSingleOrder,
@@ -101,4 +113,5 @@ export const orderControllers = {
   cancelOrder,
   updateStats,
   updatetrackingLink,
+  deleteOrder
 };

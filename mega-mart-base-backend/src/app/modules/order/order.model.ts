@@ -89,9 +89,7 @@ const orderInfoSchema = new Schema<TOrderInfo>(
       ref: 'product',
       required: true,
     },
-    color: {
-      type: String,
-    },
+    color: {type: String},
     size: {
       type: String,
     },
@@ -100,18 +98,7 @@ const orderInfoSchema = new Schema<TOrderInfo>(
     },
     status: {
       type: String,
-      enum: [
-        'pending',
-        'confirmed',
-        'processing',
-        'picked',
-        'at-local-facility',
-        'out-for-delivery',
-        'delivered',
-        'cancelled',
-        'returned',
-        'refunded',
-      ],
+      enum: ['pending','confirmed','processing','picked','at-local-facility','out-for-delivery','delivered','cancelled','returned','refunded'],
       required: true,
       default: 'pending',
     },

@@ -16,8 +16,8 @@ import {
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
-const rootReducer = combineReducers({
-  [baseApi.reducerPath]: baseApi.reducer,
+const rootReducer = combineReducers({ 
+  [baseApi.reducerPath]: baseApi.reducer, 
   auth: authReducer,
   products: productReducer,
   category: categoryReducer,

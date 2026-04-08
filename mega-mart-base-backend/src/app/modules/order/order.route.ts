@@ -21,5 +21,6 @@ router.patch('/:id', orderControllers.updateStats);
 router.patch('/update/track-code/:id', orderControllers.updatetrackingLink);
 
 router.patch('/cancel/:id', orderControllers.cancelOrder);
+router.delete('/:id', orderControllers.deleteOrder);
 
 export const OrderRoutes = router;

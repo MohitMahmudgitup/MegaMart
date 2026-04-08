@@ -104,17 +104,13 @@ export default function BannerCreateUpdate({
     try {
       const formData = new FormData();
 
-      const payload = {
-        title: data.title || "",
-        subTitle: data.subTitle || "",
-        image: data.image || "",
-        discount: Number(data.discount) || 0,
-        isActive: data.isActive || false,
-        buttonText: data.buttonText || "",
-        buttonLink: data.buttonLink || "",
-      };
-
-      formData.append("data", JSON.stringify(payload));
+      // Append each field individually
+      formData.append("title", data.title);
+      formData.append("subTitle", data.subTitle);
+      formData.append("discount", String(data.discount));
+      formData.append("isActive", String(data.isActive));
+      formData.append("buttonText", data.buttonText);
+      formData.append("buttonLink", data.buttonLink);
 
       if (bannerImg?.file) {
         formData.append("image", bannerImg.file as File);
@@ -139,8 +135,7 @@ export default function BannerCreateUpdate({
       const errorMessage =
         error?.data?.errorSources?.[0]?.message ||
         error?.data?.message ||
-        error?.message ||
-        "Something went wrong!";
+        error?.message || "Something went wrong!";
       toast.error(errorMessage, { id: submitToast });
     }
   };
@@ -179,7 +174,7 @@ export default function BannerCreateUpdate({
                       <Label>Banner Title</Label>
                       <Input
                         placeholder="Banner Title"
-                        {...register("title", { required: true })}
+                        {...register("title")}
                       />
                     </div>
                   </div>
@@ -189,7 +184,7 @@ export default function BannerCreateUpdate({
                       <Label>Sub Title</Label>
                       <Input
                         placeholder="Banner Sub Title"
-                        {...register("subTitle", { required: true })}
+                        {...register("subTitle")}
                       />
                     </div>
                   </div>
@@ -245,12 +240,12 @@ export default function BannerCreateUpdate({
                     <Label>Button Text</Label>
                     <Input
                       placeholder="Button Text"
-                      {...register("buttonText", { required: true })}
+                      {...register("buttonText")}
                     />
                     <Label>Button Link</Label>
                     <Input
                       placeholder="/link-here"
-                      {...register("buttonLink", { required: true })}
+                      {...register("buttonLink")}
                     />
                   </div>
                 </form>

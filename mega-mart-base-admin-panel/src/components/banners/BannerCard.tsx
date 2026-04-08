@@ -7,7 +7,7 @@ import BannerCreateUpdate from "./BannerModal";
 
 export interface Banner {
   _id: string;
-  image: string; // ✅ required
+  image: string; 
   title?: string;
   subTitle?: string;
   buttonText?: string;

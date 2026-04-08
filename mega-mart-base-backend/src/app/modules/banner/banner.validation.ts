@@ -3,9 +3,9 @@ import { z } from 'zod';
 
 
 export const createBannerSchema = z.object({
-  title: z.string().min(1, 'title is required'),
-  subTitle: z.string().min(1, 'subTitle is required'),
-  image: z.string().url('image must be a valid URL').optional(),
+  title: z.string().optional(),
+  subTitle: z.string().optional(),
+  image: z.string().optional(),
   buttonText: z.string().optional().nullable(),
   buttonLink: z.string().optional().nullable(),
   discount: z.number(),

@@ -4,7 +4,7 @@ const bannerSchema = new Schema(
   {
     title: { type: String },
     subTitle: { type: String},
-    image: { type: String, required: true },
+    image: { type: String },
     buttonText: { type: String },
     buttonLink: { type: String },
     discount: { type: Number },
