@@ -73,7 +73,6 @@ export function useAuthHandlers() {
       }
       
     } catch (error) {
-      console.log(error)
       toast.error("Login failed — no session found");
     }
   };

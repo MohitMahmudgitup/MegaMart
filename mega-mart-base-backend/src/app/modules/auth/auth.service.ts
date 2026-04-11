@@ -6,6 +6,7 @@ import bcrypt from 'bcrypt';
 import AppError from '../../errors/handleAppError';
 import httpStatus from 'http-status';
 import { StatusCodes } from 'http-status-codes';
+import { CustomerModel } from '../customer/customer.model';
 
 //register a user in database
 const registerUserOnDB = async (payload: TAuth) => {
@@ -123,10 +124,27 @@ const getMe = async (decodedUser: JwtPayload) => {
   return me;
 };
 
+const googlegetMe = async (userId: string) => {
+  const customer = await CustomerModel.findOne({ userId }).populate({ path: "userId", select: "name email image" }).lean();
+
+  if (!customer) {
+    throw new AppError(404, "Customer not found");
+  }
+
+  // 🔥 exact format return
+  return {
+    userId: customer.userId || [],
+    cartItem: customer.cartItem || [],
+    address: customer.address || [],
+  };
+};
+
 export const AuthServices = {
   registerUserOnDB,
   loginUserFromDB,
   logoutUserFromDB,
   loginUserUsingProviderFromDB,
   getMe,
+  googlegetMe
+
 };

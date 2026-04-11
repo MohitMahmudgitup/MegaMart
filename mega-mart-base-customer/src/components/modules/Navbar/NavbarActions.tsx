@@ -23,7 +23,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { selectCustomer } from "@/redux/featured/customer/customerSlice";
+import { selectCustomer, clearCustomer } from "@/redux/featured/customer/customerSlice";
 import CartSidebar from "@/components/navBer/CartSidebar";
 import { Badge } from "@/components/ui/badge";
 import PopupProduct from "@/components/modules/Navbar/PopupProduct";
@@ -40,6 +40,7 @@ interface Customer {
 
 interface CurrentUser {
   _id?: string;
+  image?: string | null;
   name?: string | null;
   email?: string | null;
 }
@@ -52,15 +53,18 @@ type NavbarActionsProps = {
   setSearchOpen: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch , searchQuery, setSearchQuery , searchOpen, setSearchOpen  }) => {
+const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch, searchQuery, setSearchQuery, searchOpen, setSearchOpen }) => {
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const customerData: Customer = useAppSelector(selectCustomer) || {};
+  // const clearCustomer = useAppSelector(selectCustomer) || (() => null);
   const cartItems = customerData?.cartItem?.[0]?.productInfo || [];
   const currentUser: CurrentUser | null = useAppSelector(selectCurrentUser);
   const dispatch = useAppDispatch();
   const [logout] = useLogoutMutation();
   const { data: session } = useSession();
+  console.log(session, "session in navbar");
+  console.log(currentUser)
 
   const handleSearchHistory = (query: string) => {
     setSearchHistory((prevHistory) => {
@@ -78,6 +82,7 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
         console.error(err);
       }
     }
+    dispatch(clearCustomer());
     dispatch(logoutUser());
     await signOut({ callbackUrl: "/auth/login" });
   };
@@ -89,7 +94,6 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
     setHideSearch(false);
   }
 
-  
   return (
     <div className="flex items-center gap-2 relative">
       {/* Search */}
@@ -100,10 +104,10 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
           {searchOpen ? <X size={18} /> : <Search size={18} />}
         </div> */}
 
-         <div className={`cursor-pointer  rounded-full transition  ${hideSearch ? "block" : " hidden md:block" } `}
-          onClick={() =>  handaleSearchOpen()}
+        <div className={`cursor-pointer  rounded-full transition  ${hideSearch ? "block" : " hidden md:block"} `}
+          onClick={() => handaleSearchOpen()}
         >
-           <Search size={18} />
+          <Search size={18} />
         </div>
 
         <AnimatePresence>
@@ -152,21 +156,15 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <div
-              className="
-        flex items-center gap-3 cursor-pointer
-        rounded-full md:px-3 md:p-0 p-0.5 md:py-1.5 ml-1
-        bg-gradient-to-r from-violet-600/80 to-indigo-600/80
-        hover:from-violet-600 hover:to-indigo-600
-        transition-all duration-300
-        md:shadow-md hover:shadow-lg
+              className=" flex items-center gap-3 cursor-pointer rounded-full md:px-3 md:p-0 p-0.5 md:py-1.5 ml-1 bg-gradient-to-r from-violet-600/80 to-indigo-600/80 hover:from-violet-600 hover:to-indigo-600 transition-all duration-300 md:shadow-md hover:shadow-lg
       "
             >
               <Avatar className="h-9 w-9 ring-2 ring-white/40">
-                {session?.user?.image ? (
+                {session?.user?.image || currentUser?.image ? (
                   <div className="w-full h-full rounded-full overflow-hidden">
                     <Image
-                      src={session.user.image}
-                      alt={safeString(session.user.name)}
+                      src={safeString(currentUser?.image || session?.user?.image)}
+                      alt={safeString(currentUser?.name || session?.user?.name)}
                       width={36}
                       height={36}
                       className="object-cover w-full h-full"
@@ -197,14 +195,7 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
             </div>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent
-            align="end"
-            className="
-      w-60 rounded-xl
-      bg-white/90 backdrop-blur-xl
-      shadow-xl border border-gray-200
-      overflow-hidden
-    "
+          <DropdownMenuContent align="end" className=" w-60 rounded-xl bg-white/90 backdrop-blur-xl shadow-xl border border-gray-200 overflow-hidden "
           >
             {/* Header */}
             <div className="px-4 py-3 bg-gradient-to-r from-indigo-50 to-violet-50">
@@ -287,8 +278,8 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
 
       {searchQuery.length > 0 && searchOpen && (
 
-     
-          <div className="fixed inset-0 z-40  items-start justify-center bg-black/40 overflow-y-auto pt-14 md:flex hidden "
+
+        <div className="fixed inset-0 z-40  items-start justify-center bg-black/40 overflow-y-auto pt-14 md:flex hidden "
           onClick={() => setSearchOpen(false)}
         >
           <PopupProduct
@@ -298,7 +289,7 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
         </div>
 
       )}
-      {searchQuery.length > 0  && searchOpen && (
+      {searchQuery.length > 0 && searchOpen && (
 
         <div
           className="fixed inset-0 z-40 flex items-start justify-center  mt-27 overflow-y-auto md:hidden "
@@ -310,7 +301,7 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
           />
         </div>
 
-       )} 
+      )}
 
 
     </div>

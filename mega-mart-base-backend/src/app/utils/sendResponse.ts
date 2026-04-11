@@ -17,6 +17,6 @@ const sendResponse = <T>(res : Response , data : TResponse<T>) => {
         data: data?.data || null,
         meta: data.meta  || null
     })
-}
+}  
 
 export default sendResponse;

@@ -33,6 +33,7 @@ import { useGetAllProductsQuery, useGetSingleProductQuery } from "@/redux/featur
 import { useGetSingleCustomerQuery, useUpdateCustomerMutation } from "@/redux/featured/customer/customerApi";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { selectCurrentUser } from "@/redux/featured/auth/authSlice";
+
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import clsx from "clsx";
@@ -64,7 +65,6 @@ export default function ProductDetailsPage({ productId }: any) {
   const reviewRef = useRef<HTMLDivElement | null>(null);
   const voucherRef = useRef<HTMLDivElement | null>(null);
   const relatedRef = useRef<HTMLDivElement | null>(null);
-
   const scrollToSection = (ref: any, offset = 0) => {
     if (ref.current) {
       const top = ref.current.getBoundingClientRect().top + window.scrollY + offset;
@@ -86,10 +86,12 @@ export default function ProductDetailsPage({ productId }: any) {
   const { data: productsData } = useGetAllProductsQuery({});
 
   const currentUser = useAppSelector(selectCurrentUser);
-
+  
   const { data: singleCustomer, refetch: refetchCustomer } =
-    useGetSingleCustomerQuery(currentUser?._id as string);
-
+  useGetSingleCustomerQuery(currentUser?._id as string);
+  
+  console.log("currentUser?._id: ", currentUser?._id);
+  console.log("currentUser ", currentUser);
   useEffect(() => {
     if (singleCustomer) {
       dispatch(setCustomer(singleCustomer));

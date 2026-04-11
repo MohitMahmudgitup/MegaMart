@@ -60,10 +60,15 @@ const getMyCustomerInfoFromDB = async (id: string) => {
   return result;
 };
 
+const getCustomerByUserIdFromDB = async (userId: string) => {
+  return await CustomerModel.findOne({ userId }).populate("userId");
+};
+
 export const customerServices = {
   createCustomerOnDB,
   getSingleCustomerFromDB,
   getAllCustomerFromDB,
   updateCustomerOnDB,
   getMyCustomerInfoFromDB,
+  getCustomerByUserIdFromDB
 };

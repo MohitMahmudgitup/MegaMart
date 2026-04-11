@@ -2,6 +2,9 @@ import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import httpStatus from "http-status";
 import { customerServices } from "./customer.service";
+import { AuthServices } from "../auth/auth.service";
+import { JwtPayload } from "jsonwebtoken";
+
 
 const getAllCustomer = catchAsync(async (req, res) => {
   const result = await customerServices.getAllCustomerFromDB(req.query);
@@ -13,6 +16,7 @@ const getAllCustomer = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
 
 const getSingleCustomer = catchAsync(async (req, res) => {
   const id = req.params.id;

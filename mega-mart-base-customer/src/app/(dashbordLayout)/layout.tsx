@@ -25,7 +25,6 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
   const dispatch = useAppDispatch();
   const [logout] = useLogoutMutation();
   const router = useRouter();
-  console.log(currentUser);
 
   const isCheckoutPage = pathname.startsWith("/dashboard/checkout");
   const showSidebar = !isCheckoutPage;

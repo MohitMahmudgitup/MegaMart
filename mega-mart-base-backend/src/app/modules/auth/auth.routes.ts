@@ -41,5 +41,7 @@ router.get("/google/callback", passport.authenticate("google", { failureRedirect
 
 
 router.get('/me', checkAuth(...Object.values(userRoles)), AuthController.gatMe);
+router.get('/googleData', checkAuth(...Object.values(userRoles)), AuthController.googleData);
+
 
 export const AuthRoutes = router;

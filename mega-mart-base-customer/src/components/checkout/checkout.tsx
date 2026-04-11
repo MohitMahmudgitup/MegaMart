@@ -58,7 +58,7 @@ export default function CheckoutPage() {
 
 
   const subTotal = orderItems.reduce((acc, item) => {
-    const productPrice = item.productId[0].productInfo?.salePrice || 0;
+    const productPrice = item.productId[0]?.productInfo?.salePrice || 0;
     return acc + productPrice * item.quantity;
   }, 0);
 
@@ -176,13 +176,13 @@ export default function CheckoutPage() {
 
   const orderInfo = orderItems.map(item => {
     const product = item.productId[0];
-    const subTotal = (product.productInfo?.salePrice || 0) * item.quantity;
+    const subTotal = (product?.productInfo?.salePrice || 0) * item.quantity;
     const total = subTotal;
     return {
       orderBy: customerDetails?._id,
-      shopInfo: product.shopId,
-      vendorId: product.vendorId,
-      productInfo: product._id,
+      shopInfo: product?.shopId,
+      vendorId: product?.vendorId,
+      productInfo: product?._id,
       status: 'pending',
       isCancelled: false,
       quantity: item.quantity,

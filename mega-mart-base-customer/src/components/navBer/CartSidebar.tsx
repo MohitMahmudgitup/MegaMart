@@ -45,7 +45,7 @@ export default function CartSidebar({
     useGetSingleCustomerQuery(currentUser?._id as string, {
       skip: !currentUser?._id,
     });
-
+console.log(customerData)
   useEffect(() => {
     if (customerData) {
       dispatch(setCustomer(customerData));

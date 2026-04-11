@@ -10,6 +10,7 @@ import AppError from "../../errors/handleAppError";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import { userRoles } from "../user/user.const";
+import { CustomerModel } from "../customer/customer.model";
 
 const registerUser = catchAsync(async (req, res) => {
   const userInfo = {
@@ -120,10 +121,12 @@ const googleCallbackController = catchAsync(async (req, res) => {
   }
 });
 
+
+
 const gatMe = catchAsync(async (req, res) => {
   const decodedUser = req.user;
 
-  const me = await AuthServices.getMe(decodedUser as JwtPayload);
+  const me = await AuthServices.getMe(decodedUser as any);
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -132,6 +135,19 @@ const gatMe = catchAsync(async (req, res) => {
   });
 });
 
+
+const googleData = catchAsync(async (req, res) => {
+  const decodedUser = req.user;
+   const me = await AuthServices.googlegetMe(decodedUser as any);
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Data received Successfully!",
+    data: me,
+  });
+})
+
+
 export const AuthController = {
   registerUser,
   loginUser,
@@ -139,4 +155,5 @@ export const AuthController = {
   loginUserUsingProvider,
   googleCallbackController,
   gatMe,
+  googleData
 };
