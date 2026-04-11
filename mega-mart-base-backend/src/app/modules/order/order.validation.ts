@@ -53,7 +53,7 @@ const customerInfoZodSchema = z.object({
         ? "Last name is required!"
         : "Must be a string!",
   }),
-  email: z.string().email("Must be a valid email!"),
+  email: z.string().email("Must be a valid email!").optional().or(z.literal('')),
   phone: z.string({
     error: (issue) =>
       issue.input === undefined

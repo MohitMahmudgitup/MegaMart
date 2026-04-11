@@ -90,8 +90,6 @@ export default function ProductDetailsPage({ productId }: any) {
   const { data: singleCustomer, refetch: refetchCustomer } =
   useGetSingleCustomerQuery(currentUser?._id as string);
   
-  console.log("currentUser?._id: ", currentUser?._id);
-  console.log("currentUser ", currentUser);
   useEffect(() => {
     if (singleCustomer) {
       dispatch(setCustomer(singleCustomer));

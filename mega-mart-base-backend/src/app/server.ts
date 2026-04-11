@@ -22,6 +22,6 @@ async function main() {
 }
  
 (() => {
-  main(); 
+  main();  
   seedSiteSettings()
 })()
