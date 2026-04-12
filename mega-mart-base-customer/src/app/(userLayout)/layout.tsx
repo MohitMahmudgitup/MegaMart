@@ -8,6 +8,8 @@ const DashboardLayout = ({ children , showSidebar }: { children: React.ReactNode
   return (
     <div className="overflow-x-hidden relative mt-0 lg:mt-2">
       
+      
+      <div>
       <Navbar showSidebar={showSidebar} />
       <div className="2xl:max-w-7xl 2xl:px-0 md:px-8 px-0 mx-auto min-h-screen sm:pt-20 pt-28.5">
         {children}
@@ -16,6 +18,9 @@ const DashboardLayout = ({ children , showSidebar }: { children: React.ReactNode
         <SmallNavbar showSidebar={showSidebar} />
       </div>
       <Footer />
+
+
+      </div>
     </div>
   );
 };

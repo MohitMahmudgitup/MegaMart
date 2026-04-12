@@ -4,12 +4,12 @@ import SectionHeader from "../new-arrivals/SectionHeader";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
-import { useGetAllProductsQuery } from "@/redux/featured/product/productApi";
+import { useNewArrivalsListDataQuery } from "@/redux/featured/product/productApi";
 import Link from "next/link";
 import { NewSpringKnitsSkeleton } from "./NewSpringKnitsSkeleton";
 
 const NewSpringKnits = () => {
-  const { data, isLoading } = useGetAllProductsQuery({});
+  const { data, isLoading } = useNewArrivalsListDataQuery();
   const springKnitsProducts = data?.slice(0, 4) || [];
 
   if (isLoading) return <NewSpringKnitsSkeleton />;

@@ -123,6 +123,7 @@ const Navbar = ({
 
   return (
     <nav className={`w-full fixed top-0 z-50 2xl:px-0 md:px-8 px-0 ${hideSearch ? "" : "bg-white rounded-xl md:bg-transparent md:rounded-none"}`}>
+      
       <div className={`2xl:max-w-7xl  bg-white mx-auto px-2 md:px-4 lg:px-6 sm:py-3   ${hideSearch ? "rounded-xl py-2 " : "rounded-t-xl md:rounded-xl p-2"}`}>
 
         {/* Top Navbar */}

@@ -23,7 +23,7 @@ const HomePage = () => {
         <NewArrivals />
         <BestSeller />
       </div>
-      <DiscountBanner />
+      {/* <DiscountBanner /> */}
       <div className=" bg-white md:rounded-lg  py-5 ">
         <TopBrands />
       </div>
