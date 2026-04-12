@@ -6,43 +6,68 @@ const Hero = ({ brandsData }: any) => {
   const heroImage = brandsData?.images?.[0]?.image;
 
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-linear-to-br from-blue-50 via-white to-purple-50 px-6 py-12 md:px-10 md:py-16 shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-        
-        {/* Left content */}
-        <div>
-          <span className="inline-block mb-3 text-sm font-semibold tracking-wide text-blue-600 uppercase">
-            Featured Brand
-          </span>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-gray-900 mb-5">
-            {brandsData?.name || "Brand Name"}
-          </h1>
+    <section className="relative overflow-hidden rounded-2xl min-h-[400px] md:min-h-[500px] flex items-center">
+      
+      {/* Background Image */}
+      {heroImage && (
+        <Image
+          src={heroImage}
+          alt="Background"
+          fill
+          className="object-cover"
+          priority
+        />
+      )}
 
-          <p className="text-gray-600 text-base sm:text-lg max-w-xl">
-            {brandsData?.description ||
-              "Discover our exclusive collection from this top brand. Premium quality, modern design, and unmatched comfort—crafted just for you."}
-          </p>
-        </div>
+      {/* Dark Overlay */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" />
 
-        {/* Right image */}
-        <div className="relative flex justify-center md:justify-end">
-          {heroImage ? (
-            <div className="relative w-full max-w-sm sm:max-w-md h-60 sm:h-72 md:h-80 rounded-2xl overflow-hidden bg-white shadow-xl">
-              {/* soft glow */}
-              <div className="absolute -inset-6 bg-linear-to-r from-blue-200 to-purple-200 opacity-30 blur-3xl" />
-              <Image
-                src={heroImage}
-                alt={brandsData?.name || "Brand Image"}
-                fill
-                className="relative object-contain p-6"
-                priority
-              />
-            </div>
-          ) : (
-            <div className="w-64 h-64 rounded-2xl bg-gray-100 flex items-center justify-center shadow-inner">
-              <span className="text-gray-400 text-sm">No Image Available</span>
-            </div>
-          )}
+      {/* Content */}
+      <div className="relative z-10 w-full px-6 md:px-12 py-12">
+        <div className="grid md:grid-cols-2 gap-10 items-center">
+          
+          {/* Left Content */}
+          <div className="text-white">
+            <span className="inline-block mb-3 text-xs sm:text-sm font-semibold tracking-widest text-blue-300 uppercase">
+              Featured Brand
+            </span>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-5">
+              {brandsData?.name || "Brand Name"}
+            </h1>
+
+            <p className="text-gray-200 text-sm sm:text-base max-w-xl">
+              {brandsData?.description ||
+                "Discover our exclusive collection from this top brand. Premium quality, modern design, and unmatched comfort—crafted just for you."}
+            </p>
+
+            {/* CTA Button */}
+            <button className="mt-6 px-6 py-3 rounded-xl bg-white text-black font-semibold hover:bg-gray-200 transition">
+              Explore Now
+            </button>
+          </div>
+
+          {/* Right Card Image */}
+          <div className="flex justify-center md:justify-end">
+            {heroImage ? (
+              <div className="relative w-full max-w-sm h-64 sm:h-72 md:h-80 rounded-2xl overflow-hidden backdrop-blur-lg bg-white/10 border border-white/20 shadow-2xl">
+                
+                <Image
+                  src={heroImage}
+                  alt={brandsData?.name || "Brand Image"}
+                  fill
+                  className="object-contain p-6"
+                />
+              </div>
+            ) : (
+              <div className="w-64 h-64 rounded-2xl bg-white/20 flex items-center justify-center">
+                <span className="text-gray-300 text-sm">
+                  No Image Available
+                </span>
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
     </section>

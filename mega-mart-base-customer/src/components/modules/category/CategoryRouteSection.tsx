@@ -60,7 +60,9 @@ export default function CategoryRouteSection({ id }: CategoryRouteSectionProps) 
         (categoriesLoading ? (
           <div className="p-10 animate-pulse bg-gray-100 rounded-lg" />
         ) : matchedCategory ? (
-          <section className="relative w-full h-80 rounded-2xl overflow-hidden px-4 md:px-6 lg:px-8">
+          <div className="sm:p-2 md:p-0">
+
+          <section className="relative  w-full h-80 rounded-2xl overflow-hidden px-4 md:px-6 lg:px-8">
             <div className="absolute inset-0">
               <Image
                 src={matchedCategory.bannerImg || "/watches.png"}
@@ -77,6 +79,8 @@ export default function CategoryRouteSection({ id }: CategoryRouteSectionProps) 
               <p className="mt-2 max-w-xl">{matchedCategory.details}</p>
             </div>
           </section>
+
+          </div>
         ) : (
           <p className="text-center text-gray-500">Category not found</p>
         ))}

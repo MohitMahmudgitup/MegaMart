@@ -51,7 +51,7 @@ const HeroSection = () => {
 
   return (
     <div className="flex flex-col-reverse lg:flex-row gap-4">
-      <Sidebar banners={banners} />
+      {/* <Sidebar banners={banners} /> */}
       <div className="flex-1 px-2 md:px-0">
         <Promo banners={banners.banners} />
       </div>
