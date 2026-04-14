@@ -60,11 +60,10 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
   // const clearCustomer = useAppSelector(selectCustomer) || (() => null);
   const cartItems = customerData?.cartItem?.[0]?.productInfo || [];
   const currentUser: CurrentUser | null = useAppSelector(selectCurrentUser);
+  console.log(currentUser)
   const dispatch = useAppDispatch();
   const [logout] = useLogoutMutation();
   const { data: session } = useSession();
-  console.log(session, "session in navbar");
-  console.log(currentUser)
 
   const handleSearchHistory = (query: string) => {
     setSearchHistory((prevHistory) => {
@@ -292,7 +291,7 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
       {searchQuery.length > 0 && searchOpen && (
 
         <div
-          className="fixed inset-0 z-40 flex items-start justify-center  mt-27 overflow-y-auto md:hidden "
+          className="fixed inset-0 z-50 flex items-start justify-center  mt-27 overflow-y-auto md:hidden "
           onClick={() => setSearchOpen(false)}
         >
           <PopupProductmobile

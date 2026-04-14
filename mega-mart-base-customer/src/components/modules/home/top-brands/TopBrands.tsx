@@ -9,7 +9,6 @@ import Link from "next/link";
 
 const TopBrands = () => {
   const { data, isLoading } = useGetsliderImageQuery();
-  console.log(data)
 
   if (isLoading) {
     return <TopBrandsSkeleton />;
