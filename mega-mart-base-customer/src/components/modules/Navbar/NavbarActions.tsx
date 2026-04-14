@@ -60,7 +60,6 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
   // const clearCustomer = useAppSelector(selectCustomer) || (() => null);
   const cartItems = customerData?.cartItem?.[0]?.productInfo || [];
   const currentUser: CurrentUser | null = useAppSelector(selectCurrentUser);
-  console.log(currentUser)
   const dispatch = useAppDispatch();
   const [logout] = useLogoutMutation();
   const { data: session } = useSession();
@@ -231,12 +230,7 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ hideSearch, setHideSearch
             {/* Logout */}
             <DropdownMenuItem
               onClick={handleLogout}
-              className="
-        flex items-center gap-3 px-4 py-2.5
-        text-sm font-medium text-red-600
-        hover:bg-red-50
-        transition-colors cursor-pointer
-      "
+              className=" flex items-center gap-3 px-4 py-2.5  text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer "
             >
               <span className="text-base">🚪</span>
               Logout

@@ -77,7 +77,6 @@ export default function ProductDetailsPage({ productId }: any) {
 
 
   const currentUser = useAppSelector(selectCurrentUser);
-
   const { data: singleCustomer, refetch: refetchCustomer } =
     useGetSingleCustomerQuery(currentUser?._id as string);
 
@@ -327,6 +326,7 @@ export default function ProductDetailsPage({ productId }: any) {
 
   const addToCart = async () => {
     if (!currentUser) {
+      console.log("currentUser ok")
       router.push("/auth/login");
       return;
     }
@@ -335,6 +335,7 @@ export default function ProductDetailsPage({ productId }: any) {
     if (currentProduct?.variants && currentProduct.variants.length > 0) {
       if (!color || !size) {
         toast.error("Please select color and size before adding to cart");
+        console.log("!color || !size ok")
         return;
       }
     }

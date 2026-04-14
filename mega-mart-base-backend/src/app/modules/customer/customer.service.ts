@@ -51,7 +51,7 @@ const updateCustomerOnDB = async (id: string, payload: Partial<TCustomer>) => {
 };
 
 const getMyCustomerInfoFromDB = async (id: string) => {
-  const result = await CustomerModel.findOne({ userId: id }).populate(
+  const result = await CustomerModel.findOne({ userId:id  }).populate(
     customerPopulate
   );
   if (!result) {

@@ -6,6 +6,7 @@ import {
 import config from '.';
 import { UserModel } from '../modules/user/user.model';
 import { userRole } from '../modules/user/user.const';
+import { CustomerModel } from '../modules/customer/customer.model';
 
 passport.use(
   new GoogleStrategy(
@@ -42,18 +43,39 @@ passport.use(
             role: userRole.customer,
             auths: [authDetails],
           });
-        } else {
-           const isAlreadyLinked = user.auths.some(
-             auth =>
-               auth.provider === authDetails.provider &&
-               auth.providerId === authDetails.providerId
-           );
 
-           if (!isAlreadyLinked) {
-             user.auths.push(authDetails);
-             await user.save(); 
-           }
+          await CustomerModel.create({
+            userId: user._id,
+            cartItem: [{ userId: user._id, productInfo: [] }],
+            wishlist: [],
+            address: [],
+            orders: [],
+          });
+
+        } else {
+          const isAlreadyLinked = user.auths.some(
+            auth =>
+              auth.provider === authDetails.provider &&
+              auth.providerId === authDetails.providerId
+          );
+
+          if (!isAlreadyLinked) {
+            user.auths.push(authDetails);
+            await user.save();
+          }
+
+          const existingCustomer = await CustomerModel.findOne({ userId: user._id });
+          if (!existingCustomer) {
+            await CustomerModel.create({
+              userId: user._id,
+              cartItem: [{ userId: user._id, productInfo: [] }],
+              wishlist: [],
+              address: [],
+              orders: [],
+            });
+          }
         }
+
         return done(null, user);
       } catch (error) {
         console.log('Google Strategy Error:', error);
@@ -64,12 +86,15 @@ passport.use(
 );
 
 passport.serializeUser((user: any, done: (err: any, id?: unknown) => void) => {
-  done(null, user._id);
+  done(null, user._id.toString());
 });
 
 passport.deserializeUser(async (id: string, done: any) => {
   try {
     const user = await UserModel.findById(id);
+    if (!user) {
+      return done(null, false);
+    }
     done(null, user);
   } catch (error) {
     done(error);

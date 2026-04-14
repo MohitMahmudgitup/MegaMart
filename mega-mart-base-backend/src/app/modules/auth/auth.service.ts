@@ -57,55 +57,48 @@ const loginUserFromDB = async (payload: TAuth) => {
 
 //login an user with credentials
 const loginUserUsingProviderFromDB = async (payload: TExternalProviderAuth) => {
-  const isUserExists = await UserModel.findOne({
-    email: payload?.email,
-  });
+  const isUserExists = await UserModel.findOne({ email: payload?.email });
 
-  // Check if a user exists with the provided email
+  let user;
+
   if (!isUserExists) {
-    const result = await UserModel.create(payload);
-
-    const jwtPayload = {
-      email: result?.email,
-      role: result?.role,
-    };
-
-    //token
-    const token = jwt.sign(jwtPayload, config.jwt_access_secret as string, {
-      expiresIn: '24h',
-    });
-
-    const userObject = {
-      user: result,
-      accessToken: token,
-    };
-
-    return userObject;
+    // নতুন user create
+    user = await UserModel.create(payload);
+  } else {
+    user = await UserModel.findByIdAndUpdate(
+      isUserExists._id,
+      { status: 'active' },
+      { new: true }
+    );
   }
 
-  const user = await UserModel.findByIdAndUpdate(
-    isUserExists?._id,
-    { status: 'active' },
-    { new: true }
-  );
+  // ✅ Customer document আছে কিনা check করো
+  const existingCustomer = await CustomerModel.findOne({ userId: user?._id });
 
-  //generating token
+  if (!existingCustomer) {
+    // ✅ না থাকলে create করো
+    await CustomerModel.create({
+      userId: user?._id,
+      cartItem: [{ userId: user?._id, productInfo: [] }],
+      wishlist: [],
+      address: [],
+      orders: [],
+    });
+  }
+
   const jwtPayload = {
-    email: isUserExists?.email,
-    role: isUserExists?.role,
+    email: user?.email,
+    role: user?.role,
   };
 
-  //token
   const token = jwt.sign(jwtPayload, config.jwt_access_secret as string, {
-    expiresIn: '24h',
+    expiresIn: '7d',
   });
 
-  const userObject = {
-    user: user,
+  return {
+    user,
     accessToken: token,
   };
-
-  return userObject;
 };
 
 //logout current user and removing token from cookie
