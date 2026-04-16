@@ -40,7 +40,6 @@ const createCategory = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
     var _a, _b, _c, _d;
     const files = req.files;
     const categoryData = Object.assign(Object.assign({}, req.body), { image: ((_b = (_a = files["image"]) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.path) || '', bannerImg: ((_d = (_c = files["bannerImg"]) === null || _c === void 0 ? void 0 : _c[0]) === null || _d === void 0 ? void 0 : _d.path) || '' });
-    console.log(categoryData);
     const result = yield category_service_1.categoryServices.createCategoryIntoDB(categoryData);
     (0, sendResponse_1.default)(res, {
         success: true,
@@ -77,10 +76,20 @@ const deleteCategory = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
         data: result,
     });
 }));
+const getProductInCategory = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield category_service_1.categoryServices.getAllProductinCategoryFromDB();
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Products in category retrieved successfully!",
+        data: result,
+    });
+}));
 exports.categoryControllers = {
     getAllCategory,
     getSingleCategory,
     createCategory,
     deleteCategory,
     editCategory,
+    getProductInCategory
 };

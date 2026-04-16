@@ -37,6 +37,8 @@ const shopSettingSchema = new mongoose_1.Schema({
         required: [true, "Contact number is required!"],
     },
     websiteUrl: { type: String },
+    currency: { type: String },
+    timezone: { type: String },
 }, { _id: false });
 const shopMaintenanceSettingSchema = new mongoose_1.Schema({
     image: { type: String },
@@ -50,6 +52,7 @@ const shopSchema = new mongoose_1.Schema({
     staffs: [{ type: mongoose_1.Schema.Types.ObjectId }],
     logo: { type: String, required: true },
     coverImage: { type: String },
+    category: { type: mongoose_1.Schema.Types.ObjectId, ref: 'category' },
     basicInfo: { type: basicInfoSchema, required: true },
     paymentInfo: { type: paymentInfoSchema, default: {} },
     shopAddress: { type: shopAddressSchema, required: true },

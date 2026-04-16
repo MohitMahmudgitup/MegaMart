@@ -34,7 +34,6 @@ export default function Dashboard() {
   const {
     data: Customer,
   } = useGetSingleCustomerQuery(currentUser?._id as string);
-  // Console log the fetched data
 
 
   if (isLoading) return <Loading />

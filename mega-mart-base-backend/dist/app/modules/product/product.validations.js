@@ -89,6 +89,8 @@ exports.createProductZodSchema = zod_1.z.object({
     productInfo: productInfoZodSchema,
     variants: zod_1.z.array(exports.VariantSchema).min(1, "At least one variant is required"),
     specifications: zod_1.z.any().optional(),
+    featuredImg: zod_1.z.string().url('Invalid feature image URL!').optional(),
+    gallery: zod_1.z.array(zod_1.z.string().url('Invalid gallery image URL!')).optional(),
 });
 exports.updateProductZodSchema = zod_1.z.object({
     shopId: zod_1.z.string().optional(),

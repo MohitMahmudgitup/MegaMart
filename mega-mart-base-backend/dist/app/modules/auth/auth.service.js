@@ -20,6 +20,7 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const handleAppError_1 = __importDefault(require("../../errors/handleAppError"));
 const http_status_1 = __importDefault(require("http-status"));
 const http_status_codes_1 = require("http-status-codes");
+const customer_model_1 = require("../customer/customer.model");
 //register a user in database
 const registerUserOnDB = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield user_model_1.UserModel.create(payload);
@@ -39,6 +40,8 @@ const loginUserFromDB = (payload) => __awaiter(void 0, void 0, void 0, function*
     if (!(payload === null || payload === void 0 ? void 0 : payload.password)) {
         throw new Error('Password is required');
     }
+    // console.log(payload.password)
+    // console.log(isUserExists.password)
     const isPasswordMatched = yield bcrypt_1.default.compare(payload.password, isUserExists.password);
     if (!isPasswordMatched) {
         throw new handleAppError_1.default(http_status_1.default.UNAUTHORIZED, 'Wrong Credentials!');
@@ -48,45 +51,42 @@ const loginUserFromDB = (payload) => __awaiter(void 0, void 0, void 0, function*
 });
 //login an user with credentials
 const loginUserUsingProviderFromDB = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const isUserExists = yield user_model_1.UserModel.findOne({
-        email: payload === null || payload === void 0 ? void 0 : payload.email,
-    });
-    // Check if a user exists with the provided email
+    const isUserExists = yield user_model_1.UserModel.findOne({ email: payload === null || payload === void 0 ? void 0 : payload.email });
+    let user;
     if (!isUserExists) {
-        const result = yield user_model_1.UserModel.create(payload);
-        const jwtPayload = {
-            email: result === null || result === void 0 ? void 0 : result.email,
-            role: result === null || result === void 0 ? void 0 : result.role,
-        };
-        //token
-        const token = jsonwebtoken_1.default.sign(jwtPayload, config_1.default.jwt_access_secret, {
-            expiresIn: '24h',
-        });
-        const userObject = {
-            user: result,
-            accessToken: token,
-        };
-        return userObject;
+        // নতুন user create
+        user = yield user_model_1.UserModel.create(payload);
     }
-    const user = yield user_model_1.UserModel.findByIdAndUpdate(isUserExists === null || isUserExists === void 0 ? void 0 : isUserExists._id, { status: 'active' }, { new: true });
-    //generating token
+    else {
+        user = yield user_model_1.UserModel.findByIdAndUpdate(isUserExists._id, { status: 'active' }, { new: true });
+    }
+    // ✅ Customer document আছে কিনা check করো
+    const existingCustomer = yield customer_model_1.CustomerModel.findOne({ userId: user === null || user === void 0 ? void 0 : user._id });
+    if (!existingCustomer) {
+        // ✅ না থাকলে create করো
+        yield customer_model_1.CustomerModel.create({
+            userId: user === null || user === void 0 ? void 0 : user._id,
+            cartItem: [{ userId: user === null || user === void 0 ? void 0 : user._id, productInfo: [] }],
+            wishlist: [],
+            address: [],
+            orders: [],
+        });
+    }
     const jwtPayload = {
-        email: isUserExists === null || isUserExists === void 0 ? void 0 : isUserExists.email,
-        role: isUserExists === null || isUserExists === void 0 ? void 0 : isUserExists.role,
+        email: user === null || user === void 0 ? void 0 : user.email,
+        role: user === null || user === void 0 ? void 0 : user.role,
     };
-    //token
     const token = jsonwebtoken_1.default.sign(jwtPayload, config_1.default.jwt_access_secret, {
-        expiresIn: '24h',
+        expiresIn: '7d',
     });
-    const userObject = {
-        user: user,
+    return {
+        user,
         accessToken: token,
     };
-    return userObject;
 });
 //logout current user and removing token from cookie
 const logoutUserFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    yield user_model_1.UserModel.findByIdAndUpdate(id, { status: 'inActive' }, { new: true });
+    yield user_model_1.UserModel.findByIdAndUpdate(id, { new: true });
     return {};
 });
 const getMe = (decodedUser) => __awaiter(void 0, void 0, void 0, function* () {
@@ -96,10 +96,23 @@ const getMe = (decodedUser) => __awaiter(void 0, void 0, void 0, function* () {
     }
     return me;
 });
+const googlegetMe = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const customer = yield customer_model_1.CustomerModel.findOne({ userId }).populate({ path: "userId", select: "name email image" }).lean();
+    if (!customer) {
+        throw new handleAppError_1.default(404, "Customer not found");
+    }
+    // 🔥 exact format return
+    return {
+        userId: customer.userId || [],
+        cartItem: customer.cartItem || [],
+        address: customer.address || [],
+    };
+});
 exports.AuthServices = {
     registerUserOnDB,
     loginUserFromDB,
     logoutUserFromDB,
     loginUserUsingProviderFromDB,
     getMe,
+    googlegetMe
 };

@@ -32,6 +32,8 @@ const config_1 = __importDefault(require("../../config"));
 const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const vendor_consts_1 = require("../vendor/vendor.consts");
 const user_const_1 = require("./user.const");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const nodemailer_1 = __importDefault(require("nodemailer"));
 const getAllUserFromDB = () => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield user_model_1.UserModel.find();
     return result;
@@ -95,6 +97,77 @@ const updateUserRole = (id) => __awaiter(void 0, void 0, void 0, function* () {
     });
     return result;
 });
+const updateStatus = (id, status) => __awaiter(void 0, void 0, void 0, function* () {
+    const isUserExists = yield user_model_1.UserModel.findById(id);
+    if (!isUserExists) {
+        throw new handleAppError_1.default(http_status_1.default.NOT_FOUND, "User does not Exists!");
+    }
+    const result = yield user_model_1.UserModel.findByIdAndUpdate(id, { status }, { new: true });
+    return result;
+});
+const forgetPasswordService = (email) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_model_1.UserModel.findOne({ email });
+    if (!user) {
+        throw new handleAppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    const token = jsonwebtoken_1.default.sign({ email }, process.env.JWT_RESET_PASSWORD_KEY, { expiresIn: '1h' });
+    //send email
+    const transporter = nodemailer_1.default.createTransport({
+        service: "gmail",
+        secure: true,
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+        },
+    });
+    const mailOptions = {
+        from: 'syedmohitmahmudinzmaqm@gmail.com',
+        to: email,
+        subject: "Password Reset Request",
+        html: `<p>Click on this to generate your new password ${process.env.CLIENT_URL}/${token}  to reset your password. This link will expire in 1 hour.</p>`,
+    };
+    const result = yield transporter.sendMail(mailOptions);
+    return result;
+});
+const resetPasswordService = (token, password) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!password) {
+        throw new handleAppError_1.default(http_status_1.default.BAD_REQUEST, "Password is required");
+    }
+    let decoded;
+    try {
+        decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_RESET_PASSWORD_KEY);
+    }
+    catch (error) {
+        throw new handleAppError_1.default(http_status_1.default.UNAUTHORIZED, "Invalid or expired reset token");
+    }
+    const user = yield user_model_1.UserModel.findOne({ email: decoded.email });
+    if (!user) {
+        throw new handleAppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    user.password = password;
+    yield user.save();
+    return {
+        message: "Password reset successfully",
+    };
+});
+const changePasswordService = (userId, oldPassword, newPassword) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_model_1.UserModel.findById(userId);
+    if (!user) {
+        throw new handleAppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    if (!user.password) {
+        throw new handleAppError_1.default(http_status_1.default.INTERNAL_SERVER_ERROR, "User password not set");
+    }
+    const isPasswordCorrect = yield bcrypt_1.default.compare(oldPassword, user.password);
+    if (!isPasswordCorrect) {
+        throw new handleAppError_1.default(http_status_1.default.UNAUTHORIZED, "Old password is incorrect");
+    }
+    user.password = newPassword;
+    yield user.save();
+    return {
+        message: "Password changed successfully",
+    };
+});
 exports.UserServices = {
     getAllUserFromDB,
     getSingleUserFromDB,
@@ -103,4 +176,8 @@ exports.UserServices = {
     getAdminProfileFromDB,
     updateUserOnDB,
     updateUserRole,
+    updateStatus,
+    forgetPasswordService,
+    resetPasswordService,
+    changePasswordService,
 };

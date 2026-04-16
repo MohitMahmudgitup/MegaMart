@@ -14,19 +14,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.couponServices = void 0;
 const http_status_1 = __importDefault(require("http-status"));
-const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const handleAppError_1 = __importDefault(require("../../errors/handleAppError"));
 const coupons_const_1 = require("./coupons.const");
 const coupons_model_1 = require("./coupons.model");
+const QueryBuilder_1 = require("../../utils/QueryBuilder");
 const getAllCouponsFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const couponQuery = new QueryBuilder_1.default(coupons_model_1.CouponModel.find(), query)
-        .search(coupons_const_1.CouponSearchableFields)
-        .filter()
-        .sort()
-        .paginate()
-        .fields();
-    const result = yield couponQuery.modelQuery;
-    return result;
+    const couponsQuery = new QueryBuilder_1.QueryBuilder(coupons_model_1.CouponModel.find(), query);
+    const allCoupons = couponsQuery.search(coupons_const_1.CouponSearchableFields).filter().sort().paginate();
+    const [data, meta] = yield Promise.all([
+        allCoupons.build().exec(),
+        couponsQuery.getMeta()
+    ]);
+    return {
+        data, meta
+    };
 });
 const getSingleCouponFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield coupons_model_1.CouponModel.findById(id);

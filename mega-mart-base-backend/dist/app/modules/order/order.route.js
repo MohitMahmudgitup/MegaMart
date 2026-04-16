@@ -11,9 +11,12 @@ const order_validation_1 = require("./order.validation");
 const router = express_1.default.Router();
 router.get("/", order_controller_1.orderControllers.getAllOrder);
 router.get("/my-order/:id", order_controller_1.orderControllers.getMyOrders);
+// ─── Guest Orders (no auth required) ─────────────────────────
+router.post("/guest-orders", order_controller_1.orderControllers.getGuestOrders);
 router.get("/:id", order_controller_1.orderControllers.getSingleOrder);
 router.post("/create-order", (0, validateRequest_1.default)(order_validation_1.createOrderZodSchema), order_controller_1.orderControllers.createOrder);
-router.patch('/:id', order_controller_1.orderControllers.updateStats);
-router.patch('/update/track-code/:id', order_controller_1.orderControllers.updatetrackingLink);
-router.patch('/cancel/:id', order_controller_1.orderControllers.cancelOrder);
+router.patch("/:id", order_controller_1.orderControllers.updateStats);
+router.patch("/update/track-code/:id", order_controller_1.orderControllers.updatetrackingLink);
+router.patch("/cancel/:id", order_controller_1.orderControllers.cancelOrder);
+router.delete("/:id", order_controller_1.orderControllers.deleteOrder);
 exports.OrderRoutes = router;

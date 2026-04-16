@@ -3,8 +3,10 @@
 import Footer from "@/components/modules/Footer/Footer";
 import Navbar from "@/components/modules/Navbar/Navbar";
 import SmallNavbar from "@/components/SmallNavbar/SmallNavbar";
+import { useMergeGuestCart } from "@/hooks/useMergeGuestCart";
 
 const DashboardLayout = ({ children , showSidebar }: { children: React.ReactNode, showSidebar?: boolean }) => {
+  useMergeGuestCart();
   return (
     <div className="overflow-x-hidden relative mt-0 lg:mt-2">
       

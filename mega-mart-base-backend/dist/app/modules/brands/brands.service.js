@@ -53,10 +53,15 @@ const DeleteBrandOnDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
     return updatedBrand;
 });
 exports.DeleteBrandOnDB = DeleteBrandOnDB;
+const getProductsByBrand = () => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield brands_model_1.BrandModel.find({}, { "images.image": 1, _id: 1 });
+    return result;
+});
 exports.brandServices = {
     getAllBrandsFromDB,
     getSingleBrandFromDB,
     createBrandOnDB,
     updateBrandOnDB: exports.updateBrandOnDB,
     DeleteBrandOnDB: exports.DeleteBrandOnDB,
+    getProductsByBrand
 };

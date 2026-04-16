@@ -15,6 +15,14 @@ const brandsSchema = new mongoose_1.Schema({
         type: String,
         required: [true, "Brand can't create without a name!"],
     },
+    title: {
+        type: String,
+        required: [true, "Brand can't create without a title!"],
+    },
+    description: {
+        type: String,
+        required: [true, "Brand can't create without a description!"],
+    },
     icon: iconSchema,
     images: { type: [imageSchema], default: [] },
 }, {

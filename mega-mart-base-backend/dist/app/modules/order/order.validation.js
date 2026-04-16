@@ -2,134 +2,119 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createOrderZodSchema = exports.shippingSchema = void 0;
 const zod_1 = require("zod");
-// ObjectId validation
+// ✅ ObjectId validation
 const objectIdSchema = zod_1.z
     .string()
-    .regex(/^[0-9a-fA-F]{24}$/, "Must be a valid ObjectId string");
-// Shipping Validation
+    .regex(/^[0-9a-fA-F]{24}$/, "Must be a valid ObjectId");
+// ==========================
+// ✅ Shipping (per item)
+// ==========================
 const shippingZodSchema = zod_1.z.object({
     name: zod_1.z.string({
-        error: (issue) => issue.input === undefined
-            ? "Shipping name is required!"
-            : "Must be a string!",
+        message: "Shipping name is required!",
     }),
-    type: zod_1.z.enum(["free", "percentage", "amount"], {
-        message: "Shipping type must be either 'free', 'percentage', or 'amount'",
-    }),
+    type: zod_1.z.enum(["free", "percentage", "amount"]),
 });
-// Total Amount Validation
+// ==========================
+// ✅ Total Amount
+// ==========================
 const totalAmountZodSchema = zod_1.z.object({
     subTotal: zod_1.z.number({
-        error: (issue) => issue.input === undefined ? "SubTotal is required!" : "Must be a number!",
+        message: "SubTotal is required!",
     }),
     tax: zod_1.z.number({
-        error: (issue) => issue.input === undefined ? "Tax is required!" : "Must be a number!",
+        message: "Tax is required!",
     }),
     shipping: shippingZodSchema,
     discount: zod_1.z.number({
-        error: (issue) => issue.input === undefined ? "Discount is required!" : "Must be a number!",
+        message: "Discount is required!",
     }),
     total: zod_1.z.number({
-        error: (issue) => issue.input === undefined ? "Total is required!" : "Must be a number!",
+        message: "Total is required!",
     }),
 });
-// Customer Info Validation
+// ==========================
+// ✅ Customer Info
+// ==========================
 const customerInfoZodSchema = zod_1.z.object({
     firstName: zod_1.z.string({
-        error: (issue) => issue.input === undefined
-            ? "First name is required!"
-            : "Must be a string!",
+        message: "First name is required!",
     }),
     lastName: zod_1.z.string({
-        error: (issue) => issue.input === undefined
-            ? "Last name is required!"
-            : "Must be a string!",
+        message: "Last name is required!",
     }),
-    email: zod_1.z.string().email("Must be a valid email!"),
+    // guest friendly
+    email: zod_1.z.string().email().optional().or(zod_1.z.literal("")),
     phone: zod_1.z.string({
-        error: (issue) => issue.input === undefined
-            ? "Phone number is required!"
-            : "Must be a string!",
+        message: "Phone number is required!",
     }),
     address: zod_1.z.string({
-        error: (issue) => issue.input === undefined ? "Address is required!" : "Must be a string!",
+        message: "Address is required!",
     }),
     city: zod_1.z.string({
-        error: (issue) => issue.input === undefined ? "City is required!" : "Must be a string!",
+        message: "City is required!",
     }),
     postalCode: zod_1.z.string({
-        error: (issue) => issue.input === undefined
-            ? "Postal code is required!"
-            : "Must be a string!",
+        message: "Postal code is required!",
     }),
     country: zod_1.z.string({
-        error: (issue) => issue.input === undefined ? "Country is required!" : "Must be a string!",
+        message: "Country is required!",
     }),
 });
-// Payment Info Validation
-const paymentInfoZodSchema = zod_1.z.union([
-    zod_1.z.literal("cash-on"),
-    zod_1.z.literal("pay-with-sslCommerz"),
+// ==========================
+// ✅ Payment
+// ==========================
+const paymentInfoZodSchema = zod_1.z.enum([
+    "cash-on",
+    "pay-with-sslCommerz",
 ]);
+// ==========================
+// ✅ Main Shipping (checkout)
+// ==========================
 exports.shippingSchema = zod_1.z.object({
-    shippingLocation: zod_1.z.enum(['dhaka', 'outside_dhaka']),
+    shippingLocation: zod_1.z.enum(["dhaka", "outside_dhaka"]),
     shippingCharge: zod_1.z.number().min(0),
 });
-// Order Info Validation
+// ==========================
+// ✅ Order Info (IMPORTANT)
+// ==========================
 const orderInfoZodSchema = zod_1.z.object({
-    orderBy: objectIdSchema.or(zod_1.z.string({
-        error: issue => issue.input === undefined
-            ? 'OrderBy is required!'
-            : 'Must be a valid ObjectId string!',
-    })),
-    shopInfo: objectIdSchema.or(zod_1.z.string({
-        error: issue => issue.input === undefined
-            ? 'Shop info is required!'
-            : 'Must be a valid ObjectId string!',
-    })),
-    productInfo: objectIdSchema.or(zod_1.z.string({
-        error: issue => issue.input === undefined
-            ? 'Product info is required!'
-            : 'Must be a valid ObjectId string!',
-    })),
+    orderBy: objectIdSchema.optional().nullable(),
+    shopInfo: objectIdSchema.optional().nullable(),
+    productInfo: objectIdSchema,
     color: zod_1.z.string().optional(),
     size: zod_1.z.string().optional(),
     trackingNumber: zod_1.z.string().optional(),
     status: zod_1.z
         .enum([
-        'pending',
-        'processing',
-        'at-local-facility',
-        'out-for-delivery',
-        'cancelled',
-        'completed',
-    ], {
-        message: "Status must be one of 'pending', 'processing', 'at-local-facility', 'out-for-delivery', 'cancelled', or 'completed'",
-    })
-        .optional()
-        .default('pending'),
-    isCancelled: zod_1.z.boolean().optional().default(false),
-    quantity: zod_1.z
-        .number({
-        error: issue => issue.input === undefined
-            ? 'Quantity is required!'
-            : 'Must be a number!',
-    })
-        .min(1, 'Quantity must be at least 1'),
+        "pending",
+        "processing",
+        "at-local-facility",
+        "out-for-delivery",
+        "cancelled",
+        "completed",
+    ])
+        .default("pending"),
+    isCancelled: zod_1.z.boolean().default(false),
+    quantity: zod_1.z.number({
+        message: "Quantity is required!",
+    }).min(1),
     totalAmount: totalAmountZodSchema,
-    orderNote: zod_1.z.string().optional()
+    orderNote: zod_1.z.string().optional(),
 });
-// Main Order Validation
+// ==========================
+// ✅ FINAL ORDER SCHEMA
+// ==========================
 exports.createOrderZodSchema = zod_1.z.object({
     orderInfo: zod_1.z
         .array(orderInfoZodSchema)
-        .min(1, 'At least one order info is required!'),
+        .min(1, "At least one order info is required!"),
     shipping: exports.shippingSchema,
     customerInfo: customerInfoZodSchema,
     paymentInfo: paymentInfoZodSchema,
     totalAmount: zod_1.z.number({
-        error: issue => issue.input === undefined
-            ? 'Total amount is required!'
-            : 'Must be a number!',
+        message: "Total amount is required!",
     }),
+    // ✅ optional flags
+    isGuest: zod_1.z.boolean().optional(),
 });

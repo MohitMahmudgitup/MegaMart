@@ -88,6 +88,48 @@ const updateUserRole = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
         data: result,
     });
 }));
+const updateStatus = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { status } = req.body;
+    const result = yield user_service_1.UserServices.updateStatus(req.params.id, status);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "User status updated successfully!",
+        data: result,
+    });
+}));
+const forgetPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email } = req.body;
+    const result = yield user_service_1.UserServices.forgetPasswordService(email);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Password reset link sent successfully!",
+        data: result,
+    });
+}));
+const resetPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { token } = req.params;
+    const { password } = req.body;
+    const result = yield user_service_1.UserServices.resetPasswordService(token, password);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Password reset successfully!",
+        data: result,
+    });
+}));
+const chnagePassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.params.id;
+    const { oldPassword, newPassword } = req.body;
+    const result = yield user_service_1.UserServices.changePasswordService(userId, oldPassword, newPassword);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Password changed successfully!",
+        data: result,
+    });
+}));
 exports.UserControllers = {
     getSingleUser,
     getAllUser,
@@ -96,4 +138,8 @@ exports.UserControllers = {
     getAllVendorUser,
     updateUser,
     updateUserRole,
+    updateStatus,
+    forgetPassword,
+    resetPassword,
+    chnagePassword,
 };

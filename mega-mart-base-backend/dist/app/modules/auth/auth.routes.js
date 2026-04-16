@@ -32,4 +32,5 @@ router.get('/google', (req, res, next) => __awaiter(void 0, void 0, void 0, func
 }));
 router.get("/google/callback", passport_1.default.authenticate("google", { failureRedirect: "/login" }), auth_controller_1.AuthController.googleCallbackController);
 router.get('/me', (0, checkAuth_1.checkAuth)(...Object.values(user_const_1.userRoles)), auth_controller_1.AuthController.gatMe);
+router.get('/googleData', (0, checkAuth_1.checkAuth)(...Object.values(user_const_1.userRoles)), auth_controller_1.AuthController.googleData);
 exports.AuthRoutes = router;

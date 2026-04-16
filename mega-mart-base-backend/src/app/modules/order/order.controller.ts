@@ -19,7 +19,7 @@ const getAllOrder = catchAsync(async (req, res) => {
 const getMyOrders = catchAsync(async (req, res) => {
   const customerId = req.params.id;
 
-  const {data, meta} = await orderServices.getMyOrdersFromDB(
+  const { data, meta } = await orderServices.getMyOrdersFromDB(
     customerId,
     req.query as Record<string, string>
   );
@@ -29,7 +29,30 @@ const getMyOrders = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     message: "Orders retrieved successfully!",
     data: data,
-    meta: meta
+    meta: meta,
+  });
+});
+
+// ─── Guest Orders ────────────────────────────────────────────
+const getGuestOrders = catchAsync(async (req, res) => {
+  const { orderIds } = req.body;
+
+  if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
+    return sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "No order IDs provided",
+      data: [],
+    });
+  }
+
+  const result = await orderServices.getGuestOrdersFromDB(orderIds);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Guest orders retrieved successfully!",
+    data: result,
   });
 });
 
@@ -46,15 +69,28 @@ const getSingleOrder = catchAsync(async (req, res) => {
 });
 
 const createOrder = catchAsync(async (req, res) => {
-  const orderData = req.body;
-  const result = await orderServices.createOrderIntoDB(orderData);
+  try {
+    const orderData = req.body;
 
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: "Order created successfully!",
-    data: result,
-  });
+
+    const result = await orderServices.createOrderIntoDB(orderData);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Order created successfully!",
+      data: result,
+    });
+  } catch (error: any) {
+    console.error("CREATE ORDER ERROR:", error);
+
+    sendResponse(res, {
+      success: false,
+      statusCode: 500,
+      message: error.message || "Order failed",
+      data: null,
+    });
+  }
 });
 
 const cancelOrder = catchAsync(async (req, res) => {
@@ -64,23 +100,22 @@ const cancelOrder = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: 'Order canceld successfully!',
+    message: "Order canceld successfully!",
     data: result,
   });
 });
 
 const updateStats = catchAsync(async (req, res) => {
   const id = req.params.id;
-  const result = await orderServices.updateStatsIntoDB(id,req.body);
+  const result = await orderServices.updateStatsIntoDB(id, req.body);
 
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: 'Status Updated successfully!',
+    message: "Status Updated successfully!",
     data: result,
   });
 });
-
 
 const updatetrackingLink = catchAsync(async (req, res) => {
   const id = req.params.id;
@@ -89,7 +124,7 @@ const updatetrackingLink = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: 'Order trackingLink set successfully!',
+    message: "Order trackingLink set successfully!",
     data: result,
   });
 });
@@ -101,17 +136,19 @@ const deleteOrder = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: 'Order deleted successfully!',
+    message: "Order deleted successfully!",
     data: [],
   });
 });
+
 export const orderControllers = {
   getAllOrder,
   getSingleOrder,
   createOrder,
   getMyOrders,
+  getGuestOrders,
   cancelOrder,
   updateStats,
   updatetrackingLink,
-  deleteOrder
+  deleteOrder,
 };

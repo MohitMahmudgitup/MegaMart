@@ -17,6 +17,7 @@ const passport_google_oauth20_1 = require("passport-google-oauth20");
 const _1 = __importDefault(require("."));
 const user_model_1 = require("../modules/user/user.model");
 const user_const_1 = require("../modules/user/user.const");
+const customer_model_1 = require("../modules/customer/customer.model");
 passport_1.default.use(new passport_google_oauth20_1.Strategy({
     clientID: _1.default.GOOGLE_CLIENT_ID,
     clientSecret: _1.default.GOOGLE_CLIENT_SECRET,
@@ -41,6 +42,13 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
                 role: user_const_1.userRole.customer,
                 auths: [authDetails],
             });
+            yield customer_model_1.CustomerModel.create({
+                userId: user._id,
+                cartItem: [{ userId: user._id, productInfo: [] }],
+                wishlist: [],
+                address: [],
+                orders: [],
+            });
         }
         else {
             const isAlreadyLinked = user.auths.some(auth => auth.provider === authDetails.provider &&
@@ -48,6 +56,16 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
             if (!isAlreadyLinked) {
                 user.auths.push(authDetails);
                 yield user.save();
+            }
+            const existingCustomer = yield customer_model_1.CustomerModel.findOne({ userId: user._id });
+            if (!existingCustomer) {
+                yield customer_model_1.CustomerModel.create({
+                    userId: user._id,
+                    cartItem: [{ userId: user._id, productInfo: [] }],
+                    wishlist: [],
+                    address: [],
+                    orders: [],
+                });
             }
         }
         return done(null, user);
@@ -58,11 +76,14 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
     }
 })));
 passport_1.default.serializeUser((user, done) => {
-    done(null, user._id);
+    done(null, user._id.toString());
 });
 passport_1.default.deserializeUser((id, done) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield user_model_1.UserModel.findById(id);
+        if (!user) {
+            return done(null, false);
+        }
         done(null, user);
     }
     catch (error) {

@@ -9,6 +9,9 @@ router.get("/", orderControllers.getAllOrder);
 
 router.get("/my-order/:id", orderControllers.getMyOrders);
 
+// ─── Guest Orders (no auth required) ─────────────────────────
+router.post("/guest-orders", orderControllers.getGuestOrders);
+
 router.get("/:id", orderControllers.getSingleOrder);
 
 router.post(
@@ -17,10 +20,10 @@ router.post(
   orderControllers.createOrder
 );
 
-router.patch('/:id', orderControllers.updateStats);
-router.patch('/update/track-code/:id', orderControllers.updatetrackingLink);
+router.patch("/:id", orderControllers.updateStats);
+router.patch("/update/track-code/:id", orderControllers.updatetrackingLink);
 
-router.patch('/cancel/:id', orderControllers.cancelOrder);
-router.delete('/:id', orderControllers.deleteOrder);
+router.patch("/cancel/:id", orderControllers.cancelOrder);
+router.delete("/:id", orderControllers.deleteOrder);
 
 export const OrderRoutes = router;

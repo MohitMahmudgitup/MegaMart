@@ -22,5 +22,7 @@ router.patch('/update-brand/:id', multer_config_1.multerUpload.fields([
     { name: 'sliderImage', maxCount: 1 },
     { name: 'iconImage', maxCount: 1 },
 ]), (0, validateRequest_1.default)(brands_validation_1.updateBrandZodSchema), brands_controller_1.brandsControllers.updateBrand);
-router.delete('/:id', brands_controller_1.brandsControllers.deleteBrand);
+router.get('/products/:id', brands_controller_1.brandsControllers.getProductsByBrand);
+router.delete('/delete/:id', brands_controller_1.brandsControllers.deleteBrand);
+router.get('/type/slider-images', brands_controller_1.brandsControllers.getsliderImage);
 exports.BrandRoutes = router;

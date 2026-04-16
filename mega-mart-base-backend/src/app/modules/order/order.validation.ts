@@ -1,172 +1,138 @@
 import { z } from "zod";
 
-// ObjectId validation
+// ✅ ObjectId validation
 const objectIdSchema = z
   .string()
-  .regex(/^[0-9a-fA-F]{24}$/, "Must be a valid ObjectId string");
+  .regex(/^[0-9a-fA-F]{24}$/, "Must be a valid ObjectId");
 
-// Shipping Validation
+// ==========================
+// ✅ Shipping (per item)
+// ==========================
 const shippingZodSchema = z.object({
   name: z.string({
-    error: (issue) =>
-      issue.input === undefined
-        ? "Shipping name is required!"
-        : "Must be a string!",
+    message: "Shipping name is required!",
   }),
-  type: z.enum(["free", "percentage", "amount"], {
-    message: "Shipping type must be either 'free', 'percentage', or 'amount'",
-  }),
+  type: z.enum(["free", "percentage", "amount"]),
 });
 
-// Total Amount Validation
+// ==========================
+// ✅ Total Amount
+// ==========================
 const totalAmountZodSchema = z.object({
   subTotal: z.number({
-    error: (issue) =>
-      issue.input === undefined ? "SubTotal is required!" : "Must be a number!",
+    message: "SubTotal is required!",
   }),
   tax: z.number({
-    error: (issue) =>
-      issue.input === undefined ? "Tax is required!" : "Must be a number!",
+    message: "Tax is required!",
   }),
   shipping: shippingZodSchema,
   discount: z.number({
-    error: (issue) =>
-      issue.input === undefined ? "Discount is required!" : "Must be a number!",
+    message: "Discount is required!",
   }),
   total: z.number({
-    error: (issue) =>
-      issue.input === undefined ? "Total is required!" : "Must be a number!",
+    message: "Total is required!",
   }),
 });
 
-// Customer Info Validation
+// ==========================
+// ✅ Customer Info
+// ==========================
 const customerInfoZodSchema = z.object({
   firstName: z.string({
-    error: (issue) =>
-      issue.input === undefined
-        ? "First name is required!"
-        : "Must be a string!",
+    message: "First name is required!",
   }),
   lastName: z.string({
-    error: (issue) =>
-      issue.input === undefined
-        ? "Last name is required!"
-        : "Must be a string!",
+    message: "Last name is required!",
   }),
-  email: z.string().email("Must be a valid email!").optional().or(z.literal('')),
+
+  // guest friendly
+  email: z.string().email().optional().or(z.literal("")),
+
   phone: z.string({
-    error: (issue) =>
-      issue.input === undefined
-        ? "Phone number is required!"
-        : "Must be a string!",
+    message: "Phone number is required!",
   }),
   address: z.string({
-    error: (issue) =>
-      issue.input === undefined ? "Address is required!" : "Must be a string!",
+    message: "Address is required!",
   }),
   city: z.string({
-    error: (issue) =>
-      issue.input === undefined ? "City is required!" : "Must be a string!",
+    message: "City is required!",
   }),
   postalCode: z.string({
-    error: (issue) =>
-      issue.input === undefined
-        ? "Postal code is required!"
-        : "Must be a string!",
+    message: "Postal code is required!",
   }),
   country: z.string({
-    error: (issue) =>
-      issue.input === undefined ? "Country is required!" : "Must be a string!",
+    message: "Country is required!",
   }),
 });
 
-// Payment Info Validation
-const paymentInfoZodSchema = z.union([
-  z.literal("cash-on"),
-  z.literal("pay-with-sslCommerz"),
+// ==========================
+// ✅ Payment
+// ==========================
+const paymentInfoZodSchema = z.enum([
+  "cash-on",
+  "pay-with-sslCommerz",
 ]);
 
-
+// ==========================
+// ✅ Main Shipping (checkout)
+// ==========================
 export const shippingSchema = z.object({
-  shippingLocation: z.enum(['dhaka', 'outside_dhaka']),
+  shippingLocation: z.enum(["dhaka", "outside_dhaka"]),
   shippingCharge: z.number().min(0),
 });
 
-
-
-// Order Info Validation
+// ==========================
+// ✅ Order Info (IMPORTANT)
+// ==========================
 const orderInfoZodSchema = z.object({
-  orderBy: objectIdSchema.or(
-    z.string({
-      error: issue =>
-        issue.input === undefined
-          ? 'OrderBy is required!'
-          : 'Must be a valid ObjectId string!',
-    })
-  ),
-  shopInfo: objectIdSchema.or(
-    z.string({
-      error: issue =>
-        issue.input === undefined
-          ? 'Shop info is required!'
-          : 'Must be a valid ObjectId string!',
-    })
-  ),
-  productInfo: objectIdSchema.or(
-    z.string({
-      error: issue =>
-        issue.input === undefined
-          ? 'Product info is required!'
-          : 'Must be a valid ObjectId string!',
-    })
-  ),
+  orderBy: objectIdSchema.optional().nullable(),
+  shopInfo: objectIdSchema.optional().nullable(),
+  productInfo: objectIdSchema,
+
   color: z.string().optional(),
   size: z.string().optional(),
   trackingNumber: z.string().optional(),
+
   status: z
-    .enum(
-      [
-        'pending',
-        'processing',
-        'at-local-facility',
-        'out-for-delivery',
-        'cancelled',
-        'completed',
-      ],
-      {
-        message:
-          "Status must be one of 'pending', 'processing', 'at-local-facility', 'out-for-delivery', 'cancelled', or 'completed'",
-      }
-    )
-    .optional()
-    .default('pending'),
-  isCancelled: z.boolean().optional().default(false),
-  quantity: z
-    .number({
-      error: issue =>
-        issue.input === undefined
-          ? 'Quantity is required!'
-          : 'Must be a number!',
-    })
-    .min(1, 'Quantity must be at least 1'),
+    .enum([
+      "pending",
+      "processing",
+      "at-local-facility",
+      "out-for-delivery",
+      "cancelled",
+      "completed",
+    ])
+    .default("pending"),
+
+  isCancelled: z.boolean().default(false),
+
+  quantity: z.number({
+    message: "Quantity is required!",
+  }).min(1),
+
   totalAmount: totalAmountZodSchema,
-  orderNote: z.string().optional()
+
+  orderNote: z.string().optional(),
 });
 
-// Main Order Validation
+// ==========================
+// ✅ FINAL ORDER SCHEMA
+// ==========================
 export const createOrderZodSchema = z.object({
   orderInfo: z
     .array(orderInfoZodSchema)
-    .min(1, 'At least one order info is required!'),
+    .min(1, "At least one order info is required!"),
+
   shipping: shippingSchema,
+
   customerInfo: customerInfoZodSchema,
 
   paymentInfo: paymentInfoZodSchema,
 
   totalAmount: z.number({
-    error: issue =>
-      issue.input === undefined
-        ? 'Total amount is required!'
-        : 'Must be a number!',
+    message: "Total amount is required!",
   }),
+
+  // ✅ optional flags
+  isGuest: z.boolean().optional(),
 });

@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
+
 import { IProduct } from "@/types/product";
 import { Button } from "../ui/button";
 import { LoaderCircle, Minus, Plus, X } from "lucide-react";
@@ -13,15 +14,21 @@ import { selectCurrentUser } from "@/redux/featured/auth/authSlice";
 import toast from "react-hot-toast";
 import { useEffect, useState } from "react";
 import {
-  selectCustomer,
   setCustomer,
   updateCartItemQuantity,
 } from "@/redux/featured/customer/customerSlice";
+import {
+  getGuestCart,
+  setGuestCart,
+  GuestCartItem,
+} from "@/utils/guestCart";
 
 interface CartItems {
   productId: [IProduct];
   quantity: number;
   totalAmount: number;
+  color?: string;
+  size?: string;
 }
 
 export default function CartSidebar({
@@ -34,269 +41,394 @@ export default function CartSidebar({
   cartItems: CartItems[];
 }) {
   const dispatch = useAppDispatch();
-
   const [updateCustomer] = useUpdateCustomerMutation();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const currentUser = useAppSelector(selectCurrentUser);
-  const singleCustomer = useAppSelector(selectCustomer);
 
-  const { data: customerData, refetch: refetchCustomer } =
+  const [guestCart, setGuestCartState] = useState<GuestCartItem[]>([]);
+  const isGuest = !currentUser;
+
+  const { data: customerData, refetch } =
     useGetSingleCustomerQuery(currentUser?._id as string, {
       skip: !currentUser?._id,
     });
-console.log(customerData)
+
   useEffect(() => {
-    if (customerData) {
-      dispatch(setCustomer(customerData));
-    }
+    if (customerData) dispatch(setCustomer(customerData));
   }, [customerData, dispatch]);
 
+  useEffect(() => {
+    if (!currentUser) {
+      setGuestCartState(getGuestCart());
+    }
+  }, [currentUser, isCartOpen]);
+
+  // ================= GUEST =================
+  const removeFromGuestCart = (
+    productId: string,
+    color: string,
+    size: string
+  ) => {
+    const updated = guestCart.filter(
+      (i) =>
+        !(i.productId === productId && i.color === color && i.size === size)
+    );
+    setGuestCart(updated);
+    setGuestCartState(updated);
+    toast.success("Removed from cart!");
+  };
+
+  const handleGuestQuantityChange = (
+    productId: string,
+    color: string,
+    size: string,
+    type: "inc" | "dec"
+  ) => {
+    const updated = guestCart.map((i) =>
+      i.productId === productId && i.color === color && i.size === size
+        ? {
+            ...i,
+            quantity:
+              type === "inc"
+                ? i.quantity + 1
+                : Math.max(i.quantity - 1, 1),
+          }
+        : i
+    );
+
+    setGuestCart(updated);
+    setGuestCartState(updated);
+  };
+
+  // ================= USER =================
   const removeFromCart = async (id: string) => {
-    if (!singleCustomer) return;
-
-    const updatedProductInfo =
-      singleCustomer?.cartItem?.[0]?.productInfo?.filter((item: any) => {
-        const productIds = item.productId.map((p: any) =>
-          typeof p === "string" ? p : String(p._id)
-        );
-
-        return !productIds.includes(id);
-      }) || [];
+    if (!currentUser) return;
 
     try {
       setLoadingId(id);
 
+      const updatedProductInfo = cartItems
+        .filter((item: any) => !item.productId[0]?._id.includes(id))
+        .map((item: any) => item);
+
       await updateCustomer({
-        id: singleCustomer?._id,
+        id: currentUser._id,
         body: {
           cartItem: [
             {
-              userId: currentUser?._id,
+              userId: currentUser._id,
               productInfo: updatedProductInfo.map((item: any) => ({
-                productId: item.productId.map((p: any) =>
-                  typeof p === "string" ? p : String(p._id)
-                ),
+                productId: [String(item.productId[0]?._id)],
                 quantity: item.quantity,
                 totalAmount: item.totalAmount,
-                color: item.color || '',
-                size: item.size || '',
+                color: item.color || "",
+                size: item.size || "",
               })),
             },
           ],
         },
       });
 
-      refetchCustomer();
-      toast.success("Removed from cart successfully!");
+      refetch();
+      toast.success("Removed from cart!");
       setLoadingId(null);
-    } catch (error) {
-      toast.error("Failed to remove from cart.");
+    } catch {
+      toast.error("Failed to remove");
+      setLoadingId(null);
     }
   };
 
-  const cartInfo = cartItems.map((item) => {
-    const product = item.productId[0];
-    const subTotal = (product?.productInfo?.salePrice || 0) * item.quantity;
-    const total = subTotal;
+  const handleQuantityChange = async (
+    productId: string,
+    type: "inc" | "dec"
+  ) => {
+    if (!currentUser) return;
 
-    return {
-      subTotal,
-      totalAmount: { total },
-    };
-  });
+    const item = cartItems.find(
+      (i) => i.productId[0]?._id === productId
+    );
+    if (!item) return;
 
-  const overallTotal = cartInfo.reduce(
-    (acc, item) => acc + item.totalAmount.total,
-    0
-  );
+    const newQuantity =
+      type === "inc"
+        ? item.quantity + 1
+        : Math.max(item.quantity - 1, 1);
 
-  // update quantity functions
-  const handleQuantityChange = async (productId: string, type: "inc" | "dec") => {
-    if (!singleCustomer) return;
-
-    // Find the item to update
-    const itemToUpdate = singleCustomer?.cartItem?.[0]?.productInfo?.find((item: any) => {
-      const ids = item.productId.map((p: any) => typeof p === "string" ? p : p._id);
-      return ids.includes(productId);
-    });
-
-    if (!itemToUpdate) return;
-
-    // Calculate new quantity
-    const newQuantity = type === "inc" ? itemToUpdate.quantity + 1 : Math.max(itemToUpdate.quantity - 1, 1);
-
-    // Update locally first for immediate UI feedback
     dispatch(updateCartItemQuantity({ productId, type }));
 
     try {
-      // Update on server
-     await updateCustomer({
-        id: singleCustomer._id,
+      await updateCustomer({
+        id: currentUser._id,
         body: {
           cartItem: [
             {
-              userId: currentUser?._id,
-              productInfo: singleCustomer?.cartItem?.[0]?.productInfo?.map((item: any) => {
-                const ids = item.productId.map((p: any) => typeof p === "string" ? p : p._id);
-                
-                if (ids.includes(productId)) {
+              userId: currentUser._id,
+              productInfo: cartItems.map((i) => {
+                if (i.productId[0]?._id === productId) {
                   return {
-                    productId: [String(item.productId[0]._id || item.productId[0])],
+                    productId: [String(i.productId[0]?._id)],
                     quantity: newQuantity,
-                    totalAmount: item.totalAmount,
-                    color: item.color || '',
-                    size: item.size || '',
+                    totalAmount: i.totalAmount,
+                    color: i.color || "",
+                    size: i.size || "",
                   };
                 }
-                
+
                 return {
-                  productId: [String(item.productId[0]._id || item.productId[0])],
-                  quantity: item.quantity,
-                  totalAmount: item.totalAmount,
-                  color: item.color || '',
-                  size: item.size || '',
+                  productId: [String(i.productId[0]?._id)],
+                  quantity: i.quantity,
+                  totalAmount: i.totalAmount,
+                  color: i.color || "",
+                  size: i.size || "",
                 };
-              }) ?? [],
+              }),
             },
           ],
         },
       });
-      refetchCustomer();
-    } catch (error) {
-      toast.error("Failed to update quantity.");
+
+      refetch();
+    } catch {
+      toast.error("Update failed");
     }
   };
 
+  const guestTotal = guestCart.reduce(
+    (acc, i) => acc + (i.salePrice || 0) * i.quantity,
+    0
+  );
+
+  const overallTotal = cartItems.reduce(
+    (acc, i) =>
+      acc +
+      (i.productId[0]?.productInfo?.salePrice || 0) * i.quantity,
+    0
+  );
+
   return (
     <>
-      {isCartOpen && (
-        <div className="fixed inset-0 z-50 backdrop-blur-sm bg-black/40">
-          <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl">
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b p-4">
-                <h2 className="text-lg font-medium">
-                  Shopping Cart ({cartItems.length} Items)
-                </h2>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsCartOpen(false)}
-                  className="h-8 w-8 p-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+      {/* BACKDROP */}
+      <div
+        className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity
+        ${
+          isCartOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setIsCartOpen(false)}
+      />
 
-              <div className="flex-1 overflow-y-auto p-4">
-                <div className="space-y-4">
-                  {cartItems?.map((item: CartItems) => (
-                    <div
-                      key={item.productId[0]?._id}
-                      className="flex items-center gap-3 pb-4 border-b border-gray-100 last:border-b-0"
-                    >
-                      <div className="h-12 w-12 rounded-md overflow-hidden flex items-center justify-center bg-gray-100">
-                        <Image
-                          src={
-                            item.productId[0]?.featuredImg || "/placeholder.png"
-                          }
-                          alt={item.productId[0]?.description?.name}
-                          width={48}
-                          height={48}
-                          className="object-cover"
-                        />
-                      </div>
+      {/* SIDEBAR */}
+      <div
+        className={`
+          fixed z-50 bg-white shadow-xl flex flex-col
 
-                      <div className="flex-1">
-                        <h3 className="font-medium text-sm">
-                          {item.productId[0]?.description?.name}
-                        </h3>
-                        <p className="text-sm font-semibold">
-                          $
-                          {item.productId[0]?.productInfo?.salePrice?.toFixed(2)}
-                        </p>
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-6 w-6 p-0"
-                              onClick={() =>
-                                handleQuantityChange(
-                                  item.productId[0]._id,
-                                  "dec"
-                                )
-                              }
-                              disabled={item.quantity <= 1}
-                            >
-                              <Minus className="h-3 w-3" />
-                            </Button>
+          /* MOBILE */
+          bottom-0 left-0 right-0 w-full max-h-[85vh] rounded-t-3xl
+          transition-transform duration-300 ease-in-out
+          ${isCartOpen ? "translate-y-0" : "translate-y-full"}
 
-                            <span className="text-sm font-medium w-8 text-center">
-                              {item.quantity}
-                            </span>
-
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-6 w-6 p-0"
-                              onClick={() =>
-                                handleQuantityChange(
-                                  item.productId[0]._id,
-                                  "inc"
-                                )
-                              }
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            disabled={loadingId === item.productId[0]?._id}
-                            onClick={() =>
-                              removeFromCart(item.productId[0]?._id)
-                            }
-                            className="text-xs flex items-center gap-2 text-rose-500 hover:text-rose-600"
-                          >
-                            {loadingId === item.productId[0]?._id ? (
-                              <>
-                                <LoaderCircle className="w-4 h-4 animate-spin" />
-                                <span>Removing...</span>
-                              </>
-                            ) : (
-                              "Remove"
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="border-t p-4 space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">Subtotal</span>
-                  <span className="font-bold text-lg">{overallTotal}</span>
-                </div>
-                <Link href={`/dashboard/checkout`}>
-                  <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
-                    Checkout
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  className="w-full text-sm"
-                  onClick={() => setIsCartOpen(false)}
-                >
-                  Continue Shopping
-                </Button>
-              </div>
-            </div>
-          </div>
+          /* DESKTOP */
+          md:top-0 md:bottom-0 md:left-auto md:right-0
+          md:h-full md:w-full md:max-w-md md:rounded-none
+          md:transition-transform md:duration-300 md:ease-in-out
+          ${isCartOpen ? "md:translate-x-0" : "md:translate-x-full"}
+        `}
+      >
+        {/* HEADER */}
+        <div className="flex items-center justify-between border-b p-4">
+          <h2 className="text-lg font-semibold">
+            Cart ({isGuest ? guestCart.length : cartItems.length})
+          </h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsCartOpen(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
-      )}
+
+        {/* CONTENT */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {isGuest ? (
+            guestCart.length === 0 ? (
+              <p className="text-center text-gray-400">
+                Cart is empty
+              </p>
+            ) : (
+              guestCart.map((item, idx) => (
+                <div key={idx} className="flex gap-3 border-b pb-3">
+                  <div className="relative w-14 h-14 flex-shrink-0">
+                    <Image
+                      src={item.featuredImg || "/placeholder.png"}
+                      alt="product"
+                      fill
+                      className="object-cover rounded-lg"
+                    />
+                  </div>
+
+                  <div className="flex-1">
+                    <h3 className="text-sm font-medium">
+                      {item.name}
+                    </h3>
+                    <p className="text-sm">৳{item.salePrice}</p>
+
+                    <div className="flex items-center gap-2 mt-2">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() =>
+                          handleGuestQuantityChange(
+                            item.productId,
+                            item.color,
+                            item.size,
+                            "dec"
+                          )
+                        }
+                      >
+                        <Minus size={14} />
+                      </Button>
+
+                      <span>{item.quantity}</span>
+
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() =>
+                          handleGuestQuantityChange(
+                            item.productId,
+                            item.color,
+                            item.size,
+                            "inc"
+                          )
+                        }
+                      >
+                        <Plus size={14} />
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        onClick={() =>
+                          removeFromGuestCart(
+                            item.productId,
+                            item.color,
+                            item.size
+                          )
+                        }
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )
+          ) : (
+            cartItems.map((item) => (
+              <div
+                key={item.productId[0]?._id}
+                className="flex gap-3 border-b pb-3"
+              >
+                <div className="relative w-14 h-14 flex-shrink-0">
+                  <Image
+                    src={
+                      item.productId[0]?.featuredImg ||
+                      "/placeholder.png"
+                    }
+                    alt="product"
+                    fill
+                    className="object-cover rounded-lg"
+                  />
+                </div>
+
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium">
+                    {item.productId[0]?.description?.name}
+                  </h3>
+
+                  <p>
+                    ৳
+                    {
+                      item.productId[0]?.productInfo
+                        ?.salePrice
+                    }
+                  </p>
+
+                  <div className="flex items-center gap-2 mt-2">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() =>
+                        handleQuantityChange(
+                          item.productId[0]._id,
+                          "dec"
+                        )
+                      }
+                    >
+                      <Minus size={14} />
+                    </Button>
+
+                    <span>{item.quantity}</span>
+
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() =>
+                        handleQuantityChange(
+                          item.productId[0]._id,
+                          "inc"
+                        )
+                      }
+                    >
+                      <Plus size={14} />
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      onClick={() =>
+                        removeFromCart(item.productId[0]._id)
+                      }
+                    >
+                      {loadingId === item.productId[0]?._id ? (
+                        <LoaderCircle className="animate-spin w-4 h-4" />
+                      ) : (
+                        "Remove"
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* FOOTER */}
+        <div className="border-t p-4">
+          <div className="flex justify-between mb-3">
+            <span>Total</span>
+            <span className="font-bold">
+              ৳
+              {(isGuest ? guestTotal : overallTotal).toFixed(2)}
+            </span>
+          </div>
+
+          <Link href="/dashboard/checkout">
+            <Button className="w-full bg-orange-500 hover:bg-orange-600">
+              Checkout
+            </Button>
+          </Link>
+
+          <Button
+            className="w-full mt-2"
+            variant="ghost"
+            onClick={() => setIsCartOpen(false)}
+          >
+            Continue Shopping
+          </Button>
+        </div>
+      </div>
     </>
   );
 }

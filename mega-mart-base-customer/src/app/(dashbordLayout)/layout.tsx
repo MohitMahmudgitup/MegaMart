@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePathname, useRouter } from "next/navigation";
 import DashboardSideber from "@/components/Siderbar-dashbord/Dashbord-sideber";
@@ -14,6 +14,7 @@ import { useAppDispatch } from "@/redux/hooks";
 import { useLogoutMutation } from "@/redux/featured/auth/authApi";
 import toast from "react-hot-toast";
 import Footer from "@/components/modules/Footer/Footer";
+
 interface AccountLayoutProps {
   children: React.ReactNode;
 }
@@ -27,15 +28,19 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
   const router = useRouter();
 
   const isCheckoutPage = pathname.startsWith("/dashboard/checkout");
+  // Orders page-এ guest user allow করা হয়েছে
+  const isOrdersPage = pathname.startsWith("/dashboard/orders");
+
+  // Guest user যেসব page access করতে পারবে
+  const isGuestAllowedPage = isCheckoutPage || isOrdersPage;
+
   const showSidebar = !isCheckoutPage;
 
+  // Auth check — guest-allowed pages-এ কিছুই করবে না
   useEffect(() => {
-    if (!currentUser) {
-      router.push("/auth/login");
-      return;
-    }
+    if (isGuestAllowedPage) return;
 
-    if (currentUser?.role !== "customer") {
+    if (!currentUser || currentUser.role !== "customer") {
       const handleLogout = async () => {
         try {
           if (currentUser?._id) {
@@ -46,14 +51,14 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
         } finally {
           dispatch(logoutUser());
           toast.error("You are not authorized");
-          router.push("/auth/login");
         }
       };
+
       handleLogout();
     }
-  }, [currentUser, router, dispatch]);
+  }, [currentUser, router, dispatch, isGuestAllowedPage]);
 
-
+  // Sidebar scroll lock
   useEffect(() => {
     document.body.classList.toggle("overflow-hidden", sidebarOpen);
     return () => document.body.classList.remove("overflow-hidden");
@@ -61,34 +66,35 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* 🟦 Header/Navbar */}
+      {/* Header/Navbar */}
       <header className="sticky top-0 z-40 bg-white">
-        <div className="w-full  flex items-center justify-between">
-
-
+        <div className="w-full flex items-center justify-between">
           <div className="w-full">
-            <Navbar showSidebar={showSidebar} setSidebarOpen={setSidebarOpen} dashboardLocation />
+            <Navbar
+              showSidebar={showSidebar}
+              setSidebarOpen={setSidebarOpen}
+              dashboardLocation
+            />
           </div>
         </div>
       </header>
 
-      {/* 🟪 Main Content Area */}
-      <div className="flex flex-1 w-full mt-20 max-w-7xl mx-auto ">
-        {/* 💻 Desktop Sidebar (hidden on mobile) */}
+      {/* Main Content Area */}
+      <div className="flex flex-1 w-full mt-20 max-w-7xl mx-auto">
+        {/* Desktop Sidebar */}
         {showSidebar && (
-          <aside className="hidden lg:block w-64  sticky top-20 h-full ">
-            <DashboardSideber /> 
+          <aside className="hidden lg:block w-64 sticky top-20 h-full">
+            <DashboardSideber />
           </aside>
         )}
 
-        {/* 📱 Mobile Sidebar Overlay */}
+        {/* Mobile Sidebar Overlay */}
         {showSidebar && sidebarOpen && (
           <div className="fixed inset-0 z-50 lg:hidden">
             <div
               className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setSidebarOpen(false)}
             />
-
             <div className="relative flex flex-col w-72 max-w-[80vw] h-full bg-white border-r">
               <div className="flex items-center justify-between p-4">
                 <h2 className="text-lg font-semibold">📋 Menu</h2>
@@ -97,7 +103,7 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
                   size="icon"
                   onClick={() => setSidebarOpen(false)}
                 >
-                  <X className="h-5 w-5" /> 
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
               <div className="flex-1 overflow-y-auto">
@@ -107,21 +113,19 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
           </div>
         )}
 
-        {/* 🟩 Page Content */}
-        <main className="flex-1  w-full overflow-x-hidden ml-4">
-          <div className="mx-auto w-full ">
-            {children}
-          </div>
+        {/* Page Content */}
+        <main className="flex-1 w-full overflow-x-hidden ml-4">
+          <div className="mx-auto w-full">{children}</div>
         </main>
       </div>
 
-      {/* 📱 Mobile Bottom Navbar */}
+      {/* Mobile Bottom Navbar */}
       <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden">
         <SmallNavbar />
       </div>
 
-      {/* 🟫 Footer */}
-          <Footer/>
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

@@ -33,4 +33,8 @@ user_controller_1.UserControllers.getSuperAdmin);
 router.get("/:id", user_controller_1.UserControllers.getSingleUser);
 router.patch('/:id', multer_config_1.multerUpload.single('profile'), (0, validateRequest_1.default)(user_validations_1.updateUserZodSchema), user_controller_1.UserControllers.updateUser);
 router.patch('/roleupdate/:id', user_controller_1.UserControllers.updateUserRole);
+router.patch('/status-update/:id', user_controller_1.UserControllers.updateStatus);
+router.post('/forget-password', user_controller_1.UserControllers.forgetPassword);
+router.post('/reset-password/:token', user_controller_1.UserControllers.resetPassword);
+router.post('/change-password/:id', user_controller_1.UserControllers.chnagePassword);
 exports.UserRoutes = router;

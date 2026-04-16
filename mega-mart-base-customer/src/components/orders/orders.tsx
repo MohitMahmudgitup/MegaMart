@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import PaginationView from "@/components/Pagination";
@@ -30,6 +31,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useCallback } from "react";
 import toast from "react-hot-toast";
+import { selectCurrentUser } from "@/redux/featured/auth/authSlice";
+import { getGuestOrderIds } from "@/utils/guestCart";
 
 /* ─── helpers ─────────────────────────────────────────────── */
 
@@ -164,28 +167,22 @@ function OrderDrawer({
     order?.paymentStatus === "UNPAID" && order?.paymentInfo !== "cash-on";
   const isCOD = order?.paymentInfo === "cash-on";
   const canCancel = status === "pending";
-  const canTrack = !!order?.trackingCode;
 
   const subtotal = order?.totalAmount ?? 0;
   const shipping = order?.shipping?.shippingCharge ?? 0;
   const discount = order?.coupon?.discountAmount ?? 0;
-  const total =
-    order?.payableAmount ?? subtotal + shipping;
+  const total = order?.payableAmount ?? subtotal + shipping;
 
   return (
-    /* backdrop */
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      {/* sheet */}
       <div className="relative w-full max-w-2xl bg-white rounded-t-2xl shadow-2xl max-h-[92vh] overflow-y-auto animate-slide-up">
-        {/* drag handle */}
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 rounded-full bg-gray-200" />
         </div>
 
-        {/* header */}
         <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-100 px-6 py-4 flex items-start justify-between">
           <div>
             <h2 className="text-lg font-bold text-gray-900">
@@ -209,14 +206,12 @@ function OrderDrawer({
         </div>
 
         <div className="px-6 py-5 space-y-5">
-          {/* ── payment info ── */}
+          {/* payment info */}
           {isPaid && (
             <section className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 space-y-2.5">
               <div className="flex items-center gap-2 mb-1">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <h3 className="font-semibold text-gray-900 text-sm">
-                  Payment confirmed
-                </h3>
+                <h3 className="font-semibold text-gray-900 text-sm">Payment confirmed</h3>
               </div>
               <Row
                 label="Method"
@@ -224,8 +219,8 @@ function OrderDrawer({
                   order.paymentInfo === "cash-on"
                     ? "Cash on Delivery"
                     : order.paymentInfo === "pay-with-sslCommerz"
-                    ? "SSL Commerz"
-                    : "Online Payment"
+                      ? "SSL Commerz"
+                      : "Online Payment"
                 }
               />
               {order?.paymentId?.transactionId && (
@@ -237,24 +232,18 @@ function OrderDrawer({
                 </div>
               )}
               {order?.paymentId?.amount && (
-                <Row
-                  label="Amount paid"
-                  value={fmtAmt(order.paymentId.amount)}
-                />
+                <Row label="Amount paid" value={fmtAmt(order.paymentId.amount)} />
               )}
               {order?.paymentId?.createdAt && (
                 <Row
                   label="Payment date"
-                  value={new Date(order.paymentId.createdAt).toLocaleString(
-                    "en-US",
-                    {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }
-                  )}
+                  value={new Date(order.paymentId.createdAt).toLocaleString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 />
               )}
             </section>
@@ -264,17 +253,11 @@ function OrderDrawer({
             <section className="rounded-xl bg-red-50 border border-red-200 p-4 space-y-2.5">
               <div className="flex items-center gap-2 mb-1">
                 <XCircle className="w-4 h-4 text-red-600" />
-                <h3 className="font-semibold text-gray-900 text-sm">
-                  Payment failed
-                </h3>
+                <h3 className="font-semibold text-gray-900 text-sm">Payment failed</h3>
               </div>
               <Row
                 label="Method"
-                value={
-                  order.paymentInfo === "pay-with-sslCommerz"
-                    ? "SSL Commerz"
-                    : "Online Payment"
-                }
+                value={order.paymentInfo === "pay-with-sslCommerz" ? "SSL Commerz" : "Online Payment"}
               />
               {order?.paymentId?._id && (
                 <Button
@@ -283,9 +266,7 @@ function OrderDrawer({
                   size="sm"
                   className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
                 >
-                  <RotateCcw
-                    className={`w-4 h-4 ${isRetrying ? "animate-spin" : ""}`}
-                  />
+                  <RotateCcw className={`w-4 h-4 ${isRetrying ? "animate-spin" : ""}`} />
                   {isRetrying ? "Processing…" : "Retry payment"}
                 </Button>
               )}
@@ -296,14 +277,9 @@ function OrderDrawer({
             <section className="rounded-xl bg-amber-50 border border-amber-200 p-4 space-y-2.5">
               <div className="flex items-center gap-2 mb-1">
                 <Clock className="w-4 h-4 text-amber-600" />
-                <h3 className="font-semibold text-gray-900 text-sm">
-                  Payment pending
-                </h3>
+                <h3 className="font-semibold text-gray-900 text-sm">Payment pending</h3>
               </div>
-              <Row
-                label="Method"
-                value={isCOD ? "Cash on Delivery" : "Online Payment"}
-              />
+              <Row label="Method" value={isCOD ? "Cash on Delivery" : "Online Payment"} />
               <p className="text-xs text-amber-700">
                 {isCOD
                   ? "Please keep the exact amount ready. Payment will be collected upon delivery."
@@ -312,14 +288,12 @@ function OrderDrawer({
             </section>
           )}
 
-          {/* ── coupon ── */}
+          {/* coupon */}
           {order?.coupon && order.coupon.discountAmount > 0 && (
             <section className="rounded-xl bg-orange-50 border border-orange-200 p-4 space-y-2">
               <div className="flex items-center gap-2 mb-1">
                 <Tag className="w-4 h-4 text-orange-600" />
-                <h3 className="font-semibold text-gray-900 text-sm">
-                  Coupon applied
-                </h3>
+                <h3 className="font-semibold text-gray-900 text-sm">Coupon applied</h3>
               </div>
               <Row
                 label="Code"
@@ -340,7 +314,7 @@ function OrderDrawer({
             </section>
           )}
 
-          {/* ── items ── */}
+          {/* items */}
           <section>
             <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2 mb-3">
               <Package className="w-4 h-4 text-orange-500" />
@@ -354,9 +328,7 @@ function OrderDrawer({
                 >
                   <div className="w-14 h-14 bg-white rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
                     <Image
-                      src={
-                        item.productInfo?.featuredImg ?? "/placeholder.svg"
-                      }
+                      src={item.productInfo?.featuredImg ?? "/placeholder.svg"}
                       alt={item.productInfo?.description?.name ?? "Product"}
                       width={56}
                       height={56}
@@ -367,9 +339,7 @@ function OrderDrawer({
                     <p className="font-medium text-gray-900 text-sm truncate">
                       {item.productInfo?.description?.name ?? "N/A"}
                     </p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      Qty: {item.quantity ?? 1}
-                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">Qty: {item.quantity ?? 1}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="font-semibold text-gray-900 text-sm">
@@ -377,11 +347,7 @@ function OrderDrawer({
                     </p>
                     {item.quantity > 1 && (
                       <p className="text-xs text-gray-400">
-                        ৳
-                        {(
-                          item.totalAmount?.subTotal / item.quantity
-                        ).toFixed(2)}{" "}
-                        each
+                        ৳{(item.totalAmount?.subTotal / item.quantity).toFixed(2)} each
                       </p>
                     )}
                   </div>
@@ -390,16 +356,11 @@ function OrderDrawer({
             </div>
           </section>
 
-          {/* ── summary ── */}
+          {/* summary */}
           <section className="bg-gray-50 rounded-xl p-4 space-y-2">
-            <h3 className="font-semibold text-gray-900 text-sm mb-3">
-              Order summary
-            </h3>
+            <h3 className="font-semibold text-gray-900 text-sm mb-3">Order summary</h3>
             <Row label="Subtotal" value={fmtAmt(subtotal)} />
-            <Row
-              label="Shipping"
-              value={shipping === 0 ? "Free" : fmtAmt(shipping)}
-            />
+            <Row label="Shipping" value={shipping === 0 ? "Free" : fmtAmt(shipping)} />
             {discount > 0 && (
               <Row
                 label={
@@ -413,17 +374,13 @@ function OrderDrawer({
                   </span>
                 }
                 value={
-                  <span className="text-emerald-600 font-semibold">
-                    -{fmtAmt(discount)}
-                  </span>
+                  <span className="text-emerald-600 font-semibold">-{fmtAmt(discount)}</span>
                 }
               />
             )}
             <div className="border-t border-gray-200 pt-3 mt-1 flex justify-between items-center">
               <span className="font-bold text-gray-900">Total</span>
-              <span className="font-bold text-gray-900 text-base">
-                {fmtAmt(total)}
-              </span>
+              <span className="font-bold text-gray-900 text-base">{fmtAmt(total)}</span>
             </div>
             {discount > 0 && (
               <p className="text-xs text-emerald-600 font-medium">
@@ -432,7 +389,7 @@ function OrderDrawer({
             )}
           </section>
 
-          {/* ── shipping address ── */}
+          {/* shipping address */}
           <section className="bg-gray-50 rounded-xl p-4 space-y-2">
             <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2 mb-3">
               <MapPin className="w-4 h-4 text-orange-500" />
@@ -441,27 +398,17 @@ function OrderDrawer({
             <p className="font-medium text-gray-900 text-sm">
               {order.customerInfo?.firstName} {order.customerInfo?.lastName}
             </p>
-            <p className="text-sm text-gray-600">
-              {order.customerInfo?.address}
-            </p>
+            <p className="text-sm text-gray-600">{order.customerInfo?.address}</p>
             <p className="text-sm text-gray-600">
               {order.customerInfo?.city}, {order.customerInfo?.postalCode}
             </p>
-            <p className="text-sm text-gray-600">
-              {order.customerInfo?.country}
-            </p>
-            <p className="text-sm text-gray-500 pt-1">
-              📞 {order.customerInfo?.phone}
-            </p>
+            <p className="text-sm text-gray-600">{order.customerInfo?.country}</p>
+            <p className="text-sm text-gray-500 pt-1">📞 {order.customerInfo?.phone}</p>
           </section>
 
-          {/* ── actions ── */}
+          {/* actions */}
           <div className="flex gap-3 pb-2">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              className="flex-1"
-            >
+            <Button variant="outline" onClick={onClose} className="flex-1">
               Close
             </Button>
             {canCancel && (
@@ -473,7 +420,6 @@ function OrderDrawer({
                 Cancel order
               </Button>
             )}
-           
           </div>
         </div>
       </div>
@@ -491,14 +437,7 @@ function OrderDrawer({
   );
 }
 
-/* tiny helper row */
-function Row({
-  label,
-  value,
-}: {
-  label: React.ReactNode;
-  value: React.ReactNode;
-}) {
+function Row({ label, value }: { label: React.ReactNode; value: React.ReactNode }) {
   return (
     <div className="flex justify-between items-center text-sm">
       <span className="text-gray-500">{label}</span>
@@ -509,13 +448,7 @@ function Row({
 
 /* ─── order card ──────────────────────────────────────────── */
 
-function OrderCard({
-  order,
-  onClick,
-}: {
-  order: any;
-  onClick: () => void;
-}) {
+function OrderCard({ order, onClick }: { order: any; onClick: () => void }) {
   const status: OrderStatus = order?.orderInfo[0]?.status;
   const items: any[] = order?.orderInfo ?? [];
   const previewItems = items.slice(0, 3);
@@ -529,7 +462,6 @@ function OrderCard({
       className="group bg-white border border-gray-200 rounded-2xl p-4 cursor-pointer hover:border-orange-300 hover:shadow-md transition-all duration-200"
       onClick={onClick}
     >
-      {/* top row */}
       <div className="flex items-start justify-between gap-2 mb-3">
         <div>
           <p className="font-bold text-gray-900 text-sm">
@@ -543,7 +475,6 @@ function OrderCard({
         <StatusBadge status={status} />
       </div>
 
-      {/* product thumbnails */}
       <div className="flex items-center gap-2 mb-3">
         <div className="flex -space-x-2">
           {previewItems.map((item: any, i: number) => (
@@ -574,13 +505,9 @@ function OrderCard({
         </div>
       </div>
 
-      {/* footer */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <PayBadge
-            status={order.paymentStatus}
-            info={order.paymentInfo}
-          />
+          <PayBadge status={order.paymentStatus} info={order.paymentInfo} />
           {order?.coupon?.discountAmount > 0 && (
             <span className="text-xs text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">
               Saved {fmtAmt(order.coupon.discountAmount)}
@@ -612,9 +539,7 @@ function SuccessModal({
         <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <CheckCircle2 className="w-9 h-9 text-emerald-600" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Payment successful!
-        </h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment successful!</h2>
         <p className="text-gray-500 text-sm mb-5">{message}</p>
         {transactionId && (
           <div className="bg-gray-50 rounded-xl p-3 mb-5">
@@ -654,9 +579,17 @@ export default function MyOrdersTable() {
   const params = useSearchParams();
   const [queryParams, setQueryParams] = useState<IQueryParams>({ limit: 8 });
   const customerDetails = useAppSelector(selectCustomer);
+  const currentUser = useAppSelector(selectCurrentUser);
   const [cancelOrderApi] = useCancelOrderMutation();
   const [reTryPayment] = useRetryPaymentMutation();
 
+  // ─── Guest state ─────────────────────────────────────────
+  const isGuest = !currentUser;
+  const [guestOrders, setGuestOrders] = useState<any[]>([]);
+  const [guestLoading, setGuestLoading] = useState(false);
+  const [guestError, setGuestError] = useState(false);
+
+  // ─── Logged-in user orders ────────────────────────────────
   const {
     data: orders,
     isLoading,
@@ -665,15 +598,56 @@ export default function MyOrdersTable() {
   } = useGetMyOrdersQuery(
     { id: customerDetails?._id as string, params: queryParams },
     {
-      skip: !customerDetails?._id,
-      pollingInterval: 30000,      // auto-refresh every 30 s
-      refetchOnFocus: true,        // refetch when tab regains focus
-      refetchOnReconnect: true,    // refetch on internet reconnect
+      skip: !customerDetails?._id || isGuest, // guest হলে skip
+      pollingInterval: 30000,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
     }
   );
 
-  // Store only the ID — always derive the full order from latest query data
-  // so any admin status change is instantly reflected when polling fires
+  // ─── Fetch guest orders from backend ─────────────────────
+const fetchGuestOrders = useCallback(async () => {
+  const orderIds = getGuestOrderIds();
+  
+  if (orderIds.length === 0) {
+    setGuestOrders([]);
+    return;
+  }
+
+  setGuestLoading(true);
+  setGuestError(false);
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_API}/order/guest-orders`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderIds }),
+      }
+    );
+    const data = await res.json();
+    
+    if (data.success) {
+      setGuestOrders(data.data || []);
+    } else {
+      setGuestError(true);
+    }
+  } catch (err) {
+    console.error("Guest orders fetch error:", err); // আগে থেকেই আছে
+    setGuestError(true);
+  } finally {
+    setGuestLoading(false);
+  }
+}, []);
+
+  useEffect(() => {
+    if (isGuest) {
+      fetchGuestOrders();
+    }
+  }, [isGuest, fetchGuestOrders]);
+
+  // ─── Shared state ─────────────────────────────────────────
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [isPaymentStart, setIsPaymentStart] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -685,24 +659,28 @@ export default function MyOrdersTable() {
   } | null>(null);
   const hasShownToast = useRef(false);
 
-  // Always live — derived from latest polled data, never stale
+  // ─── Resolve display data ─────────────────────────────────
+  const displayOrders = isGuest ? guestOrders : orders?.data;
+  const displayLoading = isGuest ? guestLoading : isLoading;
+  const displayError = isGuest ? guestError : isError;
+
+  // Selected order always derived from latest data
   const selectedOrder = selectedOrderId
-    ? (orders?.data?.find((o: any) => o._id === selectedOrderId) ?? null)
+    ? (displayOrders?.find((o: any) => o._id === selectedOrderId) ?? null)
     : null;
 
-  // Track last refresh time for the UI indicator
   useEffect(() => {
     if (orders) setLastRefresh(new Date());
   }, [orders]);
 
-  // Visibility-based refetch (extra insurance on top of pollingInterval)
   useEffect(() => {
+    if (isGuest) return;
     const handleVisibility = () => {
       if (document.visibilityState === "visible") refetch();
     };
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [refetch]);
+  }, [refetch, isGuest]);
 
   /* handle payment redirect callbacks */
   useEffect(() => {
@@ -718,17 +696,16 @@ export default function MyOrdersTable() {
       });
       setShowSuccessModal(true);
       hasShownToast.current = true;
-      refetch();
+      if (!isGuest) refetch();
     } else if (["fail", "failed", "cancel"].includes(status ?? "")) {
-      toast.error(
-        message ?? "Payment was unsuccessful. Please try again.",
-        { duration: 5000, icon: "❌" }
-      );
+      toast.error(message ?? "Payment was unsuccessful. Please try again.", {
+        duration: 5000,
+        icon: "❌",
+      });
       hasShownToast.current = true;
     }
-  }, [params, refetch]);
+  }, [params, refetch, isGuest]);
 
-  /* sync page param */
   useEffect(() => {
     setQueryParams((prev) => ({ ...prev, page: currentPage }));
   }, [currentPage]);
@@ -736,14 +713,18 @@ export default function MyOrdersTable() {
   const handleCancel = async (id: string) => {
     try {
       await cancelOrderApi(id).unwrap();
-      refetch();
+      if (isGuest) {
+        fetchGuestOrders();
+      } else {
+        refetch();
+      }
       setSelectedOrderId(null);
       toast.success("Order cancelled successfully!");
     } catch {
-      toast.error(
-        "Unable to cancel order. Please contact customer support.",
-        { duration: 5000, icon: "⚠️" }
-      );
+      toast.error("Unable to cancel order. Please contact customer support.", {
+        duration: 5000,
+        icon: "⚠️",
+      });
     }
   };
 
@@ -762,7 +743,7 @@ export default function MyOrdersTable() {
   };
 
   /* ── loading ── */
-  if (isLoading) {
+  if (displayLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
@@ -772,14 +753,14 @@ export default function MyOrdersTable() {
   }
 
   /* ── error ── */
-  if (isError) {
+  if (displayError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
         <XCircle className="w-14 h-14 text-red-400" />
         <p className="font-medium text-gray-800">Unable to load orders</p>
         <p className="text-sm text-gray-500">Please try refreshing the page</p>
         <Button
-          onClick={() => refetch()}
+          onClick={() => isGuest ? fetchGuestOrders() : refetch()}
           variant="outline"
           size="sm"
           className="mt-1"
@@ -792,72 +773,84 @@ export default function MyOrdersTable() {
 
   return (
     <>
-      {/* ── page ── */}
       <div className="w-full max-w-5xl mx-auto px-4 py-6 mt-4">
         {/* header */}
-   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
+              <ShoppingBag className="w-5 h-5 text-orange-600" />
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900">My orders</h1>
+              <p className="text-xs sm:text-sm text-gray-500">
+                {isGuest
+                  ? "Your guest orders"
+                  : "Track and manage your purchases"}
+              </p>
+            </div>
+          </div>
 
-  {/* Left Side */}
-  <div className="flex items-center gap-3">
-    <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-      <ShoppingBag className="w-5 h-5 text-orange-600" />
-    </div>
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4 sm:ml-auto">
+            {displayOrders?.length > 0 && (
+              <span className="bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1 rounded-full">
+                {isGuest
+                  ? `${displayOrders.length} orders`
+                  : `${orders?.meta?.total ?? displayOrders.length} orders`}
+              </span>
+            )}
 
-    <div>
-      <h1 className="text-lg sm:text-xl font-bold text-gray-900">
-        My orders
-      </h1>
-      <p className="text-xs sm:text-sm text-gray-500">
-        Track and manage your purchases
-      </p>
-    </div>
-  </div>
+            {/* Live indicator — only for logged-in */}
+            {!isGuest && (
+              <div className="flex items-center gap-1.5 text-xs text-gray-400 whitespace-nowrap">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                <span>
+                  Live ·{" "}
+                  {lastRefresh.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+            )}
 
-  {/* Right Side */}
-  <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4 sm:ml-auto">
+            <button
+              onClick={() => isGuest ? fetchGuestOrders() : refetch()}
+              className="text-xs text-gray-500 hover:text-orange-500 transition-colors underline underline-offset-2"
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
 
-    {/* Orders Count */}
-    {orders?.data?.length > 0 && (
-      <span className="bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1 rounded-full">
-        {orders.meta?.total ?? orders.data.length} orders
-      </span>
-    )}
-
-    {/* Live Indicator */}
-    <div className="flex items-center gap-1.5 text-xs text-gray-400 whitespace-nowrap">
-      <span className="relative flex h-2 w-2">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-      </span>
-
-      <span>
-        Live ·{" "}
-        {lastRefresh.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </span>
-    </div>
-
-    {/* Refresh Button */}
-    <button
-      onClick={() => refetch()}
-      className="text-xs text-gray-500 hover:text-orange-500 transition-colors underline underline-offset-2"
-    >
-      Refresh
-    </button>
-  </div>
-</div>
+        {/* Guest notice */}
+        {isGuest && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+              <Package className="w-4 h-4 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-amber-900">You're browsing as a guest</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                <Link href="/login" className="underline font-semibold">Login</Link> to manage all your orders and get full access.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* empty */}
-        {orders?.data?.length === 0 ? (
+        {(!displayOrders || displayOrders.length === 0) ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
             <Package className="w-16 h-16 text-gray-200" />
             <h3 className="text-lg font-semibold text-gray-700">
-              No orders yet
+              {isGuest ? "No guest orders found" : "No orders yet"}
             </h3>
             <p className="text-sm text-gray-400 max-w-xs">
-              Start shopping and your orders will appear here.
+              {isGuest
+                ? "Your guest orders will appear here. Orders are saved on this device only."
+                : "Start shopping and your orders will appear here."}
             </p>
             <Link href="/">
               <Button className="bg-orange-500 hover:bg-orange-600 text-white mt-1">
@@ -866,9 +859,8 @@ export default function MyOrdersTable() {
             </Link>
           </div>
         ) : (
-          /* card grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {orders?.data?.map((order: any) => (
+            {displayOrders.map((order: any) => (
               <OrderCard
                 key={order._id}
                 order={order}
@@ -878,17 +870,19 @@ export default function MyOrdersTable() {
           </div>
         )}
 
-        {/* pagination */}
-        <div className="mt-6">
-          <PaginationView
-            setCurrentPage={setCurrentPage}
-            currentPage={currentPage}
-            meta={orders?.meta}
-          />
-        </div>
+        {/* pagination — only for logged-in */}
+        {!isGuest && (
+          <div className="mt-6">
+            <PaginationView
+              setCurrentPage={setCurrentPage}
+              currentPage={currentPage}
+              meta={orders?.meta}
+            />
+          </div>
+        )}
       </div>
 
-      {/* ── drawer ── */}
+      {/* drawer */}
       {selectedOrder && (
         <OrderDrawer
           order={selectedOrder}
@@ -899,7 +893,7 @@ export default function MyOrdersTable() {
         />
       )}
 
-      {/* ── success modal ── */}
+      {/* success modal */}
       {showSuccessModal && paymentDetails && (
         <SuccessModal
           message={paymentDetails.message}

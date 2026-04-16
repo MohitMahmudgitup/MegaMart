@@ -43,7 +43,7 @@ const Payout = (orderId) => __awaiter(void 0, void 0, void 0, function* () {
                 customerId: (_a = OrderDetails.orderInfo[0]) === null || _a === void 0 ? void 0 : _a.orderBy,
                 transactionId: transactionId,
                 status: payment_interface_1.PAYMENT_STATUS.UNPAID,
-                amount: OrderDetails.totalAmount,
+                amount: OrderDetails.payableAmount,
             },
         ], { session });
         yield order_model_1.OrderModel.findByIdAndUpdate(OrderDetails._id, { payment: createdPayment[0]._id }, { new: true, runValidators: true, session })
@@ -61,6 +61,63 @@ const Payout = (orderId) => __awaiter(void 0, void 0, void 0, function* () {
             amount: (_b = createdPayment[0]) === null || _b === void 0 ? void 0 : _b.amount,
             transactionId: (_c = createdPayment[0]) === null || _c === void 0 ? void 0 : _c.transactionId,
         };
+        const sslPayment = yield sslCommerz_service_1.SSLService.sslPaymentInit(sslPayload);
+        yield session.commitTransaction();
+        session.endSession();
+        return sslPayment.GatewayPageURL;
+    }
+    catch (error) {
+        yield session.abortTransaction();
+        session.endSession();
+        throw error;
+    }
+});
+const retryPayment = (paymentId) => __awaiter(void 0, void 0, void 0, function* () {
+    const session = yield payment_model_1.Payment.startSession();
+    session.startTransaction();
+    try {
+        // Find the existing payment record
+        const existingPayment = yield payment_model_1.Payment.findById(paymentId);
+        if (!existingPayment) {
+            throw new handleAppError_1.default(http_status_codes_1.default.NOT_FOUND, 'Payment record not found');
+        }
+        // Check if payment is already successful
+        if (existingPayment.status === payment_interface_1.PAYMENT_STATUS.PAID) {
+            throw new handleAppError_1.default(http_status_codes_1.default.BAD_REQUEST, 'Payment already completed. Cannot retry.');
+        }
+        // Get the order details
+        const orderDetails = yield order_model_1.OrderModel.findById(existingPayment.orderId);
+        if (!orderDetails) {
+            throw new handleAppError_1.default(http_status_codes_1.default.NOT_FOUND, 'Order not found');
+        }
+        // Generate a new transaction ID for retry
+        const newTransactionId = getTransactionId();
+        // Update the payment record with new transaction ID and reset status
+        const updatedPayment = yield payment_model_1.Payment.findByIdAndUpdate(paymentId, {
+            transactionId: newTransactionId,
+            status: payment_interface_1.PAYMENT_STATUS.UNPAID,
+        }, { new: true, session });
+        if (!updatedPayment) {
+            throw new handleAppError_1.default(http_status_codes_1.default.INTERNAL_SERVER_ERROR, 'Failed to update payment record');
+        }
+        // Update order payment status to UNPAID for retry
+        yield order_model_1.OrderModel.findByIdAndUpdate(orderDetails._id, { paymentStatus: order_interface_1.OrderPaymentStatus.UNPAID }, { new: true, session });
+        // Prepare SSL Commerz payload
+        const userAddress = 'Bangladesh';
+        const userEmail = (orderDetails === null || orderDetails === void 0 ? void 0 : orderDetails.customerInfo.email) || 'unknown@gmail.com';
+        const userPhoneNumber = orderDetails === null || orderDetails === void 0 ? void 0 : orderDetails.customerInfo.phone;
+        const userName = (orderDetails === null || orderDetails === void 0 ? void 0 : orderDetails.customerInfo.firstName) +
+            ' ' +
+            (orderDetails === null || orderDetails === void 0 ? void 0 : orderDetails.customerInfo.lastName);
+        const sslPayload = {
+            address: userAddress,
+            email: userEmail,
+            phoneNumber: userPhoneNumber,
+            name: userName,
+            amount: updatedPayment.amount,
+            transactionId: updatedPayment.transactionId,
+        };
+        // Initialize SSL Commerz payment
         const sslPayment = yield sslCommerz_service_1.SSLService.sslPaymentInit(sslPayload);
         yield session.commitTransaction();
         session.endSession();
@@ -135,7 +192,7 @@ const failPayment = (query) => __awaiter(void 0, void 0, void 0, function* () {
         if (!updatedPayment) {
             throw new Error('Payment not found');
         }
-        yield order_model_1.OrderModel.findByIdAndUpdate(updatedPayment.orderId, { status: order_interface_1.OrderPaymentStatus.REJECTED }, { new: true, runValidators: true, session });
+        yield order_model_1.OrderModel.findByIdAndUpdate(updatedPayment.orderId, { paymentStatus: order_interface_1.OrderPaymentStatus.UNPAID, paymentId: updatedPayment._id }, { new: true, runValidators: true, session });
         yield session.commitTransaction();
         yield session.endSession();
         return { success: false, message: 'Payment Failed' };
@@ -169,4 +226,5 @@ exports.PaymentService = {
     successPayment,
     failPayment,
     cancelPayment,
+    retryPayment
 };

@@ -18,12 +18,13 @@ const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const coupons_service_1 = require("./coupons.service");
 const getAllCoupons = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield coupons_service_1.couponServices.getAllCouponsFromDB(req.query);
+    const { data, meta } = yield coupons_service_1.couponServices.getAllCouponsFromDB(req.query);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_codes_1.StatusCodes.OK,
         message: 'Coupons retrieved successfully!',
-        data: result,
+        data: data,
+        meta: meta
     });
 }));
 const getSingleCoupon = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {

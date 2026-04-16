@@ -21,4 +21,5 @@ router.patch('/edit-category/:id', multer_config_1.multerUpload.fields([
     { name: 'bannerImg', maxCount: 1 },
 ]), (0, validateRequest_1.default)(category_validations_1.updateCategoryZodSchema), category_controller_1.categoryControllers.editCategory);
 router.delete("/delete-category/:id", category_controller_1.categoryControllers.deleteCategory);
+router.get('/type/products-in-category', category_controller_1.categoryControllers.getProductInCategory);
 exports.CategoryRoutes = router;

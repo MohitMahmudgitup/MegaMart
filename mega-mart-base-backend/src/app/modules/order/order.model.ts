@@ -73,12 +73,12 @@ const orderInfoSchema = new Schema<TOrderInfo>(
     orderBy: {
       type: Schema.Types.ObjectId,
       ref: 'customer',
-      required: true,
+      required: false,
     },
     shopInfo: {
       type: Schema.Types.ObjectId,
       ref: 'shop',
-      required: true,
+      required: false,
     },
     vendorId: {
       type: Schema.Types.ObjectId,

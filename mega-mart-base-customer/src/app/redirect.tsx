@@ -5,7 +5,15 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAppSelector } from "@/redux/hooks";
 import { selectCurrentUser } from "@/redux/featured/auth/authSlice";
 
-const publicRoutes = ["/auth/login", "/auth/register"];
+// এই routes-এ login ছাড়া যাওয়া যাবে
+const publicRoutes = [
+  "/auth/login",
+  "/auth/register",
+  "/dashboard/checkout", // ✅ guest-ও checkout দেখতে পারবে
+];
+
+// এই prefix-এর routes সবসময় public (product pages, home etc)
+const publicPrefixes = ["/products", "/category", "/"];
 
 export function RedirectComponent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -13,10 +21,16 @@ export function RedirectComponent({ children }: { children: React.ReactNode }) {
   const currentUser = useAppSelector(selectCurrentUser);
 
   useEffect(() => {
-    if (!currentUser && !publicRoutes.includes(pathname)) {
+    const isPublicRoute = publicRoutes.includes(pathname);
+    const isPublicPrefix = publicPrefixes.some(
+      (prefix) => prefix !== "/" && pathname.startsWith(prefix)
+    );
+    const isHomePage = pathname === "/";
+
+    if (!currentUser && !isPublicRoute && !isPublicPrefix && !isHomePage) {
       router.replace("/auth/login");
     }
   }, [currentUser, pathname, router]);
 
-  return <>{children}</>; 
+  return <>{children}</>;
 }

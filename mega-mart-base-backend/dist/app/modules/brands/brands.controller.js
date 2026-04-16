@@ -18,6 +18,8 @@ const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const http_status_1 = __importDefault(require("http-status"));
 const brands_service_1 = require("./brands.service");
 const brands_model_1 = require("./brands.model");
+const product_model_1 = require("../product/product.model");
+const mongoose_1 = __importDefault(require("mongoose"));
 const getAllBrands = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield brands_service_1.brandServices.getAllBrandsFromDB();
     (0, sendResponse_1.default)(res, {
@@ -44,7 +46,6 @@ const createBrand = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
         name: (_a = req.body.icon) === null || _a === void 0 ? void 0 : _a.name,
         url: (_c = (_b = files['iconImage']) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.path,
     };
-    console.log(iconDetails);
     const brandData = Object.assign(Object.assign({}, req.body), { icon: ((_e = (_d = files['gridImage']) === null || _d === void 0 ? void 0 : _d[0]) === null || _e === void 0 ? void 0 : _e.path) && {
             name: (_f = req.body.icon) === null || _f === void 0 ? void 0 : _f.name,
             url: (_h = (_g = files['iconImage']) === null || _g === void 0 ? void 0 : _g[0]) === null || _h === void 0 ? void 0 : _h.path,
@@ -111,11 +112,34 @@ const updateBrand = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
 }));
 const deleteBrand = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield brands_service_1.brandServices.DeleteBrandOnDB(req.params.id);
+    console.log('DELETE brand hit', req.params.id);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
         message: 'Brand deleted successfully!',
         data: null,
+    });
+}));
+const getProductsByBrand = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const brandId = req.params.id;
+    const products = yield product_model_1.ProductModel.find({
+        'brandAndCategories.brand': new mongoose_1.default.Types.ObjectId(brandId),
+    });
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: 'Products retrieved successfully!',
+        data: products,
+    });
+}));
+// ------------------------------ data managemant-------------------------------
+const getsliderImage = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield brands_service_1.brandServices.getProductsByBrand();
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: 'Brands retrieve successfully!',
+        data: result,
     });
 }));
 exports.brandsControllers = {
@@ -124,4 +148,6 @@ exports.brandsControllers = {
     createBrand,
     updateBrand,
     deleteBrand,
+    getProductsByBrand,
+    getsliderImage
 };

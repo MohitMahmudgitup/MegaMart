@@ -35,19 +35,20 @@ const getAllShopsFromDB = (query) => __awaiter(void 0, void 0, void 0, function*
         .populate("transactions")
         .populate("withdrawals")
         .populate("attributes")
-        .populate("coupons");
+        .populate("coupons")
+        .populate("category");
     return result;
 });
 const getSingleShopFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield shop_model_1.ShopModel.findById(id)
-        .populate("vendorId")
         .populate("staffs")
         .populate("products")
         .populate("orders")
         .populate("transactions")
         .populate("withdrawals")
         .populate("attributes")
-        .populate("coupons");
+        .populate("coupons")
+        .populate("category");
     if (!result) {
         throw new handleAppError_1.default(http_status_1.default.NOT_FOUND, "Shop does not exists!");
     }
@@ -136,7 +137,7 @@ const updateShopIntoDB = (id, userId, payload) => __awaiter(void 0, void 0, void
         throw new handleAppError_1.default(http_status_1.default.NOT_FOUND, "Shop not found!");
     }
     if (isUserExists.role !== "admin" &&
-        !(isUserExists.role === "vendor" && shop.vendorId.toString() === userId)) {
+        !(isUserExists.role === "vendor")) {
         throw new handleAppError_1.default(http_status_1.default.UNAUTHORIZED, "Unauthorized access!");
     }
     const updatedShop = yield shop_model_1.ShopModel.findByIdAndUpdate(id, payload, {
@@ -172,7 +173,8 @@ const getMyShopDataFromDB = (vendorId) => __awaiter(void 0, void 0, void 0, func
         .populate("transactions")
         .populate("withdrawals")
         .populate("attributes")
-        .populate("coupons");
+        .populate("coupons")
+        .populate("category");
     if (!shops.length) {
         throw new handleAppError_1.default(http_status_1.default.NOT_FOUND, "No shops found for this vendor!");
     }

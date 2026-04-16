@@ -39,9 +39,9 @@ const totalAmountSchema = new mongoose_1.Schema({
 }, { _id: false });
 // Customer Info Schema
 const customerInfoSchema = new mongoose_1.Schema({
-    firstName: { type: String, required: [true, 'First name is required!'] },
-    lastName: { type: String, required: [true, 'Last name is required!'] },
-    email: { type: String, required: [true, 'Email is required!'] },
+    firstName: { type: String },
+    lastName: { type: String },
+    email: { type: String },
     phone: { type: String, required: [true, 'Phone number is required!'] },
     address: { type: String, required: [true, 'Address is required!'] },
     city: { type: String, required: [true, 'City is required!'] },
@@ -53,12 +53,12 @@ const orderInfoSchema = new mongoose_1.Schema({
     orderBy: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'customer',
-        required: true,
+        required: false,
     },
     shopInfo: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'shop',
-        required: true,
+        required: false,
     },
     vendorId: {
         type: mongoose_1.Schema.Types.ObjectId,
@@ -69,9 +69,7 @@ const orderInfoSchema = new mongoose_1.Schema({
         ref: 'product',
         required: true,
     },
-    color: {
-        type: String,
-    },
+    color: { type: String },
     size: {
         type: String,
     },
@@ -80,18 +78,7 @@ const orderInfoSchema = new mongoose_1.Schema({
     },
     status: {
         type: String,
-        enum: [
-            'pending',
-            'confirmed',
-            'processing',
-            'picked',
-            'at-local-facility',
-            'out-for-delivery',
-            'delivered',
-            'cancelled',
-            'returned',
-            'refunded',
-        ],
+        enum: ['pending', 'confirmed', 'processing', 'picked', 'at-local-facility', 'out-for-delivery', 'delivered', 'cancelled', 'returned', 'refunded'],
         required: true,
         default: 'pending',
     },
@@ -119,6 +106,22 @@ const ShippingSchema = new mongoose_1.Schema({
         required: true,
     },
 }, { _id: false });
+const couponInfoSchema = new mongoose_1.Schema({
+    couponId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'Coupon',
+    },
+    code: {
+        type: String,
+    },
+    discountAmount: {
+        type: Number,
+    },
+    appliedBy: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'user',
+    },
+}, { _id: false });
 // Main Order Schema
 const orderSchema = new mongoose_1.Schema({
     orderInfo: {
@@ -140,11 +143,16 @@ const orderSchema = new mongoose_1.Schema({
         type: Number,
         required: true,
     },
+    payableAmount: {
+        type: Number,
+        required: true,
+    },
     paymentId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'payment' },
     paymentStatus: {
         type: String,
         enum: ['PAID', 'UNPAID', 'REJECTED', 'CANCELLED'],
     },
+    coupon: couponInfoSchema,
     orderNote: { type: String },
     trackingCode: { type: String },
 }, { timestamps: true });

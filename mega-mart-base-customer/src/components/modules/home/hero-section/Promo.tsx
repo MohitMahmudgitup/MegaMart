@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowUpRight, ChevronRight } from "lucide-react";
+import { ArrowUpRight, ChevronRight, ImageOff } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 interface Banner {
   _id: string;
@@ -18,299 +19,208 @@ interface Banner {
 const Promo = ({ banners }: { banners: Banner[] }) => {
   const bannerList = Array.isArray(banners) ? banners : [];
 
-  const getLink = (item: Banner | undefined, fallback = "/category/all") => {
+  const getLink = (item?: Banner, fallback = "/category/all") => {
     return item?.buttonLink || fallback;
   };
 
+  // ✅ EMPTY STATE
+  if (!bannerList.length) {
+    return (
+      <section className="grid grid-cols-1 gap-4">
+        <div className="h-[320px] md:h-[420px] w-full rounded-2xl border border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center text-center p-6">
+
+          <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center mb-4">
+            <ImageOff className="text-gray-500 w-6 h-6" />
+          </div>
+
+          <h2 className="text-lg font-semibold text-gray-700">
+            No promotions available
+          </h2>
+
+          <p className="text-sm text-gray-500 mt-1">
+            We are updating new offers. Please check back soon.
+          </p>
+
+          <Button
+            onClick={() => window.location.reload()}
+            className="mt-4 flex items-center gap-2"
+          >
+            <ArrowUpRight className="w-4 h-4" />
+            Refresh
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="grid grid-cols-1 gap-2 md:gap-4">
-      {/* ── TOP ROW ── */}
+
+      {/* ───────── TOP ROW ───────── */}
       <div className="grid grid-cols-12 gap-2 md:gap-4 h-28 md:h-[196px] xl:h-60">
 
-        {/* Banner 0 — Left Top */}
-        <Link
-          href={getLink(bannerList[0])}
-          style={{ animationDelay: "0.05s" }}
-          className="col-span-7 h-full relative rounded-[20px] overflow-hidden group animate-slideUp"
-        >
-          {/* Cover image */}
-          <Image
-            src={
-              bannerList[0]?.image ||
-              "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=900&q=80"
-            }
-            alt={bannerList[0]?.title || "Promo Banner"}
-            fill
-            className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110"
-            priority
-          />
+        {/* Banner 0 */}
+        <Link href={getLink(bannerList[0])}
+          className="col-span-7 relative rounded-[20px] overflow-hidden group animate-slideUp">
 
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-black/45 via-black/10 to-transparent z-10 transition-opacity duration-300 group-hover:opacity-80" />
+          {bannerList[0]?.image ? (
+            <Image
+              src={bannerList[0].image}
+              alt={bannerList[0]?.title || "Banner"}
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              priority
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+              <ImageOff className="w-6 h-6 text-gray-500" />
+            </div>
+          )}
 
-          {/* Text */}
+          <div className="absolute inset-0 bg-gradient-to-br from-black/45 via-black/10 to-transparent z-10 group-hover:opacity-80" />
+
           <div className="z-20 absolute left-4 top-4 md:top-8 md:left-8 text-white">
             {bannerList[0]?.subTitle && (
-              <p className="text-[9px] md:text-xs uppercase tracking-widest font-light opacity-90 truncate max-w-[90%] mb-1">
+              <p className="text-[9px] md:text-xs uppercase tracking-widest opacity-90 mb-1">
                 {bannerList[0].subTitle}
               </p>
             )}
             {bannerList[0]?.title && (
-              <h2 className="text-sm md:text-2xl xl:text-3xl font-bold leading-tight truncate max-w-[90%]">
+              <h2 className="text-sm md:text-2xl xl:text-3xl font-bold leading-tight">
                 {bannerList[0].title}
               </h2>
             )}
           </div>
 
-          {/* Discount badge */}
           {bannerList[0]?.discount && (
-            <span className="absolute top-3 right-3 z-20 bg-red-500 text-white text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full shadow-lg">
+            <span className="absolute top-3 right-3 z-20 bg-red-500 text-white text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full">
               {bannerList[0].discount}% OFF
             </span>
           )}
 
-          {/* Arrow button */}
           {bannerList[0]?.buttonText && (
-            <div className="absolute bottom-4 left-4 md:left-8 z-20 bg-white rounded-full p-2 shadow-md transition-all duration-300 group-hover:scale-110 group-hover:rotate-[-8deg] group-hover:bg-black">
-              <ArrowUpRight className="w-4 h-4 md:w-6 md:h-6 text-black group-hover:text-white transition-colors duration-300" />
+            <div className="absolute bottom-4 left-4 md:left-8 z-20 bg-white rounded-full p-2 shadow group-hover:bg-black">
+              <ArrowUpRight className="w-4 h-4 text-black group-hover:text-white" />
             </div>
           )}
         </Link>
 
-        {/* Banner 1 — Right Top */}
-        <Link
-          href={getLink(bannerList[1])}
-          style={{ animationDelay: "0.12s" }}
-          className="col-span-5 h-full relative rounded-[20px] overflow-hidden group animate-slideUp"
-        >
-          <Image
-            src={
-              bannerList[1]?.image ||
-              "https://images.unsplash.com/photo-1603252109303-2751441dd157?w=700&q=80"
-            }
-            alt={bannerList[1]?.title || "Promo Banner"}
-            fill
-            className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110"
-            priority
-          />
+        {/* Banner 1 */}
+        <Link href={getLink(bannerList[1])}
+          className="col-span-5 relative rounded-[20px] overflow-hidden group animate-slideUp">
 
-          <div className="absolute inset-0 bg-gradient-to-br from-black/45 via-black/10 to-transparent z-10 transition-opacity duration-300 group-hover:opacity-80" />
+          {bannerList[1]?.image ? (
+            <Image
+              src={bannerList[1].image}
+              alt={bannerList[1]?.title || "Banner"}
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              priority
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+              <ImageOff className="w-6 h-6 text-gray-500" />
+            </div>
+          )}
 
-          <div className="z-20 absolute top-3 left-3 md:top-5 md:left-5 text-white">
+          <div className="absolute inset-0 bg-gradient-to-br from-black/45 via-black/10 to-transparent z-10" />
+
+          <div className="z-20 absolute top-3 left-3 text-white">
             {bannerList[1]?.title && (
-              <span className="inline-block bg-white/20 backdrop-blur-sm border border-white/30 text-white text-[9px] md:text-xs font-medium px-2 py-0.5 md:px-3 md:py-1 rounded-full mb-2">
+              <span className="text-xs bg-white/20 px-2 py-1 rounded-full">
                 {bannerList[1].title}
               </span>
             )}
             {bannerList[1]?.subTitle && (
-              <h2 className="text-sm md:text-2xl xl:text-2xl font-bold leading-tight truncate max-w-[90%]">
+              <h2 className="text-sm md:text-xl font-bold mt-2">
                 {bannerList[1].subTitle}
               </h2>
             )}
           </div>
-
-          {bannerList[1]?.discount && (
-            <span className="absolute top-3 right-3 z-20 bg-red-500 text-white text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full shadow-lg">
-              {bannerList[1].discount}% OFF
-            </span>
-          )}
-
-          {bannerList[1]?.buttonText && (
-            <div className="absolute bottom-4 left-3 md:left-5 z-20 bg-white rounded-full p-2 shadow transition-all duration-300 group-hover:scale-110 group-hover:rotate-[-8deg] group-hover:bg-black">
-              <ArrowUpRight className="w-4 h-4 md:w-6 md:h-6 text-black group-hover:text-white transition-colors duration-300" />
-            </div>
-          )}
         </Link>
       </div>
 
-      {/* ── BOTTOM ROW ── */}
-      <div className="grid grid-cols-3 gap-2 md:gap-4 h-48 md:h-[410px] xl:h-[450px]">
+      {/* ───────── BOTTOM ROW ───────── */}
+      <div className="grid grid-cols-3 gap-2 md:gap-4 h-48 md:h-[410px]">
 
-        {/* Banner 2 — Left */}
-        <Link
-          href={getLink(bannerList[2])}
-          style={{ animationDelay: "0.20s" }}
-          className="h-full relative rounded-[20px] overflow-hidden group animate-slideUp"
-        >
-          <Image
-            src={
-              bannerList[2]?.image ||
-              "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80"
-            }
-            alt={bannerList[2]?.title || "Banner"}
-            fill
-            className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110"
-            priority
-          />
+        {/* Banner 2 */}
+        <Link href={getLink(bannerList[2])}
+          className="relative rounded-[20px] overflow-hidden group animate-slideUp">
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 z-10 transition-opacity duration-300 group-hover:opacity-90" />
-
-          <div className="z-20 absolute top-3 left-3 md:top-5 md:left-5 text-white">
-            {bannerList[2]?.subTitle && (
-              <p className="text-[9px] md:text-xs uppercase tracking-widest font-light opacity-85 mb-1">
-                {bannerList[2].subTitle}
-              </p>
-            )}
-            {bannerList[2]?.title && (
-              <h2 className="text-xs md:text-lg font-bold leading-tight">
-                {bannerList[2].title}
-              </h2>
-            )}
-          </div>
-
-          {bannerList[2]?.discount && (
-            <span className="absolute top-3 right-3 z-20 bg-red-500 text-white text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full shadow-lg">
-              {bannerList[2].discount}% OFF
-            </span>
-          )}
-
-          {bannerList[2]?.buttonText && (
-            <div className="absolute bottom-4 left-3 md:left-5 z-20 bg-white rounded-full p-2 shadow transition-all duration-300 group-hover:scale-110 group-hover:rotate-[-8deg] group-hover:bg-black">
-              <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-black group-hover:text-white transition-colors duration-300" />
+          {bannerList[2]?.image ? (
+            <Image
+              src={bannerList[2].image}
+              alt={bannerList[2]?.title || "Banner"}
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              priority
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+              <ImageOff className="w-6 h-6 text-gray-500" />
             </div>
           )}
         </Link>
 
-        {/* Middle Column */}
-        <div className="flex flex-col h-full gap-2 md:gap-4">
+        {/* Middle column */}
+        <div className="flex flex-col gap-2 md:gap-4">
 
-          {/* Banner 3 — Watch */}
-          <Link
-            href={getLink(bannerList[3])}
-            style={{ animationDelay: "0.28s" }}
-            className="h-1/2 relative rounded-[20px] overflow-hidden group animate-slideUp"
-          >
-            <Image
-              src={
-                bannerList[3]?.image ||
-                "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80"
-              }
-              alt={bannerList[3]?.title || "Watch"}
-              fill
-              className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110"
-              priority
-            />
+          {/* Banner 3 */}
+          <Link href={getLink(bannerList[3])}
+            className="h-1/2 relative rounded-[20px] overflow-hidden group">
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/15 z-10 transition-opacity duration-300 group-hover:opacity-90" />
-
-            <div className="z-20 absolute top-2 left-2 md:top-4 md:left-4 text-white">
-              {bannerList[3]?.subTitle && (
-                <p className="text-[8px] md:text-xs uppercase tracking-widest opacity-80 mb-0.5">
-                  {bannerList[3].subTitle}
-                </p>
-              )}
-              {bannerList[3]?.title && (
-                <h2 className="text-[10px] md:text-base font-bold leading-tight">
-                  {bannerList[3].title}
-                </h2>
-              )}
-            </div>
-
-            {bannerList[3]?.discount && (
-              <span className="absolute top-2 right-2 z-20 bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow">
-                {bannerList[3].discount}% OFF
-              </span>
-            )}
-
-            {bannerList[3]?.buttonText && (
-              <div className="absolute bottom-2 md:bottom-4 left-1/2 -translate-x-1/2 z-20 bg-white/25 backdrop-blur-md border border-white/40 text-white px-3 py-1 md:px-5 md:py-2 rounded-lg md:rounded-xl flex items-center gap-1.5 text-[9px] md:text-xs font-medium whitespace-nowrap transition-all duration-300 group-hover:bg-white group-hover:text-black group-hover:-translate-x-1/2 group-hover:-translate-y-1">
-                {bannerList[3].buttonText}
-                <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
+            {bannerList[3]?.image ? (
+              <Image
+                src={bannerList[3].image}
+                alt="Banner"
+                fill
+                className="object-cover group-hover:scale-110 transition-transform"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+                <ImageOff className="w-5 h-5 text-gray-500" />
               </div>
             )}
           </Link>
 
-          {/* Banner 4 — Shoes */}
-          <Link
-            href={getLink(bannerList[4])}
-            style={{ animationDelay: "0.34s" }}
-            className="h-1/2 relative rounded-[20px] overflow-hidden group animate-slideUp"
-          >
-            <Image
-              src={
-                bannerList[4]?.image ||
-                "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80"
-              }
-              alt={bannerList[4]?.title || "Shoes"}
-              fill
-              className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110"
-              priority
-            />
+          {/* Banner 4 */}
+          <Link href={getLink(bannerList[4])}
+            className="h-1/2 relative rounded-[20px] overflow-hidden group">
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/15 z-10 transition-opacity duration-300 group-hover:opacity-90" />
-
-            <div className="z-20 absolute top-2 left-2 md:top-4 md:left-4 text-white">
-              {bannerList[4]?.subTitle && (
-                <p className="text-[8px] md:text-xs uppercase tracking-widest opacity-80 mb-0.5">
-                  {bannerList[4].subTitle}
-                </p>
-              )}
-              {bannerList[4]?.title && (
-                <h2 className="text-[10px] md:text-base font-bold leading-tight">
-                  {bannerList[4].title}
-                </h2>
-              )}
-            </div>
-
-            {bannerList[4]?.discount && (
-              <span className="absolute top-2 right-2 z-20 bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow">
-                {bannerList[4].discount}% OFF
-              </span>
-            )}
-
-            {bannerList[4]?.buttonText && (
-              <div className="absolute bottom-2 md:bottom-4 left-1/2 -translate-x-1/2 z-20 bg-white/25 backdrop-blur-md border border-white/40 text-white px-3 py-1 md:px-5 md:py-2 rounded-lg md:rounded-xl flex items-center gap-1.5 text-[9px] md:text-xs font-medium whitespace-nowrap transition-all duration-300 group-hover:bg-white group-hover:text-black group-hover:-translate-x-1/2 group-hover:-translate-y-1">
-                {bannerList[4].buttonText}
-                <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
+            {bannerList[4]?.image ? (
+              <Image
+                src={bannerList[4].image}
+                alt="Banner"
+                fill
+                className="object-cover group-hover:scale-110 transition-transform"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+                <ImageOff className="w-5 h-5 text-gray-500" />
               </div>
             )}
           </Link>
         </div>
 
-        {/* Banner 5 — Right */}
-        <Link
-          href={getLink(bannerList[5])}
-          style={{ animationDelay: "0.40s" }}
-          className="h-full relative rounded-[20px] overflow-hidden group animate-slideUp"
-        >
-          <Image
-            src={
-              bannerList[5]?.image ||
-              "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=600&q=80"
-            }
-            alt={bannerList[5]?.title || "Woman"}
-            fill
-            className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110"
-            priority
-          />
+        {/* Banner 5 */}
+        <Link href={getLink(bannerList[5])}
+          className="relative rounded-[20px] overflow-hidden group animate-slideUp">
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 z-10 transition-opacity duration-300 group-hover:opacity-90" />
-
-          <div className="z-20 absolute top-3 left-3 md:top-5 md:left-5 text-white">
-            {bannerList[5]?.subTitle && (
-              <p className="text-[9px] md:text-xs uppercase tracking-widest font-light opacity-85 mb-1">
-                {bannerList[5].subTitle}
-              </p>
-            )}
-            {bannerList[5]?.title && (
-              <h2 className="text-xs md:text-lg font-bold leading-tight">
-                {bannerList[5].title}
-              </h2>
-            )}
-          </div>
-
-          {bannerList[5]?.discount && (
-            <span className="absolute top-3 right-3 z-20 bg-red-500 text-white text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full shadow-lg">
-              {bannerList[5].discount}% OFF
-            </span>
-          )}
-
-          {bannerList[5]?.buttonText && (
-            <div className="absolute bottom-4 left-3 md:left-5 z-20 bg-white rounded-full p-2 shadow transition-all duration-300 group-hover:scale-110 group-hover:rotate-[-8deg] group-hover:bg-black">
-              <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-black group-hover:text-white transition-colors duration-300" />
+          {bannerList[5]?.image ? (
+            <Image
+              src={bannerList[5].image}
+              alt={bannerList[5]?.title || "Banner"}
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              priority
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+              <ImageOff className="w-6 h-6 text-gray-500" />
             </div>
           )}
         </Link>
+
       </div>
     </section>
   );

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserZodSchema = exports.createUserZodSchema = void 0;
+exports.updateUserZodSchema = exports.resetPasswordZodSchema = exports.forgetPasswordZodSchema = exports.createUserZodSchema = void 0;
 const zod_1 = require("zod");
 const user_const_1 = require("./user.const");
 exports.createUserZodSchema = zod_1.z.object({
@@ -16,6 +16,14 @@ exports.createUserZodSchema = zod_1.z.object({
     walletPoint: zod_1.z.number().optional(),
     socials: zod_1.z.array(zod_1.z.string()).optional(),
     cardInfo: zod_1.z.any().optional().nullable(),
+});
+exports.forgetPasswordZodSchema = zod_1.z.object({
+    email: zod_1.z.string().email("Invalid email format"),
+});
+exports.resetPasswordZodSchema = zod_1.z.object({
+    email: zod_1.z.string().email("Invalid email format"),
+    token: zod_1.z.string(),
+    newPassword: zod_1.z.string().min(6, "Password must be at least 6 characters long"),
 });
 exports.updateUserZodSchema = zod_1.z.object({
     name: zod_1.z.string(),

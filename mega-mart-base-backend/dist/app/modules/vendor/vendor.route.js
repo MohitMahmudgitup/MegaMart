@@ -13,4 +13,5 @@ router.get("/", vendor_controller_1.vendorControllers.getAllVendor);
 router.get("/:id", vendor_controller_1.vendorControllers.getSingleVendor);
 router.post("/create-vendor", (0, validateRequest_1.default)(vendor_validations_1.createVendorZodSchema), vendor_controller_1.vendorControllers.createVendor);
 router.get('/user/:userId', vendor_controller_1.vendorControllers.getVendorByUserId);
+router.patch('/status-update/:id', vendor_controller_1.vendorControllers.updateStatus);
 exports.VendorRoutes = router;

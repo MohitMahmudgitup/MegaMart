@@ -46,11 +46,11 @@ class QueryBuilder {
             });
             delete filter.status;
         }
-        if (filter.vendorId) {
+        if (filter.vendorOrderId) {
             this.modelQuery = this.modelQuery.find({
-                'orderInfo.vendorId': filter.vendorId,
+                'orderInfo.vendorId': filter.vendorOrderId,
             });
-            delete filter.vendorId;
+            delete filter.vendorOrderId;
         }
         if (Object.keys(filter).length) {
             this.modelQuery = this.modelQuery.find(filter);

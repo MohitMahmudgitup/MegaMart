@@ -28,11 +28,31 @@ const getAllOrder = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
 }));
 const getMyOrders = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const customerId = req.params.id;
-    const result = yield order_service_1.orderServices.getMyOrdersFromDB(customerId, req.query);
+    const { data, meta } = yield order_service_1.orderServices.getMyOrdersFromDB(customerId, req.query);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
         message: "Orders retrieved successfully!",
+        data: data,
+        meta: meta,
+    });
+}));
+// ─── Guest Orders ────────────────────────────────────────────
+const getGuestOrders = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { orderIds } = req.body;
+    if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
+        return (0, sendResponse_1.default)(res, {
+            success: true,
+            statusCode: http_status_1.default.OK,
+            message: "No order IDs provided",
+            data: [],
+        });
+    }
+    const result = yield order_service_1.orderServices.getGuestOrdersFromDB(orderIds);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Guest orders retrieved successfully!",
         data: result,
     });
 }));
@@ -47,14 +67,25 @@ const getSingleOrder = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
     });
 }));
 const createOrder = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const orderData = req.body;
-    const result = yield order_service_1.orderServices.createOrderIntoDB(orderData);
-    (0, sendResponse_1.default)(res, {
-        success: true,
-        statusCode: http_status_1.default.OK,
-        message: "Order created successfully!",
-        data: result,
-    });
+    try {
+        const orderData = req.body;
+        const result = yield order_service_1.orderServices.createOrderIntoDB(orderData);
+        (0, sendResponse_1.default)(res, {
+            success: true,
+            statusCode: http_status_1.default.OK,
+            message: "Order created successfully!",
+            data: result,
+        });
+    }
+    catch (error) {
+        console.error("CREATE ORDER ERROR:", error);
+        (0, sendResponse_1.default)(res, {
+            success: false,
+            statusCode: 500,
+            message: error.message || "Order failed",
+            data: null,
+        });
+    }
 }));
 const cancelOrder = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const id = req.params.id;
@@ -62,7 +93,7 @@ const cancelOrder = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
-        message: 'Order canceld successfully!',
+        message: "Order canceld successfully!",
         data: result,
     });
 }));
@@ -72,7 +103,7 @@ const updateStats = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
-        message: 'Status Updated successfully!',
+        message: "Status Updated successfully!",
         data: result,
     });
 }));
@@ -82,8 +113,18 @@ const updatetrackingLink = (0, catchAsync_1.default)((req, res) => __awaiter(voi
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
-        message: 'Order trackingLink set successfully!',
+        message: "Order trackingLink set successfully!",
         data: result,
+    });
+}));
+const deleteOrder = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.params.id;
+    yield order_service_1.orderServices.deleteOrderFromDB(id);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Order deleted successfully!",
+        data: [],
     });
 }));
 exports.orderControllers = {
@@ -91,7 +132,9 @@ exports.orderControllers = {
     getSingleOrder,
     createOrder,
     getMyOrders,
+    getGuestOrders,
     cancelOrder,
     updateStats,
     updatetrackingLink,
+    deleteOrder,
 };

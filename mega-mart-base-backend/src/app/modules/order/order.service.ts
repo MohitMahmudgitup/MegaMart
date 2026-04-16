@@ -5,6 +5,7 @@ import { OrderSearchableFields } from './order.consts';
 import { TOrder } from './order.interface';
 import { nanoid } from 'nanoid';
 import { QueryBuilder } from '../../utils/QueryBuilder';
+import { Types } from "mongoose";
 
 const getAllOrdersFromDB = async (query: Record<string, string>) => {
   const attributeQuery = new QueryBuilder(OrderModel.find(), query);
@@ -162,6 +163,27 @@ const deleteOrderFromDB = async (id: string) => {
 };
 
 
+const getGuestOrdersFromDB = async (orderIds: string[]) => {
+  const objectIds = orderIds
+    .filter(id => Types.ObjectId.isValid(id))
+    .map(id => new Types.ObjectId(id));
+
+  if (objectIds.length === 0) return [];
+
+  const orders = await OrderModel.find({
+    _id: { $in: objectIds },
+  })
+    .populate({
+      path: "orderInfo.productInfo",
+      select: "description featuredImg",
+    })
+    .populate("paymentId", "orderId customerId transactionId status amount createdAt updatedAt")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return orders;
+};
+
 export const orderServices = {
   getAllOrdersFromDB,
   getSingleOrderFromDB,
@@ -170,5 +192,6 @@ export const orderServices = {
   cancelOrderIntoDB,
   updateStatsIntoDB,
   updatetrackingLinkIntoDB,
-  deleteOrderFromDB
+  deleteOrderFromDB,
+  getGuestOrdersFromDB
 };

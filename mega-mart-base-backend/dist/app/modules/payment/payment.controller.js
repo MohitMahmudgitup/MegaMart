@@ -28,6 +28,16 @@ const Payout = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0,
         data: result,
     });
 }));
+const retryPayment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const paymentId = req.params.paymentId;
+    const result = yield payment_service_1.PaymentService.retryPayment(paymentId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 201,
+        success: true,
+        message: 'Payment create successfully',
+        data: result,
+    });
+}));
 const successPayment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const query = req.query;
     const result = yield payment_service_1.PaymentService.successPayment(query);
@@ -64,4 +74,5 @@ exports.PaymentController = {
     failPayment,
     cancelPayment,
     validatePayment,
+    retryPayment
 };

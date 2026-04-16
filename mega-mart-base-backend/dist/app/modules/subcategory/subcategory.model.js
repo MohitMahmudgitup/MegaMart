@@ -1,34 +1,34 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CategoryModel = void 0;
+exports.subCategoryModel = void 0;
 const mongoose_1 = require("mongoose");
 const iconSchema = new mongoose_1.Schema({
     name: { type: String },
     url: { type: String },
 }, { _id: false });
-const categorySchema = new mongoose_1.Schema({
+const subCategories = new mongoose_1.Schema({
     name: {
         type: String,
-        required: [true, "Category can't create without a name!"],
+        required: [true, "SubCategory can't create without a name!"],
     },
     slug: {
         type: String,
     },
     details: {
         type: String,
-        required: [true, 'Category need a description!'],
+        required: [true, 'SubCategory need a description!'],
     },
     icon: iconSchema,
     image: {
         type: String,
-        required: [true, 'An image is required to create category!'],
+        required: [true, 'An image is required to create SubCategory!'],
     },
     bannerImg: {
         type: String,
-        required: [true, 'A banner image is required to create category!'],
+        required: [true, 'A banner image is required to create SubCategory!'],
     },
     isFeatured: { type: Boolean, default: false },
 }, {
     timestamps: true,
 });
-exports.CategoryModel = (0, mongoose_1.model)("category", categorySchema);
+exports.subCategoryModel = (0, mongoose_1.model)("subCategories", subCategories);

@@ -1,23 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
 import {
-  Shield,
-  CreditCard,
-  Truck,
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  CheckCircle2,
-  Minus,
-  Plus,
-  LucideListOrdered,
-  X,
+  Shield, Truck, Check, Minus, Plus, X, Tag, ChevronDown, AlertCircle,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { selectCustomer, updateCartItemQuantity } from '@/redux/featured/customer/customerSlice';
@@ -27,1172 +15,633 @@ import { useCreateOrderMutation } from '@/redux/featured/order/orderApi';
 import { selectCurrentUser } from '@/redux/featured/auth/authSlice';
 import { useUpdateCustomerMutation } from '@/redux/featured/customer/customerApi';
 import { useRouter } from 'next/navigation';
-import { usePayOrderMutation } from '@/redux/featured/payment/paymentApi';
+import {
+  clearGuestCart, getGuestCart, addGuestOrderId,
+} from '@/utils/guestCart';
+
+/* ── inline toast/alert (no browser alert) ─────────────────── */
+function InlineAlert({ message, onClose }: { message: string; onClose: () => void }) {
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-red-600 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-lg animate-fade-in">
+      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+      <span>{message}</span>
+      <button onClick={onClose} className="ml-2 opacity-80 hover:opacity-100">
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const dispatch = useAppDispatch()
+  const dispatch = useAppDispatch();
   const [updateCustomer] = useUpdateCustomerMutation();
   const [createOrder] = useCreateOrderMutation();
-  const [currentStep, setCurrentStep] = useState(1);
-  
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [promoApplied, setPromoApplied] = useState(false);
   const currentUser = useAppSelector(selectCurrentUser);
-  const [createOrderLoading, setCreateOrderLoading] = useState(false);
-  // Always default to COD
-  const paymentMethod = 'cod';
-  const [payOrderWithSSLCommerz] = usePayOrderMutation();
-  
-  const [promoCode, setPromoCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
-  const [couponError, setCouponError] = useState('');
-  const [couponSuccess, setCouponSuccess] = useState('');
-  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
-
   const customerDetails = useAppSelector(selectCustomer);
+  const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState('');
 
-  const orderItems = customerDetails?.cartItem[0]?.productInfo || [];
+  /* refs for auto-scroll */
+  const nameRef = useRef<HTMLInputElement>(null);
+  const addressRef = useRef<HTMLInputElement>(null);
+  const cityRef = useRef<HTMLInputElement>(null);
+  const postalRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const shippingRef = useRef<HTMLDivElement>(null);
+  const couponRef = useRef<HTMLDivElement>(null);
+
+  /* form */
+  const [form, setForm] = useState({
+    name: '', address: '', city: '', postalCode: '', country: 'Bangladesh', phone: '',
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  /* shipping */
+  const [shippingLocation, setShippingLocation] = useState<'dhaka' | 'outside_dhaka' | ''>('');
+  const shippingCharge = shippingLocation === 'dhaka' ? 70 : shippingLocation === 'outside_dhaka' ? 120 : 0;
+
+  /* coupon */
+  const [couponCode, setCouponCode] = useState('');
+  const [couponOpen, setCouponOpen] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponMsg, setCouponMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+
+  /* ── cart items ──────────────────────────────────────────── */
+  const isGuest = !currentUser;
+  const guestCartItems = isGuest ? getGuestCart() : [];
+
+  const orderItems = isGuest
+    ? guestCartItems.map(item => ({
+        productId: [{
+          _id: item.productId,
+          description: { name: item.name },
+          productInfo: { salePrice: item.salePrice },
+          featuredImg: item.featuredImg,
+        }],
+        quantity: item.quantity,
+        color: item.color,
+        size: item.size,
+      }))
+    : customerDetails?.cartItem[0]?.productInfo || [];
 
   const subTotal = orderItems.reduce((acc, item) => {
-    const productPrice = item.productId[0]?.productInfo?.salePrice || 0;
-    return acc + productPrice * item.quantity;
+    return acc + (item.productId[0]?.productInfo?.salePrice || 0) * item.quantity;
   }, 0);
 
-  // Form data state — country always Bangladesh, email hidden
-  const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: 'Bangladesh',
-    phone: '',
-  });
-
-  // Shipping state
-  interface IShipping {
-    shippingLocation: 'dhaka' | 'outside_dhaka' | '';
-    shippingCharge: number;
-  }
-
-  const [shipping, setShipping] = useState<IShipping>({
-    shippingLocation: '',
-    shippingCharge: 0,
-  });
-
-  const handleShippingChange = (location: 'dhaka' | 'outside_dhaka') => {
-    const charge = location === 'dhaka' ? 70 : 120;
-    setShipping({
-      shippingLocation: location,
-      shippingCharge: charge,
-    });
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value }));
-    if (formErrors[id]) {
-      setFormErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[id];
-        return newErrors;
-      });
-    }
-  };
-
-  const validateShippingForm = () => {
-    const errors: Record<string, string> = {};
-    if (!formData.name) errors.name = 'Name is required';
-    if (!formData.address) errors.address = 'Address is required';
-    if (!formData.city) errors.city = 'City is required';
-    if (!formData.postalCode) errors.postalCode = 'Postal code is required';
-    if (!formData.phone) errors.phone = 'Phone is required';
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const clearCartData = async () => {
-    await updateCustomer({
-      id: customerDetails?._id as string,
-      body: {
-        cartItem: [
-          {
-            userId: currentUser?._id as string,
-            productInfo: [],
-          },
-        ],
-      },
-    });
-  };
-
-  const shippingInfo = {
-    name: 'Express Shipping',
-    type: 'amount',
-  };
-
-  const tax = 0;
-  
-  const calculateDiscount = () => {
+  /* discount */
+  const discount = useMemo(() => {
     if (!appliedCoupon) return 0;
-    if (appliedCoupon.type === 'fixed') {
-      return appliedCoupon.discountAmount;
-    } else if (appliedCoupon.type === 'percentage') {
-      const percentageDiscount = (subTotal * appliedCoupon.discountAmount) / 100;
-      if (appliedCoupon.maximumDiscount && percentageDiscount > appliedCoupon.maximumDiscount) {
-        return appliedCoupon.maximumDiscount;
-      }
-      return percentageDiscount;
-    }
-    return 0;
-  };
-  
-  const discount = calculateDiscount();
+    if (appliedCoupon.type === 'fixed') return appliedCoupon.discountAmount;
+    const pct = (subTotal * appliedCoupon.discountAmount) / 100;
+    return appliedCoupon.maximumDiscount ? Math.min(pct, appliedCoupon.maximumDiscount) : pct;
+  }, [appliedCoupon, subTotal]);
 
-  // Split name into firstName/lastName for order payload
-  const getFirstLastName = () => {
-    const parts = formData.name.trim().split(' ');
-    const firstName = parts[0] || '';
-    const lastName = parts.slice(1).join(' ') || '';
-    return { firstName, lastName };
+  const total = subTotal + shippingCharge - discount;
+
+  /* ── helpers ─────────────────────────────────────────────── */
+  const scrollTo = (ref: React.RefObject<HTMLElement | null>, offset = -100) => {
+    if (ref.current) {
+      const top = ref.current.getBoundingClientRect().top + window.scrollY + offset;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
   };
 
-  const orderInfo = orderItems.map(item => {
-    const product = item.productId[0];
-    const itemSubTotal = (product?.productInfo?.salePrice || 0) * item.quantity;
-    const total = itemSubTotal;
-    return {
-      orderBy: customerDetails?._id,
-      shopInfo: product?.shopId,
-      vendorId: product?.vendorId,
-      productInfo: product?._id,
-      status: 'pending',
-      isCancelled: false,
-      quantity: item.quantity,
-      totalAmount: {
-        subTotal: itemSubTotal,
-        tax,
-        shipping: shippingInfo,
-        discount,
-        total,
-      },
-    };
-  });
+  const showAlert = (msg: string) => {
+    setAlert(msg);
+    setTimeout(() => setAlert(''), 4000);
+  };
 
-  const overallTotal = orderInfo.reduce(
-    (acc, item) => acc + item.totalAmount.total,
-    0
-  );
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setForm(p => ({ ...p, [id]: value }));
+    if (errors[id]) setErrors(p => { const n = { ...p }; delete n[id]; return n; });
+  };
 
-  const handlePlaceOrder = async () => {
-    if (orderItems.length === 0) {
-      toast.error('Your cart is empty', { icon: '🛒', duration: 4000 });
-      return;
-    }
-
-    if (!shipping.shippingLocation) {
-      toast.error('Please select a shipping location', { icon: '📍', duration: 4000 });
-      return;
-    }
-
-    const { firstName, lastName } = getFirstLastName();
-
-    const finalOrder = {
-      orderInfo,
-      shipping: {
-        shippingLocation: shipping.shippingLocation,
-        shippingCharge: shipping.shippingCharge,
-      },
-      totalAmount: subTotal,
-      payableAmount: subTotal + shipping.shippingCharge - discount,
-      customerInfo: {
-        firstName,
-        lastName,
-        email: '',
-        phone: formData.phone,
-        address: formData.address,
-        city: formData.city,
-        postalCode: formData.postalCode,
-        country: formData.country,
-      },
-      paymentInfo: 'cash-on',
-      ...(appliedCoupon && {
-        coupon: {
-          couponId: appliedCoupon._id,
-          code: appliedCoupon.code,
-          discountAmount: discount,
-          appliedBy: currentUser?._id,
+  /* ── quantity (logged-in) ────────────────────────────────── */
+  const handleQty = async (productId: string, type: 'inc' | 'dec') => {
+    if (!customerDetails) return;
+    dispatch(updateCartItemQuantity({ productId, type }));
+    const item = customerDetails?.cartItem?.[0]?.productInfo?.find((i: any) =>
+      i.productId.some((p: any) => (typeof p === 'string' ? p : p._id) === productId)
+    );
+    if (!item) return;
+    const newQty = type === 'inc' ? item.quantity + 1 : Math.max(item.quantity - 1, 1);
+    try {
+      await updateCustomer({
+        id: customerDetails._id,
+        body: {
+          cartItem: [{
+            userId: currentUser?._id,
+            productInfo: customerDetails?.cartItem?.[0]?.productInfo?.map((i: any) => {
+              const ids = i.productId.map((p: any) => typeof p === 'string' ? p : p._id);
+              return {
+                productId: [String(i.productId[0]._id || i.productId[0])],
+                quantity: ids.includes(productId) ? newQty : i.quantity,
+                totalAmount: i.totalAmount,
+                color: i.color || '',
+                size: i.size || '',
+              };
+            }) ?? [],
+          }],
         },
-      }),
-    };
-
-    setCreateOrderLoading(true);
-    try {
-      await createOrder(finalOrder).unwrap();
-      setCreateOrderLoading(false);
-      await clearCartData();
-      router.push('/dashboard/orders');
-      toast.success('Order placed successfully!');
-    } catch (error) {
-      setCreateOrderLoading(false);
-      console.error('Order creation error:', error);
-      toast.error('Failed to place order. Please try again.');
-    }
+      });
+    } catch { toast.error('Failed to update quantity.'); }
   };
 
-  const handleNextStepOrSubmit = () => {
-    if (currentStep === 1) {
-      if (validateShippingForm()) {
-        setCurrentStep(2);
-      }
-    } else if (currentStep === 2) {
-      setCurrentStep(3);
-    } else if (currentStep === 3) {
-      handlePlaceOrder();
-    }
+  /* ── remove item (logged-in) ─────────────────────────────── */
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const handleRemove = async (productId: string) => {
+    if (!customerDetails) return;
+    setRemovingId(productId);
+    const updated = customerDetails?.cartItem?.[0]?.productInfo?.filter((i: any) =>
+      !i.productId.some((p: any) => (typeof p === 'string' ? p : String(p._id)) === productId)
+    ) || [];
+    try {
+      await updateCustomer({
+        id: customerDetails._id,
+        body: {
+          cartItem: [{
+            userId: currentUser?._id,
+            productInfo: updated.map((i: any) => ({
+              productId: i.productId.map((p: any) => typeof p === 'string' ? p : String(p._id)),
+              quantity: i.quantity,
+              totalAmount: i.totalAmount,
+              color: i.color || '',
+              size: i.size || '',
+            })),
+          }],
+        },
+      });
+      toast.success('Item removed');
+    } catch { toast.error('Failed to remove item'); }
+    setRemovingId(null);
   };
 
-  const validateCoupon = async () => {
-    setCouponError('');
-    setCouponSuccess('');
-    
-    if (!promoCode.trim()) {
-      setCouponError('Please enter a coupon code');
-      return;
-    }
-
-    setIsValidatingCoupon(true);
-
+  /* ── coupon ──────────────────────────────────────────────── */
+  const applyCoupon = async () => {
+    setCouponMsg(null);
+    if (!couponCode.trim()) { setCouponMsg({ type: 'error', text: 'Enter a coupon code' }); return; }
+    setCouponLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/coupon?code=${promoCode.toUpperCase()}`
-      );
-      const data = await response.json();
-
-      if (!data.success || !data.data || data.data.length === 0) {
-        setCouponError('Invalid coupon code');
-        setIsValidatingCoupon(false);
-        return;
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/coupon?code=${couponCode.toUpperCase()}`);
+      const data = await res.json();
+      if (!data.success || !data.data?.length) {
+        setCouponMsg({ type: 'error', text: 'Invalid coupon code' }); setCouponLoading(false); return;
       }
-
-      const coupon = data.data[0];
-
-      if (!coupon.isActive) {
-        setCouponError('This coupon is no longer active');
-        setIsValidatingCoupon(false);
-        return;
+      const c = data.data[0];
+      if (!c.isActive) { setCouponMsg({ type: 'error', text: 'Coupon is no longer active' }); setCouponLoading(false); return; }
+      if (new Date(c.expireDate) < new Date()) { setCouponMsg({ type: 'error', text: 'Coupon has expired' }); setCouponLoading(false); return; }
+      if (c.minimumOrderAmount > subTotal) {
+        setCouponMsg({ type: 'error', text: `Min. order ৳${c.minimumOrderAmount} required` }); setCouponLoading(false); return;
       }
-
-      const now = new Date();
-      const expireDate = new Date(coupon.expireDate);
-      if (expireDate < now) {
-        setCouponError('This coupon has expired');
-        setIsValidatingCoupon(false);
-        return;
-      }
-
-      if (coupon.activeDate) {
-        const activeDate = new Date(coupon.activeDate);
-        if (activeDate > now) {
-          setCouponError('This coupon is not yet active');
-          setIsValidatingCoupon(false);
-          return;
-        }
-      }
-
-      if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
-        setCouponError('This coupon has reached its usage limit');
-        setIsValidatingCoupon(false);
-        return;
-      }
-
-      if (coupon.minimumOrderAmount > subTotal) {
-        setCouponError(`Minimum order amount of $${coupon.minimumOrderAmount} required`);
-        setIsValidatingCoupon(false);
-        return;
-      }
-
-      if (coupon.scope === 'shop' && coupon.shopId) {
-        const cartShopIds = orderItems.map((item: any) => item.productId[0].shopId);
-        const uniqueShopIds = [...new Set(cartShopIds)];
-        const isShopMatch = uniqueShopIds.includes(coupon.shopId);
-
-        if (!isShopMatch) { 
-          setCouponError('This coupon is only valid for specific shop products');
-          setIsValidatingCoupon(false);
-          return;
-        }
-
-        if (uniqueShopIds.length > 1) {
-          setCouponSuccess(`Coupon applied! Note: Discount applies only to items from the coupon's shop`);
-        }
-      }
-
-      if (coupon.userRestriction && coupon.userRestriction.length > 0 && currentUser?._id) {
-        const isUserAllowed = coupon.userRestriction.includes(currentUser._id);
-        if (!isUserAllowed) {
-          setCouponError('This coupon is not available for your account');
-          setIsValidatingCoupon(false);
-          return;
-        }
-      }
-
-      if (coupon.productRestriction && coupon.productRestriction.length > 0) {
-        const cartProductIds = orderItems.map((item: any) => item.productId[0]._id);
-        const hasRestrictedProduct = cartProductIds.some((productId: string) =>
-          coupon.productRestriction.includes(productId)
-        );
-
-        if (!hasRestrictedProduct) {
-          setCouponError('This coupon is only valid for specific products');
-          setIsValidatingCoupon(false);
-          return;
-        }
-      }
-
-      setAppliedCoupon(coupon);
-      setPromoApplied(true);
-      
-      const discountAmount = coupon.type === 'fixed' 
-        ? coupon.discountAmount 
-        : Math.min(
-            (subTotal * coupon.discountAmount) / 100,
-            coupon.maximumDiscount || Infinity
-          );
-
-      setCouponSuccess(`Coupon applied successfully! You saved $${discountAmount.toFixed(2)}`);
-      toast.success(`Coupon "${coupon.code}" applied!`);
-      setIsValidatingCoupon(false);
-    } catch (error) {
-      console.error('Coupon validation error:', error);
-      setCouponError('Failed to validate coupon. Please try again.');
-      setIsValidatingCoupon(false);
-    }
+      setAppliedCoupon(c);
+      const saved = c.type === 'fixed' ? c.discountAmount : Math.min((subTotal * c.discountAmount) / 100, c.maximumDiscount || Infinity);
+      setCouponMsg({ type: 'success', text: `Saved ৳${saved.toFixed(0)}!` });
+      toast.success(`Coupon "${c.code}" applied!`);
+    } catch { setCouponMsg({ type: 'error', text: 'Failed to validate coupon' }); }
+    setCouponLoading(false);
   };
 
   const removeCoupon = () => {
-    setAppliedCoupon(null);
-    setPromoApplied(false);
-    setPromoCode('');
-    setCouponError('');
-    setCouponSuccess('');
+    setAppliedCoupon(null); setCouponCode(''); setCouponMsg(null);
     toast.success('Coupon removed');
   };
 
-  const applyPromoCode = validateCoupon;
+  /* ── place order ─────────────────────────────────────────── */
+  const handlePlaceOrder = async () => {
+    /* validate form */
+    const newErrors: Record<string, string> = {};
+    if (!form.name) { newErrors.name = 'Required'; scrollTo(nameRef); }
+    if (!form.address) { newErrors.address = 'Required'; if (!newErrors.name) scrollTo(addressRef); }
+    if (!form.city) { newErrors.city = 'Required'; if (!newErrors.name && !newErrors.address) scrollTo(cityRef); }
+    if (!form.postalCode) { newErrors.postalCode = 'Required'; if (Object.keys(newErrors).length === 1) scrollTo(postalRef); }
+    if (!form.phone) { newErrors.phone = 'Required'; if (Object.keys(newErrors).length === 1) scrollTo(phoneRef); }
 
-  const handleBackToShipping = () => setCurrentStep(1);
-  const handleBackToPayment = () => setCurrentStep(2);
-  const handleBackClick = () => {
-    if (currentStep === 2) handleBackToShipping();
-    if (currentStep === 3) handleBackToPayment();
-  };
+    if (Object.keys(newErrors).length) {
+      setErrors(newErrors);
+      const firstKey = Object.keys(newErrors)[0];
+      const refMap: Record<string, React.RefObject<HTMLElement | null>> = {
+        name: nameRef, address: addressRef, city: cityRef, postalCode: postalRef, phone: phoneRef,
+      };
+      scrollTo(refMap[firstKey]);
+      return;
+    }
 
-  const nextCtaText =
-    currentStep === 1
-      ? 'Continue to Payment'
-      : currentStep === 2
-      ? 'Review Order'
-      : 'Confirm Order';
+    if (!shippingLocation) {
+      scrollTo(shippingRef, -80);
+      showAlert('Please select a delivery location before placing your order');
+      return;
+    }
 
-  const handleQuantityChange = async (productId: string, type: "inc" | "dec") => {
-    if (!customerDetails) return;
+    if (orderItems.length === 0) { toast.error('Your cart is empty'); return; }
 
-    const itemToUpdate = customerDetails?.cartItem?.[0]?.productInfo?.find((item: any) => {
-      const ids = item.productId.map((p: any) => typeof p === "string" ? p : p._id);
-      return ids.includes(productId);
+    const parts = form.name.trim().split(' ');
+    const firstName = parts[0] || '';
+    const lastName = parts.slice(1).join(' ') || '';
+
+    const shippingInfo = { name: 'Express Shipping', type: 'amount' as const };
+
+    const orderInfo = orderItems.map(item => {
+      const product = item.productId[0];
+      const itemSubTotal = (product?.productInfo?.salePrice || 0) * item.quantity;
+      return {
+        orderBy: customerDetails?._id,
+        shopInfo: 'shopId' in product ? product.shopId : null,
+        vendorId: 'vendorId' in product ? product.vendorId : null,
+        productInfo: product?._id,
+        status: 'pending',
+        isCancelled: false,
+        quantity: item.quantity,
+        totalAmount: { subTotal: itemSubTotal, tax: 0, shipping: shippingInfo, discount, total: itemSubTotal },
+      };
     });
 
-    if (!itemToUpdate) return;
+    const finalOrder = {
+      orderInfo,
+      shipping: { shippingLocation, shippingCharge },
+      totalAmount: subTotal,
+      payableAmount: total,
+      customerInfo: { firstName, lastName, email: '', phone: form.phone, address: form.address, city: form.city, postalCode: form.postalCode, country: form.country },
+      paymentInfo: 'cash-on',
+      orderBy: currentUser?._id || null,
+      isGuest: !currentUser,
+      ...(appliedCoupon && {
+        coupon: { couponId: appliedCoupon._id, code: appliedCoupon.code, discountAmount: discount, appliedBy: currentUser?._id || null },
+      }),
+    };
 
-    const newQuantity = type === "inc" ? itemToUpdate.quantity + 1 : Math.max(itemToUpdate.quantity - 1, 1);
-
-    dispatch(updateCartItemQuantity({ productId, type }));
-
+    setLoading(true);
     try {
-      await updateCustomer({
-        id: customerDetails._id,
-        body: {
-          cartItem: [
-            {
-              userId: currentUser?._id,
-              productInfo: customerDetails?.cartItem?.[0]?.productInfo?.map((item: any) => {
-                const ids = item.productId.map((p: any) => typeof p === "string" ? p : p._id);
-                
-                if (ids.includes(productId)) {
-                  return {
-                    productId: [String(item.productId[0]._id || item.productId[0])],
-                    quantity: newQuantity,
-                    totalAmount: item.totalAmount,
-                    color: item.color || '',
-                    size: item.size || '',
-                  };
-                }
-                
-                return {
-                  productId: [String(item.productId[0]._id || item.productId[0])],
-                  quantity: item.quantity,
-                  totalAmount: item.totalAmount,
-                  color: item.color || '',
-                  size: item.size || '',
-                };
-              }) ?? [],
-            },
-          ],
-        },
-      });
-    } catch (error) {
-      toast.error("Failed to update quantity.");
-    }
+      const result = await createOrder(finalOrder).unwrap();
+      if (currentUser) {
+        await updateCustomer({
+          id: customerDetails?._id as string,
+          body: { cartItem: [{ userId: currentUser._id, productInfo: [] }] },
+        });
+      } else {
+        clearGuestCart();
+        const orderId = result?.data?._id || result?._id;
+        if (orderId) addGuestOrderId(orderId);
+      }
+      window.dispatchEvent(new Event('guestCartUpdated'));
+      toast.success('Order placed successfully!');
+      router.push('/dashboard/orders');
+    } catch { toast.error('Failed to place order. Please try again.'); }
+    setLoading(false);
   };
 
-  const [removingItemId, setRemovingItemId] = useState<string | null>(null);
-  
-  const handleRemoveItem = async (productId: string) => {
-    if (!customerDetails) return;
-
-    const updatedProductInfo =
-      customerDetails?.cartItem?.[0]?.productInfo?.filter((item: any) => {
-        const productIds = item.productId.map((p: any) =>
-          typeof p === "string" ? p : String(p._id)
-        );
-        return !productIds.includes(productId);
-      }) || [];
-
-    try {
-      setRemovingItemId(productId);
-
-      await updateCustomer({
-        id: customerDetails._id,
-        body: {
-          cartItem: [
-            {
-              userId: currentUser?._id,
-              productInfo: updatedProductInfo.map((item: any) => ({
-                productId: item.productId.map((p: any) =>
-                  typeof p === "string" ? p : String(p._id)
-                ),
-                quantity: item.quantity,
-                totalAmount: item.totalAmount,
-                color: item.color || '',
-                size: item.size || '',
-              })),
-            },
-          ],
-        },
-      });
-
-      toast.success("Item removed from cart");
-      setRemovingItemId(null);
-    } catch (error) {
-      toast.error("Failed to remove item");
-      setRemovingItemId(null);
-    }
-  };
-  
+  /* ── render ──────────────────────────────────────────────── */
   return (
-    <div className="min-h-screen pt-12 md:py-8 rounded-2xl mr-4">
-      <div className="w-full md:px-4 max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 md:mb-6">
-            Complete Your Order
-          </h1>
+    <>
+      {alert && <InlineAlert message={alert} onClose={() => setAlert('')} />}
 
-          {/* Progress Steps */}
-          <div className="flex items-center justify-center mb-6 md:mb-8">
-            <div className="flex flex-col items-center w-24 md:w-32">
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                  currentStep >= 1 ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-600'
-                }`}
-              >
-                {currentStep > 1 ? <Check className="w-5 h-5" /> : '1'}
+      <div className="min-h-screen mt-6 mr-4 py-6 md:px-6">
+        <div className=" mx-auto">
+
+          {/* page title */}
+          <div className="mb-6">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Checkout</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Fill in your details and confirm order</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+
+            {/* ── LEFT: form ───────────────────────────────── */}
+            <div className="lg:col-span-3 space-y-4">
+
+              {/* Delivery info */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center">
+                    <Truck className="w-3.5 h-3.5 text-orange-600" />
+                  </div>
+                  <h2 className="text-base font-semibold text-gray-900">Delivery details</h2>
+                </div>
+
+                <div className="space-y-3">
+                  <Field label="Full name" error={errors.name}>
+                    <Input
+                      id="name" ref={nameRef} value={form.name} onChange={handleInput}
+                      placeholder="Your full name"
+                      className={errors.name ? 'border-red-400 focus-visible:ring-red-300' : ''}
+                    />
+                  </Field>
+
+                  <Field label="Address" error={errors.address}>
+                    <Input
+                      id="address" ref={addressRef} value={form.address} onChange={handleInput}
+                      placeholder="Street, building, area"
+                      className={errors.address ? 'border-red-400 focus-visible:ring-red-300' : ''}
+                    />
+                  </Field>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="City" error={errors.city}>
+                      <Input
+                        id="city" ref={cityRef} value={form.city} onChange={handleInput}
+                        placeholder="City"
+                        className={errors.city ? 'border-red-400 focus-visible:ring-red-300' : ''}
+                      />
+                    </Field>
+                    <Field label="Postal code" error={errors.postalCode}>
+                      <Input
+                        id="postalCode" ref={postalRef} value={form.postalCode} onChange={handleInput}
+                        placeholder="1200"
+                        className={errors.postalCode ? 'border-red-400 focus-visible:ring-red-300' : ''}
+                      />
+                    </Field>
+                  </div>
+
+                  <Field label="Phone number" error={errors.phone}>
+                    <Input
+                      id="phone" ref={phoneRef} type="tel" value={form.phone} onChange={handleInput}
+                      placeholder="+880 1X XX XXX XXX"
+                      className={errors.phone ? 'border-red-400 focus-visible:ring-red-300' : ''}
+                    />
+                  </Field>
+                </div>
               </div>
-              <span className={`mt-2 text-xs md:text-sm ${currentStep >= 1 ? 'text-orange-500 font-medium' : 'text-gray-500'}`}>
-                Shipping
-              </span>
+
+              {/* Shipping location */}
+<div
+  ref={shippingRef}
+  className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5"
+>
+  <h2 className="text-base font-semibold text-gray-900 mb-3">
+    Delivery area
+  </h2>
+
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <ShippingOption
+      selected={shippingLocation === "dhaka"}
+      onClick={() => setShippingLocation("dhaka")}
+      title="Chittagong city"
+      price="৳70"
+      sub="Inside city"
+    />
+
+    <ShippingOption
+      selected={shippingLocation === "outside_dhaka"}
+      onClick={() => setShippingLocation("outside_dhaka")}
+      title="Outside Chittagong"
+      price="৳120"
+      sub="Rest of Bangladesh"
+    />
+  </div>
+
+  {!shippingLocation && (
+    <p className="text-xs text-amber-600 mt-2 flex items-center gap-1">
+      <AlertCircle className="w-3.5 h-3.5" />
+      Select your delivery area
+    </p>
+  )}
+</div>
+
+              {/* Payment method */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-3">Payment</h2>
+                <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-orange-400 bg-orange-50">
+                  <div className="w-5 h-5 rounded-full border-2 border-orange-500 bg-orange-500 flex items-center justify-center flex-shrink-0">
+                    <div className="w-2 h-2 bg-white rounded-full" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">Cash on Delivery</p>
+                    <p className="text-xs text-gray-500">Pay when your order arrives</p>
+                  </div>
+                  <Check className="w-4 h-4 text-orange-500 ml-auto" />
+                </div>
+              </div>
+
+              {/* Coupon */}
+              <div ref={couponRef} className="bg-white rounded-2xl border border-gray-100 p-5">
+                <button
+                  onClick={() => setCouponOpen(v => !v)}
+                  className="flex items-center gap-2 w-full text-left"
+                >
+                  <Tag className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700">Have a promo code?</span>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 ml-auto transition-transform ${couponOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {couponOpen && (
+                  <div className="mt-3">
+                    {appliedCoupon ? (
+                      <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-xl">
+                        <div>
+                          <p className="text-sm font-semibold text-green-800">{appliedCoupon.code}</p>
+                          <p className="text-xs text-green-600">-৳{discount.toFixed(0)} saved</p>
+                        </div>
+                        <button onClick={removeCoupon} className="text-xs text-red-500 hover:underline">Remove</button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex gap-2">
+                          <Input
+                            value={couponCode}
+                            onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponMsg(null); }}
+                            placeholder="PROMO CODE"
+                            className="flex-1 font-mono text-sm tracking-widest uppercase"
+                            onKeyDown={e => e.key === 'Enter' && applyCoupon()}
+                          />
+                          <Button
+                            onClick={applyCoupon}
+                            disabled={couponLoading || !couponCode.trim()}
+                            className="bg-gray-900 hover:bg-black text-white px-4 shrink-0"
+                          >
+                            {couponLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Apply'}
+                          </Button>
+                        </div>
+                        {couponMsg && (
+                          <p className={`text-xs mt-2 flex items-center gap-1 ${couponMsg.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
+                            {couponMsg.type === 'error' ? <X className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
+                            {couponMsg.text}
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className={`w-8 md:w-16 h-1 ${currentStep >= 2 ? 'bg-orange-500' : 'bg-gray-300'}`} />
+            {/* ── RIGHT: order summary ──────────────────────── */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 lg:sticky lg:top-4">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">
+                  Order ({orderItems.length} {orderItems.length === 1 ? 'item' : 'items'})
+                </h2>
 
-            <div className="flex flex-col items-center w-24 md:w-32">
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                  currentStep >= 2
-                    ? 'bg-orange-500 text-white'
-                    : currentStep === 2
-                    ? 'border-2 border-orange-500 text-orange-500 bg-white'
-                    : 'bg-gray-200 text-gray-600'
-                }`}
-              >
-                {currentStep > 2 ? <Check className="w-5 h-5" /> : '2'}
+                {/* items */}
+                <div className="space-y-3 max-h-72 overflow-y-auto pr-1 mb-4">
+                  {orderItems.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-6">Your cart is empty</p>
+                  ) : orderItems.map((item: any, i: number) => (
+                    <div key={i} className="flex gap-3 group">
+                      <div className="w-14 h-14 rounded-xl overflow-hidden border border-gray-100 flex-shrink-0 bg-gray-50">
+                        <Image
+                          src={item.productId[0]?.featuredImg || '/placeholder.png'}
+                          alt={item.productId[0]?.description?.name || 'Product'}
+                          width={56} height={56} className="object-cover w-full h-full"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {item.productId[0]?.description?.name}
+                        </p>
+                        {(item.color || item.size) && (
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {[item.color, item.size].filter(Boolean).join(' · ')}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-between mt-1.5">
+                          {!isGuest ? (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleQty(item.productId[0]._id, 'dec')}
+                                disabled={item.quantity <= 1}
+                                className="w-6 h-6 rounded-md border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40"
+                              >
+                                <Minus className="w-3 h-3" />
+                              </button>
+                              <span className="text-sm font-semibold w-6 text-center">{item.quantity}</span>
+                              <button
+                                onClick={() => handleQty(item.productId[0]._id, 'inc')}
+                                className="w-6 h-6 rounded-md border border-gray-200 flex items-center justify-center hover:bg-gray-50"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => handleRemove(item.productId[0]._id)}
+                                disabled={removingId === item.productId[0]._id}
+                                className="ml-1 text-gray-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">Qty: {item.quantity}</span>
+                          )}
+                          <p className="text-sm font-bold text-gray-900">
+                            ৳{((item.productId[0]?.productInfo?.salePrice || 0) * item.quantity).toFixed(0)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* price breakdown */}
+                <div className="border-t border-gray-100 pt-4 space-y-2">
+                  <PriceRow label="Subtotal" value={`৳${subTotal.toFixed(0)}`} />
+                  <PriceRow
+                    label="Delivery"
+                    value={shippingCharge > 0 ? `৳${shippingCharge}` : '—'}
+                    hint={!shippingLocation ? 'Select area' : undefined}
+                  />
+                  {discount > 0 && (
+                    <PriceRow label={`Discount (${appliedCoupon?.code})`} value={`-৳${discount.toFixed(0)}`} green />
+                  )}
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                    <span className="font-semibold text-gray-900">Total</span>
+                    <span className="text-lg font-bold text-gray-900">৳{total.toFixed(0)}</span>
+                  </div>
+                  {discount > 0 && (
+                    <p className="text-xs text-green-600 text-right">You saved ৳{discount.toFixed(0)}!</p>
+                  )}
+                </div>
+
+                {/* trust */}
+                <div className="flex items-center gap-2 mt-4 p-3 bg-gray-50 rounded-xl">
+                  <Shield className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <span className="text-xs text-gray-500">Secure checkout · No hidden charges</span>
+                </div>
+
+                {/* CTA */}
+                <button
+                  onClick={handlePlaceOrder}
+                  disabled={loading}
+                  className="mt-4 w-full bg-orange-500 hover:bg-orange-600 active:scale-[0.98] disabled:opacity-60 text-white font-semibold text-sm py-3.5 rounded-xl transition-all flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Placing order...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Confirm order · ৳{total.toFixed(0)}
+                    </>
+                  )}
+                </button>
+
+                <p className="text-xs text-center text-gray-400 mt-2">
+                  Cash on delivery · Pay when received
+                </p>
               </div>
-              <span className={`mt-2 text-xs md:text-sm ${currentStep >= 2 ? 'text-orange-500 font-medium' : 'text-gray-500'}`}>
-                Payment
-              </span>
-            </div>
-
-            <div className={`w-8 md:w-16 h-1 ${currentStep >= 3 ? 'bg-orange-500' : 'bg-gray-300'}`} />
-
-            <div className="flex flex-col items-center w-24 md:w-32">
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                  currentStep >= 3
-                    ? 'bg-orange-500 text-white'
-                    : currentStep === 3
-                    ? 'border-2 border-orange-500 text-orange-500 bg-white'
-                    : 'bg-gray-200 text-gray-600'
-                }`}
-              >
-                3
-              </div>
-              <span className={`mt-2 text-xs md:text-sm ${currentStep >= 3 ? 'text-orange-500 font-medium' : 'text-gray-500'}`}>
-                Review
-              </span>
             </div>
           </div>
         </div>
-
-        {/* Main Grid */}
-        <form onSubmit={e => e.preventDefault()}>
-          <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 md:gap-8">
-            {/* Left Column */}
-            <div className="lg:col-span-2 bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-100">
-              {currentStep === 1 ? (
-                <>
-                  <div className="flex items-center mb-4">
-                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center mr-3">
-                      <Truck className="w-4 h-4 text-orange-600" />
-                    </div>
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      Shipping Information
-                    </h2>
-                  </div>
-
-                  <div className="space-y-4">
-                    {/* Single Name Field */}
-                    <div>
-                      <Label htmlFor="name" className="text-sm font-medium">
-                        Name
-                      </Label>
-                      <Input
-                        required
-                        id="name"
-                        placeholder="Your full name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        className={`mt-1 ${formErrors.name ? 'border-red-500' : ''}`}
-                      />
-                      {formErrors.name && (
-                        <p className="mt-1 text-xs text-red-500">{formErrors.name}</p>
-                      )}
-                    </div>
-
-                    {/* Address */}
-                    <div>
-                      <Label htmlFor="address" className="text-sm font-medium">
-                        Address
-                      </Label>
-                      <Input
-                        required
-                        id="address"
-                        value={formData.address}
-                        onChange={handleInputChange}
-                        className={`mt-1 ${formErrors.address ? 'border-red-500' : ''}`}
-                      />
-                      {formErrors.address && (
-                        <p className="mt-1 text-xs text-red-500">{formErrors.address}</p>
-                      )}
-                    </div>
-
-                    {/* City and Postal Code */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="city" className="text-sm font-medium">
-                          City
-                        </Label>
-                        <Input
-                          required
-                          id="city"
-                          value={formData.city}
-                          onChange={handleInputChange}
-                          className={`mt-1 ${formErrors.city ? 'border-red-500' : ''}`}
-                        />
-                        {formErrors.city && (
-                          <p className="mt-1 text-xs text-red-500">{formErrors.city}</p>
-                        )}
-                      </div>
-                      <div>
-                        <Label htmlFor="postalCode" className="text-sm font-medium">
-                          Postal Code
-                        </Label>
-                        <Input
-                          required
-                          id="postalCode"
-                          value={formData.postalCode}
-                          onChange={handleInputChange}
-                          className={`mt-1 ${formErrors.postalCode ? 'border-red-500' : ''}`}
-                        />
-                        {formErrors.postalCode && (
-                          <p className="mt-1 text-xs text-red-500">{formErrors.postalCode}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Phone only (country hidden, always Bangladesh) */}
-                    <div>
-                      <Label htmlFor="phone" className="text-sm font-medium">
-                        Phone
-                      </Label>
-                      <Input
-                        required
-                        id="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        className={`mt-1 ${formErrors.phone ? 'border-red-500' : ''}`}
-                      />
-                      {formErrors.phone && (
-                        <p className="mt-1 text-xs text-red-500">{formErrors.phone}</p>
-                      )}
-                    </div>
-                  </div>
-                </>
-              ) : currentStep === 2 ? (
-                <>
-                  <div className="flex items-center mb-4">
-                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center mr-3">
-                      <CreditCard className="w-4 h-4 text-orange-600" />
-                    </div>
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      Payment Information
-                    </h2>
-                  </div>
-
-                  {/* COD always selected */}
-                  <div className="space-y-3 mb-6">
-                    <p className="text-sm font-medium text-gray-700 mb-3">
-                      Payment Method
-                    </p>
-                    
-                    <div className="grid grid-cols-1 gap-3">
-                      <div className="relative rounded-xl border-2 border-orange-500 bg-orange-50 shadow-sm p-4">
-                        <div className="flex items-start gap-3">
-                          <div className="mt-0.5 w-5 h-5 rounded-full border-2 border-orange-500 bg-orange-500 flex items-center justify-center flex-shrink-0">
-                            <div className="w-2 h-2 bg-white rounded-full" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Truck className="w-5 h-5 text-orange-600" />
-                              <p className="font-semibold text-gray-900">Cash on Delivery</p>
-                            </div>
-                            <p className="text-xs text-gray-600">
-                              Pay with cash when you receive your order
-                            </p>
-                            <p className="text-xs text-orange-600 mt-1 font-medium">
-                              No extra charges
-                            </p>
-                          </div>
-                        </div>
-                        <div className="absolute top-3 right-3">
-                          <CheckCircle2 className="w-5 h-5 text-orange-500" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
-                    <div className="flex gap-3">
-                      <Truck className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-amber-900">Cash on Delivery</p>
-                        <p className="text-xs text-amber-700 mt-1">
-                          Please have the exact amount ready when the delivery arrives. Our delivery partner will collect the payment.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">Review Your Order</h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Please confirm all details before placing your order
-                    </p>
-                  </div>
-
-                  <div className="space-y-6">
-                    {/* Shipping Information */}
-                    <div className="border-2 border-gray-200 rounded-xl p-5 bg-gradient-to-br from-white to-gray-50">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
-                            <Truck className="w-4 h-4 text-orange-600" />
-                          </div>
-                          Shipping Information
-                        </h3>
-                        <Button
-                          type="button"
-                          onClick={handleBackToShipping}
-                          variant="outline"
-                          size="sm"
-                          className="text-orange-600 border-orange-300 hover:bg-orange-50 h-8 text-xs"
-                        >
-                          Edit
-                        </Button>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div className="flex items-start gap-3">
-                          <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide">Full Name</p>
-                            <p className="text-sm font-medium text-gray-900">{formData.name}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                          <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <svg className="w-3 h-3 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide">Delivery Address</p>
-                            <p className="text-sm font-medium text-gray-900">{formData.address}</p>
-                            <p className="text-sm text-gray-600">
-                              {formData.city}, {formData.postalCode}
-                            </p>
-                            <p className="text-sm text-gray-600">Bangladesh</p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                          <div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <svg className="w-3 h-3 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide">Phone Number</p>
-                            <p className="text-sm font-medium text-gray-900">{formData.phone}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Payment Method */}
-                    <div className="border rounded-lg p-4 bg-gray-50">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
-                        <Truck className="w-4 h-4 mr-2 text-orange-500" />
-                        Payment Method
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                          <Truck className="w-4 h-4 text-orange-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-700 font-medium">Cash on Delivery</p>
-                          <p className="text-xs text-gray-500">Pay when you receive</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Items */}
-                    <div className="border rounded-xl p-4 md:p-6 bg-white shadow-sm">
-                      <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <LucideListOrdered className="w-5 h-5 text-orange-500" />
-                        Order Items ({orderItems.length})
-                      </h3>
-
-                      <div className="max-h-[400px] overflow-y-auto space-y-3 pr-2">
-                        {orderItems.length > 0 ? (
-                          orderItems.map((item: any, index: number) => (
-                            <div
-                              key={index}
-                              className="relative flex gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-orange-300 transition-colors group"
-                            >
-                              {/* Remove Button */}
-                              <button
-                                onClick={() => handleRemoveItem(item.productId[0]._id)}
-                                disabled={removingItemId === item.productId[0]._id}
-                                className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-colors opacity-0 group-hover:opacity-100 z-10"
-                                title="Remove item"
-                              >
-                                {removingItemId === item.productId[0]._id ? (
-                                  <div className="w-3 h-3 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                  <X className="w-4 h-4 text-gray-500 hover:text-red-600" />
-                                )}
-                              </button>
-
-                              {/* Product Image */}
-                              <div className="w-20 h-20 bg-white rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
-                                <div className="relative w-full h-full">
-                                  <Image
-                                    src={item?.productId[0]?.featuredImg || '/placeholder.png'}
-                                    alt={item?.productId[0]?.description?.name || 'Product'}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Product Details */}
-                              <div className="flex-1 min-w-0 pr-6">
-                                <h4 className="text-sm font-medium text-gray-900 truncate">
-                                  {item?.productId[0]?.description?.name}
-                                </h4>
-                                
-                                <div className="flex gap-2 mt-1 flex-wrap">
-                                  {item?.color !== '' && (
-                                    <span className="text-xs text-gray-600 bg-white px-2 py-0.5 rounded border border-gray-200">
-                                      Color: <span className="font-medium">{item.color || ''}</span>
-                                    </span>
-                                  )}
-                                  {item?.size !== '' && (
-                                    <span className="text-xs text-gray-600 bg-white px-2 py-0.5 rounded border border-gray-200">
-                                      Size: <span className="font-medium">{item.size || ''}</span>
-                                    </span>
-                                  )}
-                                </div>
-
-                                <div className="flex items-center justify-between mt-2">
-                                  <div className="flex items-center gap-2">
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      className="h-7 w-7 rounded-md"
-                                      onClick={() => handleQuantityChange(item.productId[0]._id, 'dec')}
-                                      disabled={item.quantity <= 1}
-                                    >
-                                      <Minus className="h-3 w-3" />
-                                    </Button>
-                                    <span className="text-sm font-semibold w-8 text-center text-gray-800">
-                                      {item?.quantity}
-                                    </span>
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      className="h-7 w-7 rounded-md"
-                                      onClick={() => handleQuantityChange(item.productId[0]._id, 'inc')}
-                                    >
-                                      <Plus className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-
-                                  <div className="text-right">
-                                    <p className="text-base font-bold text-gray-900">
-                                      ৳{(item?.productId[0]?.productInfo?.salePrice * item?.quantity).toFixed(2)}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      ৳{item?.productId[0]?.productInfo?.salePrice} each
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-center py-12">
-                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                              <LucideListOrdered className="w-8 h-8 text-gray-400" />
-                            </div>
-                            <p className="text-base font-medium text-gray-900 mb-1">Your cart is empty</p>
-                            <p className="text-sm text-gray-500">Add items to your cart to continue</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Desktop action buttons */}
-              <div className="mt-6 hidden md:flex justify-between">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleBackClick}
-                  className="bg-transparent text-gray-700 border-gray-300 h-10 px-4 text-sm"
-                  disabled={currentStep === 1}
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  {currentStep === 2 ? 'Back to Shipping' : 'Back to Payment'}
-                </Button>
-
-                <Button
-                  type="button"
-                  onClick={handleNextStepOrSubmit}
-                  disabled={currentStep === 3 && (orderItems.length === 0 || !shipping.shippingLocation)}
-                  className="bg-orange-500 hover:bg-orange-600 h-10 px-5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {createOrderLoading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      {nextCtaText}
-                      {currentStep < 3 && <ArrowRight className="w-4 h-4 ml-2" />}
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            {/* Right Column - Order Summary */}
-            <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-100 h-fit lg:sticky lg:top-4">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 md:mb-6 pb-3 border-b">
-                Order Summary
-              </h2>
-
-              <div className="space-y-3 mb-4 md:mb-6">
-                {/* Shipping Location Selector */}
-                <div className="border-t border-b py-3 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-900">Select Shipping Location</span>
-                    {shipping.shippingLocation && (
-                      <span className="text-xs text-orange-600 font-medium">
-                        ৳{shipping.shippingCharge}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label
-                      className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                        shipping.shippingLocation === 'dhaka'
-                          ? 'border-orange-500 bg-orange-50'
-                          : 'border-gray-200 hover:border-orange-300 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="shipping"
-                          value="dhaka"
-                          checked={shipping.shippingLocation === 'dhaka'}
-                          onChange={() => handleShippingChange('dhaka')}
-                          className="w-4 h-4 text-orange-500 focus:ring-orange-500"
-                        />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Chittagong</p>
-                          <p className="text-xs text-gray-500">Inside Chittagong city</p>
-                        </div>
-                      </div>
-                      <span className="text-sm font-semibold text-gray-900">৳70</span>
-                    </label>
-
-                    <label
-                      className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                        shipping.shippingLocation === 'outside_dhaka'
-                          ? 'border-orange-500 bg-orange-50'
-                          : 'border-gray-200 hover:border-orange-300 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="shipping"
-                          value="outside_dhaka"
-                          checked={shipping.shippingLocation === 'outside_dhaka'}
-                          onChange={() => handleShippingChange('outside_dhaka')}
-                          className="w-4 h-4 text-orange-500 focus:ring-orange-500"
-                        />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Outside Chittagong</p>
-                          <p className="text-xs text-gray-500">Rest of Bangladesh</p>
-                        </div>
-                      </div>
-                      <span className="text-sm font-semibold text-gray-900">৳120</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="text-gray-900">৳{subTotal.toFixed(2)}</span>
-                </div>
-
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Shipping</span>
-                  {shipping.shippingCharge > 0 ? (
-                    <span className="text-gray-900 font-medium">৳{shipping.shippingCharge}</span>
-                  ) : (
-                    <span className="text-amber-600 text-xs">Please select location</span>
-                  )}
-                </div>
-
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Tax</span>
-                  <span className="text-gray-900">Free</span>
-                </div>
-
-                {appliedCoupon && discount > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 flex items-center gap-1">
-                      Discount
-                      <span className="text-xs text-orange-600 font-medium">({appliedCoupon.code})</span>
-                    </span>
-                    <span className="text-green-600 font-semibold">-৳{discount.toFixed(2)}</span>
-                  </div>
-                )}
-
-                <div className="border-t pt-3">
-                  <div className="flex justify-between font-medium">
-                    <span className="text-gray-900">Total</span>
-                    <span className="text-gray-900 text-lg">
-                      ৳{(subTotal + shipping.shippingCharge - discount).toFixed(2)}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Including VAT</p>
-                  {appliedCoupon && discount > 0 && (
-                    <p className="text-xs text-green-600 mt-1 font-medium">
-                      You saved ৳{discount.toFixed(2)} with this coupon!
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Security Badge */}
-              <div className="flex items-center justify-center space-x-2 mb-4 p-3 bg-gray-50 rounded-lg">
-                <Shield className="w-4 h-4 text-green-600" />
-                <span className="text-xs text-gray-600">Secure SSL encrypted checkout</span>
-              </div>
-
-              {/* Free Shipping Notice */}
-              <div className="rounded-lg bg-blue-50 p-3 mb-4">
-                <p className="text-xs text-blue-800 flex items-center">
-                  <Truck className="w-3 h-3 mr-1" />
-                  Free shipping on orders over ৳4,000!
-                </p>
-              </div>
-
-              {/* Promo Code */}
-              <div className="border-t pt-4">
-                <p className="text-sm font-medium text-gray-900 mb-2">Have a promo code?</p>
-                <div className="flex flex-col md:flex-row gap-2">
-                  <Input
-                    placeholder="Enter code"
-                    value={promoCode}
-                    onChange={e => {
-                      setPromoCode(e.target.value.toUpperCase());
-                      setCouponError('');
-                      setCouponSuccess('');
-                    }}
-                    className={`flex-1 ${
-                      couponError ? 'border-red-500' : couponSuccess ? 'border-green-500' : ''
-                    }`}
-                    disabled={promoApplied}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !promoApplied) applyPromoCode();
-                    }}
-                  />
-                  {!promoApplied ? (
-                    <Button
-                      type="button"
-                      onClick={applyPromoCode}
-                      className="bg-gray-900 hover:bg-black w-full md:w-auto flex items-center gap-2 text-white rounded-lg transition-all"
-                      disabled={isValidatingCoupon || !promoCode.trim()}
-                    >
-                      {isValidatingCoupon ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>Validating...</span>
-                        </>
-                      ) : (
-                        'Apply Coupon'
-                      )}
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      onClick={removeCoupon}
-                      variant="outline"
-                      className="border-red-400 text-red-600 hover:bg-red-50 w-full md:w-auto rounded-lg transition-all"
-                    >
-                      Remove ✕
-                    </Button>
-                  )}
-                </div>
-                
-                {couponError && (
-                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-                    <X className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-red-600">{couponError}</p>
-                  </div>
-                )}
-                
-                {couponSuccess && (
-                  <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg flex items-start gap-2">
-                    <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-green-600">{couponSuccess}</p>
-                  </div>
-                )}
-                
-                {appliedCoupon && (
-                  <div className="mt-3 p-3 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-orange-900 uppercase">
-                        {appliedCoupon.code}
-                      </span>
-                      <span className="text-xs text-orange-700 bg-white px-2 py-0.5 rounded">
-                        {appliedCoupon.type === 'percentage' 
-                          ? `${appliedCoupon.discountAmount}% OFF` 
-                          : `৳${appliedCoupon.discountAmount} OFF`}
-                      </span>
-                    </div>
-                    {appliedCoupon.description && (
-                      <p className="text-xs text-orange-800">{appliedCoupon.description}</p>
-                    )}
-                  </div>
-                )}
-
-                {/* Mobile-only action buttons */}
-                <div className="mt-4 flex justify-end flex-col md:hidden gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleBackClick}
-                    className="bg-transparent text-gray-700 border-gray-300 h-12 w-full"
-                    disabled={currentStep === 1}
-                  >
-                    <ArrowLeft className="mr-2" />
-                    {currentStep === 2 ? 'Back to Shipping' : 'Back to Payment'}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    onClick={handleNextStepOrSubmit}
-                    disabled={currentStep === 3 && (orderItems.length === 0 || !shipping.shippingLocation)}
-                    className="bg-orange-500 hover:bg-orange-600 px-6 py-2 h-12 w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {createOrderLoading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        {nextCtaText}
-                        {currentStep < 3 && <ArrowRight className="ml-2" />}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </form>
       </div>
+
+      <style jsx global>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .animate-fade-in { animation: fade-in 0.25s ease both; }
+      `}</style>
+    </>
+  );
+}
+
+/* ── small components ────────────────────────────────────── */
+
+function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <Label className="text-xs font-medium text-gray-600 mb-1 block">{label}</Label>
+      {children}
+      {error && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{error}</p>}
+    </div>
+  );
+}
+
+function ShippingOption({ selected, onClick, title, price, sub }: {
+  selected: boolean; onClick: () => void; title: string; price: string; sub: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full text-left p-3.5 rounded-xl border-2 transition-all ${
+        selected ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300 bg-white'
+      }`}
+    >
+      <div className="flex items-start gap-2.5">
+        <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+          selected ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
+        }`}>
+          {selected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-gray-900">{title}</p>
+          <p className="text-xs text-gray-400">{sub}</p>
+        </div>
+        <span className={`ml-auto text-sm font-bold ${selected ? 'text-orange-600' : 'text-gray-700'}`}>{price}</span>
+      </div>
+    </button>
+  );
+}
+
+function PriceRow({ label, value, hint, green }: { label: string; value: string; hint?: string; green?: boolean }) {
+  return (
+    <div className="flex justify-between items-center text-sm">
+      <span className="text-gray-500">{label}</span>
+      <span className={green ? 'text-green-600 font-medium' : hint ? 'text-amber-500 text-xs' : 'text-gray-900'}>
+        {hint || value}
+      </span>
     </div>
   );
 }

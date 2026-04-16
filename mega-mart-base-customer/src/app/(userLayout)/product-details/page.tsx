@@ -36,6 +36,7 @@ import Link from "next/link";
 import { ProductDetailsSkeleton } from "@/components/ProductDetailsSkeleton";
 import SectionHeader from "@/components/modules/home/new-arrivals/SectionHeader";
 import NewArrivals from "@/components/modules/home/new-arrivals/NewArrivals";
+import { addToGuestCart, getGuestCart } from "@/utils/guestCart";
 
 function cn(...c: (string | false | null | undefined)[]) {
   return c.filter(Boolean).join(" ");
@@ -275,27 +276,7 @@ export default function ProductDetailsPage({ productId }: any) {
       }));
   }, [productsData, currentProduct]);
 
-  // ---- Static data for vouchers and reviews (you can make these dynamic too) ----
-  const vouchers = [
-    {
-      label: "20%",
-      labelColor: "bg-[#0E1F34] text-white",
-      title: "20% Off",
-      description: "Get 20% off on orders above $100",
-      minPurchase: "$100",
-      expires: "2024-12-31",
-      code: "SAVE20",
-    },
-    {
-      label: "Free ",
-      labelColor: "bg-emerald-500 text-white",
-      title: "Free Shipping",
-      description: "Free shipping on orders above $50",
-      minPurchase: "$50",
-      expires: "2024-12-31",
-      code: "FREESHIP",
-    },
-  ];
+
 
   const reviews = [
     {
@@ -325,55 +306,60 @@ export default function ProductDetailsPage({ productId }: any) {
   const isVariantOutOfStock = selectedVariant && selectedVariant.stock === 0;
 
   const addToCart = async () => {
-    if (!currentUser) {
-      router.push("/auth/login");
+    // Variant check
+    if (currentProduct?.variants?.length > 0 && (!color || !size)) {
+      toast.error("Please select color and size before adding to cart");
       return;
     }
 
-    // Check if variants exist and color/size are not selected
-    if (currentProduct?.variants && currentProduct.variants.length > 0) {
-      if (!color || !size) {
-        toast.error("Please select color and size before adding to cart");
-        return;
-      }
+    // ✅ Guest user হলে localStorage-এ save করো
+    if (!currentUser) {
+      addToGuestCart({
+        productId: String(currentProduct?._id),
+        quantity: qty,
+        totalAmount: currentProduct?.productInfo?.salePrice || 0,
+        color: color?.name || '',
+        size: size || '',
+        featuredImg: currentProduct?.featuredImg,
+        name: currentProduct?.description?.name,
+        salePrice: currentProduct?.productInfo?.salePrice,
+      });
+      toast.success("Added to cart! Login to complete your order.");
+      return; // redirect করবে না
     }
 
+    // Logged-in user — আগের মতোই
     setIsaddLoading(true);
     try {
-      const res = await updateCustomer({
+      await updateCustomer({
         id: singleCustomer._id,
         body: {
-          cartItem: [
-            {
-              userId: currentUser._id,
-              productInfo: [
-                ...(singleCustomer?.cartItem?.[0]?.productInfo?.map(
-                  (item: any) => ({
-                    productId: [String(item.productId[0]._id)],
-                    quantity: item.quantity,
-                    totalAmount: item.totalAmount,
-                    color: item.color,
-                    size: item.size
-                  })
-                ) ?? []),
-                {
-                  productId: [String(currentProduct?._id)],
-                  quantity: qty,
-                  totalAmount: currentProduct?.productInfo?.price || 0,
-                  color: color?.name || '',
-                  size: size || ''
-                },
-              ],
-            },
-          ],
+          cartItem: [{
+            userId: currentUser._id,
+            productInfo: [
+              ...(singleCustomer?.cartItem?.[0]?.productInfo?.map((item: any) => ({
+                productId: [String(item.productId[0]._id)],
+                quantity: item.quantity,
+                totalAmount: item.totalAmount,
+                color: item.color,
+                size: item.size
+              })) ?? []),
+              {
+                productId: [String(currentProduct?._id)],
+                quantity: qty,
+                totalAmount: currentProduct?.productInfo?.price || 0,
+                color: color?.name || '',
+                size: size || ''
+              },
+            ],
+          }],
         },
       });
       setIsaddLoading(false);
       refetchCustomer();
       toast.success("Added to cart successfully!");
-      setMessage({ type: "cart", text: "Added to cart successfully!" });
     } catch (error) {
-
+      setIsaddLoading(false);
     }
   };
 
@@ -417,17 +403,39 @@ export default function ProductDetailsPage({ productId }: any) {
     } catch (error) { }
   };
 
-  const isAddedToCart = useMemo(() => {
-    if (!singleCustomer?.cartItem?.[0]?.productInfo || !currentProduct?._id) {
-      return false;
-    }
+  // নতুন state যোগ করো
+  const [guestCartItems, setGuestCartItems] = useState<any[]>([]);
 
+  // useEffect দিয়ে sync রাখো
+  useEffect(() => {
+    if (!currentUser) {
+      setGuestCartItems(getGuestCart());
+    }
+  }, [currentUser]);
+
+  // guestCartUpdated event শুনো
+  useEffect(() => {
+    const handler = () => {
+      if (!currentUser) setGuestCartItems(getGuestCart());
+    };
+    window.addEventListener('guestCartUpdated', handler);
+    return () => window.removeEventListener('guestCartUpdated', handler);
+  }, [currentUser]);
+
+  const isAddedToCart = useMemo(() => {
+    if (!currentUser) {
+      // getGuestCart() এর বদলে state use করো
+      return guestCartItems.some(
+        item => item.productId === String(currentProduct?._id) &&
+          (!color || item.color === color?.name) &&
+          (!size || item.size === size)
+      );
+    }
+    if (!singleCustomer?.cartItem?.[0]?.productInfo || !currentProduct?._id) return false;
     return singleCustomer.cartItem[0].productInfo.some((item: any) =>
-      item.productId.some(
-        (p: any) => (typeof p === "string" ? p : p._id) === currentProduct._id
-      )
+      item.productId.some((p: any) => (typeof p === "string" ? p : p._id) === currentProduct._id)
     );
-  }, [singleCustomer, currentProduct]);
+  }, [singleCustomer, currentProduct, currentUser, color, size, guestCartItems]); // guestCartItems যোগ হলো
 
   const isAddedToWishlist = useMemo(() => {
     if (!singleCustomer?.wishlist || !currentProduct?._id) {
@@ -523,7 +531,7 @@ export default function ProductDetailsPage({ productId }: any) {
         <div className="bg-white rounded-lg p-6 border ">
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mb-2">
-            {product.badges.includes("SALE"  )  && (
+            {product.badges.includes("SALE") && (
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-500 text-white">
                 SALE
               </span>
@@ -836,38 +844,38 @@ export default function ProductDetailsPage({ productId }: any) {
           </div>
         </div>
       </div>
-      
-<div className=" mt-6 z-30 bg-white/80  rounded-lg border border-gray-200  sticky top-6">
-  <div className="max-w-7xl mx-auto px-3 sm:px-6">
-    <div className="flex gap-2 sm:gap-3 overflow-x-auto no-scrollbar py-3">
 
-      {/* Button */}
-      <button
-        onClick={() => scrollToSection(whyRef, -100)}
-        className="flex-shrink-0 px-4 py-2 text-sm sm:text-base font-medium rounded-full 
+      <div className=" mt-6 z-30 bg-white/80  rounded-lg border border-gray-200  sticky top-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6">
+          <div className="flex gap-2 sm:gap-3 overflow-x-auto no-scrollbar py-3">
+
+            {/* Button */}
+            <button
+              onClick={() => scrollToSection(whyRef, -100)}
+              className="flex-shrink-0 px-4 py-2 text-sm sm:text-base font-medium rounded-full 
         bg-amber-600 text-white hover:bg-amber-700 transition-all duration-200"
-      >
-        Why Choose
-      </button>
+            >
+              Why Choose
+            </button>
 
-      <button
-        onClick={() => scrollToSection(specRef, -100)}
-        className="flex-shrink-0 px-4 py-2 text-sm sm:text-base font-medium rounded-full 
+            <button
+              onClick={() => scrollToSection(specRef, -100)}
+              className="flex-shrink-0 px-4 py-2 text-sm sm:text-base font-medium rounded-full 
         bg-gray-100 text-gray-700 hover:bg-amber-600 hover:text-white transition-all duration-200"
-      >
-        Specifications
-      </button>
+            >
+              Specifications
+            </button>
 
-      {/* Future Buttons */}
-      {/* 
+            {/* Future Buttons */}
+            {/* 
       <button className="tab-btn">Reviews</button>
       <button className="tab-btn">Vouchers</button>
       <button className="tab-btn">Related</button> 
       */}
 
-    </div>
-  </div>
-</div>
+          </div>
+        </div>
+      </div>
 
       {/* WHY CHOOSE */}
       <div ref={whyRef} className="mt-10">
@@ -901,96 +909,96 @@ export default function ProductDetailsPage({ productId }: any) {
             <div>
               <h3 className="font-semibold mb-3">Product Details</h3>
               <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
-  <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200">
 
-    {/* SKU */}
-    {product.specifications.sku && (
-      <tr className="hover:bg-gray-50 transition">
-        <td className="py-3 px-4 text-gray-500 font-medium w-1/3">SKU</td>
-        <td className="py-3 px-4 font-semibold text-gray-800">
-          {product.specifications.sku}
-        </td>
-      </tr>
-    )}
+                  {/* SKU */}
+                  {product.specifications.sku && (
+                    <tr className="hover:bg-gray-50 transition">
+                      <td className="py-3 px-4 text-gray-500 font-medium w-1/3">SKU</td>
+                      <td className="py-3 px-4 font-semibold text-gray-800">
+                        {product.specifications.sku}
+                      </td>
+                    </tr>
+                  )}
 
-    {/* Status */}
-    <tr className="hover:bg-gray-50 transition">
-      <td className="py-3 px-4 text-gray-500 font-medium">Status</td>
-      <td className="py-3 px-4 capitalize text-gray-800">
-        {product.specifications.status || "Available"}
-      </td>
-    </tr>
+                  {/* Status */}
+                  <tr className="hover:bg-gray-50 transition">
+                    <td className="py-3 px-4 text-gray-500 font-medium">Status</td>
+                    <td className="py-3 px-4 capitalize text-gray-800">
+                      {product.specifications.status || "Available"}
+                    </td>
+                  </tr>
 
-    {/* Stock */}
-    <tr className="hover:bg-gray-50 transition">
-      <td className="py-3 px-4 text-gray-500 font-medium">Stock</td>
-      <td className="py-3 px-4 text-gray-800">
-        {product.specifications.quantity} units
-      </td>
-    </tr>
+                  {/* Stock */}
+                  <tr className="hover:bg-gray-50 transition">
+                    <td className="py-3 px-4 text-gray-500 font-medium">Stock</td>
+                    <td className="py-3 px-4 text-gray-800">
+                      {product.specifications.quantity} units
+                    </td>
+                  </tr>
 
-    {/* Dimensions */}
-    {(product.specifications.dimensions.length ||
-      product.specifications.dimensions.width ||
-      product.specifications.dimensions.height) && (
-      <tr className="hover:bg-gray-50 transition">
-        <td className="py-3 px-4 text-gray-500 font-medium">Dimensions</td>
-        <td className="py-3 px-4 text-gray-800">
-          {[
-            product.specifications.dimensions.length &&
-              `L: ${product.specifications.dimensions.length}`,
-            product.specifications.dimensions.width &&
-              `W: ${product.specifications.dimensions.width}`,
-            product.specifications.dimensions.height &&
-              `H: ${product.specifications.dimensions.height}`,
-          ]
-            .filter(Boolean)
-            .join(", ")}
-        </td>
-      </tr>
-    )}
+                  {/* Dimensions */}
+                  {(product.specifications.dimensions.length ||
+                    product.specifications.dimensions.width ||
+                    product.specifications.dimensions.height) && (
+                      <tr className="hover:bg-gray-50 transition">
+                        <td className="py-3 px-4 text-gray-500 font-medium">Dimensions</td>
+                        <td className="py-3 px-4 text-gray-800">
+                          {[
+                            product.specifications.dimensions.length &&
+                            `L: ${product.specifications.dimensions.length}`,
+                            product.specifications.dimensions.width &&
+                            `W: ${product.specifications.dimensions.width}`,
+                            product.specifications.dimensions.height &&
+                            `H: ${product.specifications.dimensions.height}`,
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </td>
+                      </tr>
+                    )}
 
-    {/* Brand */}
-    {product.brand && (
-      <tr className="hover:bg-gray-50 transition">
-        <td className="py-3 px-4 text-gray-500 font-medium">Brand</td>
-        <td className="py-3 px-4 text-gray-800 font-medium">
-          {product.brand}
-        </td>
-      </tr>
-    )}
+                  {/* Brand */}
+                  {product.brand && (
+                    <tr className="hover:bg-gray-50 transition">
+                      <td className="py-3 px-4 text-gray-500 font-medium">Brand</td>
+                      <td className="py-3 px-4 text-gray-800 font-medium">
+                        {product.brand}
+                      </td>
+                    </tr>
+                  )}
 
-    {/* Tags */}
-    {product.tags.length > 0 && (
-      <tr className="hover:bg-gray-50 transition">
-        <td className="py-3 px-4 text-gray-500 font-medium">Tags</td>
-        <td className="py-3 px-4 flex flex-wrap gap-2">
-          {product.tags.map((tag: any, i: number) => (
-            <span
-              key={i}
-              className="px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded-md"
-            >
-              {tag.name}
-            </span>
-          ))}
-        </td>
-      </tr>
-    )}
+                  {/* Tags */}
+                  {product.tags.length > 0 && (
+                    <tr className="hover:bg-gray-50 transition">
+                      <td className="py-3 px-4 text-gray-500 font-medium">Tags</td>
+                      <td className="py-3 px-4 flex flex-wrap gap-2">
+                        {product.tags.map((tag: any, i: number) => (
+                          <span
+                            key={i}
+                            className="px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded-md"
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
+                      </td>
+                    </tr>
+                  )}
 
-    {/* Dynamic Specifications */}
-    {product.specificationsList?.length > 0 &&
-      product.specificationsList.map((spec: any, index: number) => (
-        <tr key={index} className="hover:bg-gray-50 transition">
-          <td className="py-3 px-4 text-gray-500 font-medium">
-            {spec.key}
-          </td>
-          <td className="py-3 px-4 text-gray-800">
-            {spec.value}
-          </td>
-        </tr>
-      ))}
-  </tbody>
-</table>
+                  {/* Dynamic Specifications */}
+                  {product.specificationsList?.length > 0 &&
+                    product.specificationsList.map((spec: any, index: number) => (
+                      <tr key={index} className="hover:bg-gray-50 transition">
+                        <td className="py-3 px-4 text-gray-500 font-medium">
+                          {spec.key}
+                        </td>
+                        <td className="py-3 px-4 text-gray-800">
+                          {spec.value}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
 
             {/* Features & Benefits + Care Instructions */}

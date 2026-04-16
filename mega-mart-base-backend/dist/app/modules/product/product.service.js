@@ -12,91 +12,148 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.productServices = exports.bestSellingProducts = void 0;
+exports.productServices = exports.bestSellingProducts = exports.getProductsByCategoryandSubcategory = void 0;
+const mongoose_1 = require("mongoose");
 const cloudinary_config_1 = require("../../config/cloudinary.config");
 const handleAppError_1 = __importDefault(require("../../errors/handleAppError"));
-const QueryBuilder_1 = require("../../utils/QueryBuilder");
 const order_model_1 = require("../order/order.model");
-const product_const_1 = require("./product.const");
+const tags_model_1 = require("../tags/tags.model");
 const product_model_1 = require("./product.model");
 const createProductOnDB = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield product_model_1.ProductModel.create(payload);
     return result;
 });
 const getAllProductFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const productQuery = new QueryBuilder_1.QueryBuilder(product_model_1.ProductModel.find()
+    // 1️⃣ Fetch all products with populate
+    const products = yield product_model_1.ProductModel.find()
         .populate("brandAndCategories.brand")
         .populate("brandAndCategories.categories")
-        .populate("brandAndCategories.tags"), query);
-    const allProducts = productQuery.search(product_const_1.ProductSearchableFields).filter().sort().paginate();
-    const [data, meta] = yield Promise.all([
-        allProducts.build().exec(),
-        productQuery.getMeta()
-    ]);
+        .populate("brandAndCategories.tags")
+        .populate("brandAndCategories.subCategories")
+        .lean(); // lean() converts mongoose docs to plain objects
+    // 2️⃣ Attach subCategories inside each category
+    const data = products.map((product) => {
+        const { categories, subCategories } = product.brandAndCategories || {};
+        const newCategories = categories === null || categories === void 0 ? void 0 : categories.map((cat) => (Object.assign(Object.assign({}, cat), { subCategories: subCategories || [] })));
+        return Object.assign(Object.assign({}, product), { brandAndCategories: Object.assign(Object.assign({}, product.brandAndCategories), { categories: newCategories, subCategories: undefined }) });
+    });
     return {
-        data, meta
+        data,
+        meta: { total: data.length }, // optional, you can add pagination meta
     };
 });
-const getProductsByCategoryandTag = (category, tag, slug) => __awaiter(void 0, void 0, void 0, function* () {
-    const categories = category ? category.split(",") : [];
-    const tags = tag ? tag.split(",") : [];
+// productServices.ts
+const getProductsByCategoryandSubcategory = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const queryId = new mongoose_1.Types.ObjectId(id);
     const products = yield product_model_1.ProductModel.aggregate([
+        // 🔹 Lookup Categories
         {
             $lookup: {
-                from: 'categories',
-                localField: 'brandAndCategories.categories',
-                foreignField: '_id',
-                as: 'categoryDetails',
+                from: "categories",
+                localField: "brandAndCategories.categories",
+                foreignField: "_id",
+                as: "categoryData",
             },
         },
+        // 🔹 Lookup SubCategories (direct from product)
         {
             $lookup: {
-                from: 'tags',
-                localField: 'brandAndCategories.tags',
-                foreignField: '_id',
-                as: 'tagDetails',
+                from: "subcategories",
+                localField: "brandAndCategories.subCategories",
+                foreignField: "_id",
+                as: "subCategoryData",
             },
         },
+        // 🔹 Match Category / Tag / SubCategory
         {
-            $lookup: {
-                from: 'brands',
-                localField: 'brandAndCategories.brand',
-                foreignField: '_id',
-                as: 'brandDetails',
+            $match: {
+                $or: [
+                    { "brandAndCategories.categories": queryId },
+                    { "brandAndCategories.tags": queryId },
+                    { "brandAndCategories.subCategories": queryId },
+                ],
             },
         },
+        // 🔹 Attach subCategories inside each category
         {
             $addFields: {
-                brandAndCategories: {
-                    brand: { $arrayElemAt: ['$brandDetails', 0] },
-                    categories: '$categoryDetails',
-                    tags: '$tagDetails',
+                "brandAndCategories.categories": {
+                    $map: {
+                        input: "$categoryData",
+                        as: "cat",
+                        in: {
+                            $mergeObjects: [
+                                "$$cat",
+                                {
+                                    subCategories: "$subCategoryData", // 👈 attach here
+                                },
+                            ],
+                        },
+                    },
                 },
             },
         },
-        {
-            $match: Object.assign(Object.assign(Object.assign({ 'description.status': 'publish' }, (categories.length
-                ? { 'brandAndCategories.categories.name': { $in: categories } }
-                : {})), (slug ? { 'brandAndCategories.categories.slug': slug } : {})), (tags.length
-                ? { 'brandAndCategories.tags.name': { $in: tags } }
-                : {})),
-        },
+        // 🔹 Remove extra fields
         {
             $project: {
-                categoryDetails: 0,
-                tagDetails: 0,
-                brandDetails: 0,
+                categoryData: 0,
+                subCategoryData: 0,
+                "brandAndCategories.subCategories": 0,
             },
         },
     ]);
     return products;
 });
+exports.getProductsByCategoryandSubcategory = getProductsByCategoryandSubcategory;
 const getSingleProductFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
     const result = yield product_model_1.ProductModel.findById(id)
-        .populate("brandAndCategories.brand")
-        .populate("brandAndCategories.categories")
-        .populate("brandAndCategories.tags");
-    return result;
+        .select("-vendorId -shopId")
+        .populate({
+        path: "brandAndCategories.brand",
+        select: "name -_id", // ✅ only name
+    })
+        .populate({
+        path: "brandAndCategories.categories",
+        select: "name _id", // ✅ only name
+    })
+        .populate({
+        path: "brandAndCategories.subCategories",
+        select: "name -_id", // ✅ only name
+    })
+        .populate({
+        path: "brandAndCategories.tags",
+        select: "name -_id", // ✅ only name
+    });
+    if (!result)
+        return null;
+    // 🔥 Manual cleanup
+    const obj = result.toObject();
+    return Object.assign(Object.assign({}, obj), { 
+        // description clean
+        description: {
+            name: (_a = obj.description) === null || _a === void 0 ? void 0 : _a.name,
+            unit: (_b = obj.description) === null || _b === void 0 ? void 0 : _b.unit,
+            description: (_c = obj.description) === null || _c === void 0 ? void 0 : _c.description,
+            shortdescription: (_d = obj.description) === null || _d === void 0 ? void 0 : _d.shortdescription,
+        }, 
+        // productInfo clean
+        productInfo: {
+            price: (_e = obj.productInfo) === null || _e === void 0 ? void 0 : _e.price,
+            salePrice: (_f = obj.productInfo) === null || _f === void 0 ? void 0 : _f.salePrice,
+            quantity: (_g = obj.productInfo) === null || _g === void 0 ? void 0 : _g.quantity,
+            sku: (_h = obj.productInfo) === null || _h === void 0 ? void 0 : _h.sku,
+            width: (_j = obj.productInfo) === null || _j === void 0 ? void 0 : _j.width,
+            height: (_k = obj.productInfo) === null || _k === void 0 ? void 0 : _k.height,
+            length: (_l = obj.productInfo) === null || _l === void 0 ? void 0 : _l.length,
+            isExternal: (_m = obj.productInfo) === null || _m === void 0 ? void 0 : _m.isExternal,
+            external: (_o = obj.productInfo) === null || _o === void 0 ? void 0 : _o.external,
+        }, 
+        // specifications clean
+        specifications: (_p = obj.specifications) === null || _p === void 0 ? void 0 : _p.map((spec) => ({
+            key: spec.key,
+            value: spec.value,
+        })) });
 });
 const updateProductOnDB = (id, updatedData) => __awaiter(void 0, void 0, void 0, function* () {
     const isProductExist = yield product_model_1.ProductModel.findById(id);
@@ -176,77 +233,124 @@ const inventoryStats = (id) => __awaiter(void 0, void 0, void 0, function* () {
 const bestSellingProducts = (categorySlug) => __awaiter(void 0, void 0, void 0, function* () {
     let limit = 10;
     const pipeline = [
-        { $unwind: '$orderInfo' },
-        // প্রতিটি product কতবার order হয়েছে তা গণনা
+        { $unwind: "$orderInfo" },
+        // total sold count
         {
             $group: {
-                _id: '$orderInfo.productInfo',
-                totalSold: { $sum: '$orderInfo.quantity' },
+                _id: "$orderInfo.productInfo",
+                totalSold: { $sum: "$orderInfo.quantity" },
             },
         },
-        // বেশি sold products আগে আসবে
         { $sort: { totalSold: -1 } },
-        // Product details lookup
+        // product lookup
         {
             $lookup: {
-                from: 'products',
-                localField: '_id',
-                foreignField: '_id',
-                as: 'product',
+                from: "products",
+                localField: "_id",
+                foreignField: "_id",
+                as: "product",
             },
         },
-        { $unwind: '$product' },
-        // Brand populate
-        {
-            $lookup: {
-                from: 'brands',
-                localField: 'product.brandAndCategories.brand',
-                foreignField: '_id',
-                as: 'product.brandAndCategories.brand',
-            },
-        },
-        // Categories populate
-        {
-            $lookup: {
-                from: 'categories',
-                localField: 'product.brandAndCategories.categories',
-                foreignField: '_id',
-                as: 'product.brandAndCategories.categories',
-            },
-        },
-        // Tags populate
-        {
-            $lookup: {
-                from: 'tags',
-                localField: 'product.brandAndCategories.tags',
-                foreignField: '_id',
-                as: 'product.brandAndCategories.tags',
-            },
-        },
-        // Optional: categorySlug filter
+        { $unwind: "$product" },
+        // optional category filter
         ...(categorySlug
             ? [
                 {
                     $match: {
-                        'product.brandAndCategories.categories.slug': categorySlug,
+                        "product.brandAndCategories.categories.slug": categorySlug,
                     },
                 },
             ]
             : []),
-        { $replaceRoot: { newRoot: '$product' } },
+        // root replace
+        { $replaceRoot: { newRoot: "$product" } },
+        // 🔥 only প্রয়োজনীয় data return
+        {
+            $project: {
+                _id: 1,
+                featuredImg: 1,
+                "description.name": 1,
+            },
+        },
         { $limit: limit },
     ];
     const result = yield order_model_1.OrderModel.aggregate(pipeline);
     return result;
 });
 exports.bestSellingProducts = bestSellingProducts;
+// -------------------------------------------------------------data Manager ------------------------------------------------
+const NewArrivalsListData = () => __awaiter(void 0, void 0, void 0, function* () {
+    const tag = yield tags_model_1.TagModel.findOne({ slug: "New-Arrivals" }).lean();
+    if (!tag)
+        return [];
+    const products = yield product_model_1.ProductModel.find({
+        "brandAndCategories.tags": tag._id
+    })
+        .populate("brandAndCategories.categories", "name")
+        .select("featuredImg description.name description.description productInfo.price productInfo.salePrice")
+        .lean();
+    return products;
+});
+const productcollection = () => __awaiter(void 0, void 0, void 0, function* () {
+    const products = yield product_model_1.ProductModel.find()
+        .populate("brandAndCategories.categories", "name")
+        .populate("brandAndCategories.tags", "name")
+        .populate("brandAndCategories.brand", "name")
+        .select("featuredImg description.name  productInfo.price productInfo.salePrice")
+        .lean();
+    return products;
+});
+const getSingleEditProductFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield product_model_1.ProductModel.findById(id)
+        .populate("brandAndCategories.brand")
+        .populate("brandAndCategories.categories")
+        .populate("brandAndCategories.subCategories")
+        .populate("brandAndCategories.tags");
+    return result;
+});
+const getCategory = () => __awaiter(void 0, void 0, void 0, function* () {
+    const products = yield product_model_1.ProductModel.find()
+        .populate({
+        path: "brandAndCategories.categories",
+        select: "name slug image bannerImg isFeatured createdAt updatedAt subCategories",
+        populate: {
+            path: "subCategories", // প্রতিটি category-এর ভিতরে subCategories populate
+            select: "name slug details image bannerImg isFeatured createdAt updatedAt",
+        },
+    })
+        .lean(); // plain JS object
+    const data = products.map((product) => {
+        const { categories } = product.brandAndCategories || {};
+        const newCategories = categories === null || categories === void 0 ? void 0 : categories.map((cat) => ({
+            _id: cat._id,
+            name: cat.name,
+            slug: cat.slug,
+            image: cat.image,
+            bannerImg: cat.bannerImg,
+            isFeatured: cat.isFeatured,
+            createdAt: cat.createdAt,
+            updatedAt: cat.updatedAt,
+            subCategories: cat.subCategories || [],
+        }));
+        return {
+            brandAndCategories: {
+                categories: newCategories,
+            },
+        };
+    });
+    return data;
+});
 exports.productServices = {
     createProductOnDB,
     getSingleProductFromDB,
     getAllProductFromDB,
     updateProductOnDB,
-    getProductsByCategoryandTag,
+    getProductsByCategoryandSubcategory: exports.getProductsByCategoryandSubcategory,
     deleteProduct,
     inventoryStats,
-    bestSellingProducts: exports.bestSellingProducts
+    bestSellingProducts: exports.bestSellingProducts,
+    NewArrivalsListData,
+    productcollection,
+    getSingleEditProductFromDB,
+    getCategory
 };

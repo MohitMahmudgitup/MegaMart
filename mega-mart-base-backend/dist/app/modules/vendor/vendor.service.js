@@ -28,9 +28,13 @@ const getVendorByUserIdFromDB = (id) => __awaiter(void 0, void 0, void 0, functi
     const result = yield vendor_model_1.VendorModel.findOne({ userId: id });
     return result;
 });
+const updateStatus = (id, status) => __awaiter(void 0, void 0, void 0, function* () {
+    return vendor_model_1.VendorModel.findByIdAndUpdate(id, { status }, { new: true });
+});
 exports.vendorServices = {
     createVendorOnDB,
     getAllVendorFromDB,
     getSingleVendorFromDB,
-    getVendorByUserIdFromDB
+    getVendorByUserIdFromDB,
+    updateStatus,
 };

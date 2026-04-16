@@ -56,8 +56,21 @@ const getVendorByUserId = (0, catchAsync_1.default)((req, res) => __awaiter(void
         data: result,
     });
 }));
+const updateStatus = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.params.id;
+    const { status } = req.body;
+    const result = yield vendor_service_1.vendorServices.updateStatus(id, status);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Vendor status updated successfully!",
+        data: result,
+    });
+}));
 exports.vendorControllers = {
     createVendor,
     getSingleVendor,
-    getAllVendor, getVendorByUserId
+    getAllVendor,
+    getVendorByUserId,
+    updateStatus,
 };

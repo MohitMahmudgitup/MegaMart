@@ -120,6 +120,16 @@ const gatMe = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, 
         data: me,
     });
 }));
+const googleData = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const decodedUser = req.user;
+    const me = yield auth_service_1.AuthServices.googlegetMe(decodedUser);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_codes_1.StatusCodes.OK,
+        message: "Data received Successfully!",
+        data: me,
+    });
+}));
 exports.AuthController = {
     registerUser,
     loginUser,
@@ -127,4 +137,5 @@ exports.AuthController = {
     loginUserUsingProvider,
     googleCallbackController,
     gatMe,
+    googleData
 };

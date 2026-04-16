@@ -8,6 +8,7 @@ const express_1 = __importDefault(require("express"));
 const auth_routes_1 = require("../modules/auth/auth.routes");
 const user_routes_1 = require("../modules/user/user.routes");
 const category_routes_1 = require("../modules/category/category.routes");
+const subCategory_routes_1 = require("../modules/subcategory/subCategory.routes");
 const brands_routes_1 = require("../modules/brands/brands.routes");
 const tags_routes_1 = require("../modules/tags/tags.routes");
 const product_routes_1 = require("../modules/product/product.routes");
@@ -58,6 +59,10 @@ const moduleRoutes = [
     {
         path: '/category',
         route: category_routes_1.CategoryRoutes,
+    },
+    {
+        path: '/subcategory',
+        route: subCategory_routes_1.SubCategoryRoutes,
     },
     {
         path: '/brand',

@@ -12,12 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.productControllers = void 0;
+exports.getCategory = exports.getSingleEditProduct = exports.productcollections = exports.newArrivalsListData = exports.bestSellingProducts = exports.inventoryStats = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getSingleProduct = exports.getProductsByCategoryandsubcategory = exports.getAllProduct = void 0;
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const http_status_1 = __importDefault(require("http-status"));
 const product_service_1 = require("./product.service");
-const getAllProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getAllProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { data, meta } = yield product_service_1.productServices.getAllProductFromDB(req.query);
     (0, sendResponse_1.default)(res, {
         success: true,
@@ -27,19 +27,21 @@ const getAllProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
         meta: meta
     });
 }));
-const getProductsByCategoryandTag = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { category, tag, slug } = req.query;
-    const result = yield product_service_1.productServices.getProductsByCategoryandTag(category, tag, slug);
+// productController.ts
+exports.getProductsByCategoryandsubcategory = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.params.id;
+    const result = yield product_service_1.productServices.getProductsByCategoryandSubcategory(id);
     (0, sendResponse_1.default)(res, {
         success: true,
-        statusCode: http_status_1.default.OK,
-        message: 'Products retrieve successfully!',
+        statusCode: 200,
+        message: "Products retrieved successfully!",
         data: result,
     });
 }));
-const getSingleProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getSingleProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const id = req.params.id;
-    const result = yield product_service_1.productServices.getSingleProductFromDB(id);
+    const productId = id.split("-").pop();
+    const result = yield product_service_1.productServices.getSingleProductFromDB(productId);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_1.default.OK,
@@ -47,12 +49,12 @@ const getSingleProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 
         data: result,
     });
 }));
-const createProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.createProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     const files = req.files;
-    const productData = Object.assign(Object.assign({}, req.body), { featuredImg: ((_b = (_a = files["featuredImgFile"]) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.path) || "", gallery: files["galleryImagesFiles"]
+    const productData = Object.assign(Object.assign({}, req.body), { featuredImg: ((_b = (_a = files["featuredImgFile"]) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.path) || req.body.featuredImg || '', gallery: files["galleryImagesFiles"]
             ? files["galleryImagesFiles"].map((f) => f.path)
-            : [] });
+            : req.body.gallery || [] });
     const result = yield product_service_1.productServices.createProductOnDB(productData);
     (0, sendResponse_1.default)(res, {
         success: true,
@@ -61,7 +63,7 @@ const createProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
         data: result,
     });
 }));
-const updateProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.updateProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
     const { id } = req.params;
     const files = req.files;
@@ -80,7 +82,7 @@ const updateProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
         data: result,
     });
 }));
-const deleteProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.deleteProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield product_service_1.productServices.deleteProduct(req.params.id);
     (0, sendResponse_1.default)(res, {
         success: true,
@@ -89,7 +91,7 @@ const deleteProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
         data: null,
     });
 }));
-const inventoryStats = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.inventoryStats = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield product_service_1.productServices.inventoryStats(req.params.id);
     (0, sendResponse_1.default)(res, {
         success: true,
@@ -98,7 +100,7 @@ const inventoryStats = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
         data: result,
     });
 }));
-const bestSellingProducts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.bestSellingProducts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield product_service_1.productServices.bestSellingProducts(req.query.category);
     (0, sendResponse_1.default)(res, {
         success: true,
@@ -107,13 +109,42 @@ const bestSellingProducts = (0, catchAsync_1.default)((req, res) => __awaiter(vo
         data: result,
     });
 }));
-exports.productControllers = {
-    createProduct,
-    getSingleProduct,
-    getAllProduct,
-    updateProduct,
-    getProductsByCategoryandTag,
-    deleteProduct,
-    inventoryStats,
-    bestSellingProducts
-};
+// --------------------------------------------data manager--------------------------------------------------
+exports.newArrivalsListData = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield product_service_1.productServices.NewArrivalsListData();
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.CREATED,
+        message: 'New Arrivals retrieved successfully!',
+        data: result,
+    });
+}));
+exports.productcollections = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield product_service_1.productServices.productcollection();
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.CREATED,
+        message: 'Product collection retrieved successfully!',
+        data: result,
+    });
+}));
+exports.getSingleEditProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.params.id;
+    const productId = id.split("-").pop();
+    const result = yield product_service_1.productServices.getSingleEditProductFromDB(productId);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Product retrieve successfully!",
+        data: result,
+    });
+}));
+exports.getCategory = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield product_service_1.productServices.getCategory();
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Category retrieve successfully!",
+        data: result,
+    });
+}));

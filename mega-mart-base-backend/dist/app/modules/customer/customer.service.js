@@ -60,10 +60,14 @@ const getMyCustomerInfoFromDB = (id) => __awaiter(void 0, void 0, void 0, functi
     }
     return result;
 });
+const getCustomerByUserIdFromDB = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    return yield customer_model_1.CustomerModel.findOne({ userId }).populate("userId");
+});
 exports.customerServices = {
     createCustomerOnDB,
     getSingleCustomerFromDB,
     getAllCustomerFromDB,
     updateCustomerOnDB,
     getMyCustomerInfoFromDB,
+    getCustomerByUserIdFromDB
 };
