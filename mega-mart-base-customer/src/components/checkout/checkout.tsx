@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,6 +33,7 @@ function InlineAlert({ message, onClose }: { message: string; onClose: () => voi
 }
 
 export default function CheckoutPage() {
+  const STORAGE_KEY = 'checkout_form_data';
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [updateCustomer] = useUpdateCustomerMutation();
@@ -50,11 +51,41 @@ export default function CheckoutPage() {
   const phoneRef = useRef<HTMLInputElement>(null);
   const shippingRef = useRef<HTMLDivElement>(null);
   const couponRef = useRef<HTMLDivElement>(null);
+const [isLoaded, setIsLoaded] = useState(false);
+
+
+
 
   /* form */
   const [form, setForm] = useState({
     name: '', address: '', city: '', postalCode: '', country: 'Bangladesh', phone: '',
   });
+
+
+useEffect(() => {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    const data = JSON.parse(saved);
+
+    setForm({
+      name: '',
+      address: '',
+      city: '',
+      postalCode: '',
+      country: 'Bangladesh',
+      phone: '',
+      ...(data.form || {}),
+    });
+
+    setShippingLocation(data.shippingLocation || '');
+    setCouponCode(data.couponCode || '');
+  }
+
+  setIsLoaded(true); // 🔥 important
+}, []);
+
+
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   /* shipping */
@@ -148,7 +179,9 @@ export default function CheckoutPage() {
         },
       });
     } catch { toast.error('Failed to update quantity.'); }
+
   };
+
 
   /* ── remove item (logged-in) ─────────────────────────────── */
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -178,6 +211,21 @@ export default function CheckoutPage() {
     } catch { toast.error('Failed to remove item'); }
     setRemovingId(null);
   };
+
+useEffect(() => {
+  if (!isLoaded) return; // 🔥 ei line add koro
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      form,
+      shippingLocation,
+      couponCode,
+    })
+  );
+}, [form, shippingLocation, couponCode, isLoaded]);
+
+
 
   /* ── coupon ──────────────────────────────────────────────── */
   const applyCoupon = async () => {
@@ -287,6 +335,7 @@ export default function CheckoutPage() {
       }
       window.dispatchEvent(new Event('guestCartUpdated'));
       toast.success('Order placed successfully!');
+      localStorage.removeItem(STORAGE_KEY);
       router.push('/dashboard/orders');
     } catch { toast.error('Failed to place order. Please try again.'); }
     setLoading(false);
